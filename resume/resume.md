@@ -1,76 +1,96 @@
-# **Alan Szmyt**
-306 Shawsheen Street, Tewksbury, MA 01876  
-(978) 491-8932  
-[szmyty@gmail.com](mailto:szmyty@gmail.com)  
-[github.com/szmyty](https://github.com/szmyty)
+<!-- Alan Szmyt – Resume (Centered Headings, GitHub Markdown-Compatible HTML) -->
+<h1 align="center">Alan Szmyt</h1>
+<p align="center">
+306&nbsp;Shawsheen&nbsp;Street,&nbsp;Tewksbury,&nbsp;MA&nbsp;01876<br/>
+📞 (978)&nbsp;491-8932&nbsp;&nbsp;|&nbsp;&nbsp;
+📧 <a href="mailto:szmyty@gmail.com">szmyty@gmail.com</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+🔗 <a href="https://github.com/szmyty">github.com/szmyty</a>
+</p>
 
----
+<hr/>
 
-## **Mission Statement**
-To design and engineer intelligent, adaptable, and elegantly built systems — blending software, data, and creative technology into experiences that are efficient, expressive, and human-centered.
+<h2 align="center">Mission Statement</h2>
+<p style="text-align:justify;">
+To design and engineer intelligent, adaptable, and elegantly built systems — blending software, data, and creative
+technology into experiences that are efficient, expressive, and human-centered.
+</p>
 
----
+<hr/>
 
-## **Work Experience**
+<h2 align="center">Work Experience</h2>
 
-### **MIT Lincoln Laboratory**, Lexington, MA – Software Engineer, Associate Staff  
-**April 2019 – Present**  
-Develops full-stack geospatial and decision-support systems for research sponsors, integrating modern data engineering, visualization, and automation technologies.  
-**Highlights include:**  
-• Led mobile development of Kotlin-based GIS tools with offline-first synchronization, secure Keycloak authentication, and local SQLite persistence.  
-• Built web dashboards using React, Redux, Deck.gl, and Kepler.gl for real-time spatial visualization.  
-• Created a Python data-triage pipeline with Elasticsearch, Apache Tika, and Stanford CoreNLP to improve document indexing and metadata search.  
-• Designed and deployed Flask + GraphQL APIs with PostgreSQL/PostGIS and TileDB for geospatial data querying and storage.  
-• Developed ETL pipelines for transforming NetCDF, CSV, and GeoJSON datasets into structured formats for analysis.  
-• Prototyped a blockchain-based GIS system using Ethereum smart contracts (Solidity, Ganache) for secure message logging.  
-• Architected DevOps infrastructure with Kubernetes, Docker, Pulumi, MinIO, Caddy, and automated CI/CD deployment pipelines.  
-• Extended QGroundControl (C++) to integrate with custom drone tracking APIs and delivered on-site technical support internationally.  
-**Technologies:** Kotlin, React, Python, Flask, GraphQL, PostgreSQL/PostGIS, TileDB, Docker, Kubernetes, Pulumi, Solidity, Elasticsearch, Apache Tika, CoreNLP
+<h3 salign="center">MIT Lincoln Laboratory, Lexington MA – Software Engineer, Associate Staff<br/>
+<small>April&nbsp;2019&nbsp;–&nbsp;Present</small></h3>
+<p style="text-align:justify;">
+Develops full-stack geospatial and decision-support systems for research sponsors, integrating modern data
+engineering, visualization, and automation technologies.
+</p>
+<ul>
+  <li>Led Kotlin-based Android GIS tools with offline-first sync, Keycloak authentication, and local SQLite persistence.</li>
+  <li>Built React + Redux + Deck.gl/Kepler.gl dashboards for real-time spatial visualization.</li>
+  <li>Created Python data-triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to enhance document indexing.</li>
+  <li>Designed Flask / GraphQL APIs backed by PostgreSQL (PostGIS) and TileDB for structured geospatial queries.</li>
+  <li>Implemented ETL pipelines transforming NetCDF, CSV, and GeoJSON into analytics-ready datasets.</li>
+  <li>Prototyped blockchain-based GIS modules using Ethereum smart contracts (Solidity, Ganache).</li>
+  <li>Architected DevOps infrastructure (Kubernetes, Docker, Pulumi, MinIO, Caddy) with automated CI/CD deployments.</li>
+  <li>Extended QGroundControl (C++) to integrate custom drone-tracking APIs; provided international field support and training.</li>
+</ul>
+<p><strong>Technologies:</strong> Kotlin, React, Python, Flask, GraphQL, PostgreSQL/PostGIS, TileDB, Docker, Kubernetes, Pulumi, Solidity, Elasticsearch, Apache&nbsp;Tika, CoreNLP</p>
 
----
+<h3 align="center">Incompris&nbsp;LLC&nbsp;–&nbsp;Founder&nbsp;&amp;&nbsp;Music&nbsp;Business&nbsp;Architect<br/>
+<small>2023&nbsp;–&nbsp;Present</small></h3>
+<p style="text-align:justify;">
+Founded a digital music label and automation studio integrating music production, AI, and software tooling for creative entrepreneurs.
+</p>
+<ul>
+  <li>Developed automated royalty/income tracking using DistroKid, ASCAP, and SongTrust.</li>
+  <li>Built AI-assisted mastering pipelines leveraging Dockerized Matchering for browser-based audio processing.</li>
+  <li>Created an AI-driven SoundCloud/Suno presence with Stable&nbsp;Diffusion visual branding.</li>
+  <li>Automated business infrastructure with ZenBusiness, Notion, and GitHub for finance and documentation.</li>
+</ul>
+<p><strong>Technologies:</strong> Python, Docker, Matchering, Stable&nbsp;Diffusion, Notion&nbsp;API, Stripe, GitHub&nbsp;Actions</p>
 
-### **Incompris LLC**, Independent – Founder & Music Business Architect  
-**2023 – Present**  
-Founded a digital music label and automation studio integrating music production, AI, and software tooling for creative entrepreneurs.  
-**Highlights include:**  
-• Developed automated royalty and income tracking systems using DistroKid, ASCAP, and SongTrust for transparent financial management.  
-• Built AI-assisted mastering pipelines using Dockerized Matchering for browser-based audio processing.  
-• Created a SoundCloud and Suno presence with Stable Diffusion-generated visuals and consistent brand identity.  
-• Automated business infrastructure using ZenBusiness, Notion, and GitHub for finance, documentation, and project tracking.  
-**Technologies:** Python, Docker, Matchering, Stable Diffusion, Notion API, Stripe, GitHub Actions
+<h3 align="center">Taylor&nbsp;Networks, Billerica&nbsp;MA&nbsp;–&nbsp;IT&nbsp;Support&nbsp;Technician<br/>
+<small>October&nbsp;2017&nbsp;–&nbsp;September&nbsp;2018</small></h3>
+<p style="text-align:justify;">
+Delivered IT support and network solutions for business clients, ensuring system security and reliability.
+</p>
+<ul>
+  <li>Configured Cisco&nbsp;ASA&nbsp;5506 firewalls and implemented Site-to-Site VPNs for secure remote access.</li>
+  <li>Maintained Windows&nbsp;Server environments with user permissions and updates.</li>
+  <li>Provided on-site and remote support for network, hardware, and software issues.</li>
+  <li>Performed HTML/CSS updates and site migrations to new hosting environments.</li>
+</ul>
+<p><strong>Technologies:</strong> Cisco&nbsp;ASA, Windows&nbsp;Server, PowerShell, VPN, HTML, CSS</p>
 
----
+<hr/>
 
-### **Taylor Networks**, Billerica, MA – IT Support Technician  
-**October 2017 – September 2018**  
-Delivered IT support and network solutions for business clients, ensuring system security, reliability, and connectivity.  
-**Highlights include:**  
-• Configured Cisco ASA 5506 firewalls and implemented Site-to-Site VPNs for remote access.  
-• Maintained Windows Server environments, managing permissions and updates.  
-• Provided on-site and remote support for network, hardware, and software issues.  
-• Performed HTML/CSS website updates and migrations to new hosting environments.  
-**Technologies:** Cisco ASA, Windows Server, PowerShell, VPN, HTML, CSS
+<h2 align="center">Education</h2>
 
----
+<h3 align="center">Boston&nbsp;University, Boston&nbsp;MA&nbsp;(Online)&nbsp;–&nbsp;Master&nbsp;of&nbsp;Science&nbsp;in&nbsp;Software&nbsp;Development<br/>
+<small>Graduated&nbsp;April&nbsp;2023</small></h3>
+<p style="text-align:justify;">
+Focused on software engineering, full-stack development, and system architecture.
+</p>
+<ul>
+  <li><strong>Key Courses:</strong> Advanced Programming Techniques, Software Design&nbsp;&amp;&nbsp;Patterns, Mobile Development with Android, Software Engineering.</li>
+  <li><strong>Capstone Projects:</strong> WAV metadata parser in Python; Android beatmaker app (JNI&nbsp;+&nbsp;C++&nbsp;Oboe&nbsp;+&nbsp;Kotlin); music recommendation system for personalized playlists.</li>
+</ul>
 
-## **Education**
+<h3 align="center">University&nbsp;of&nbsp;Massachusetts&nbsp;Lowell, Lowell&nbsp;MA&nbsp;–&nbsp;Bachelor&nbsp;of&nbsp;Science&nbsp;in&nbsp;Computer&nbsp;Science&nbsp;(Minor&nbsp;in&nbsp;Mathematics)<br/>
+<small>Graduated&nbsp;January&nbsp;2017</small></h3>
+<p style="text-align:justify;">
+Coursework in systems programming, algorithms, cryptography, and applied mathematics.
+</p>
+<ul>
+  <li><strong>Key Courses:</strong> Operating Systems, Data Structures, Computer Graphics, Analysis&nbsp;of&nbsp;Algorithms, Discrete Mathematics.</li>
+  <li><strong>Independent Study:</strong> Blockchain research on decentralized networks and cryptographic security models.</li>
+  <li>Balanced full-time course load while working 25+ hours weekly.</li>
+</ul>
 
-**Boston University**, Boston, MA (Online) – Master of Science in Software Development  
-*Graduated April 2023*  
-Focused on software engineering, full-stack development, and system architecture.  
-**Key Courses:** Advanced Programming Techniques, Software Design & Patterns, Mobile Development with Android, Software Engineering.  
-**Capstone Projects:** Developed a WAV metadata parser in Python; built an Android beatmaker app with JNI (C++) and Kotlin; designed a music recommendation system for personalized playlists.
+<hr/>
 
----
-
-**University of Massachusetts Lowell**, Lowell, MA – Bachelor of Science in Computer Science (Mathematics Minor)  
-*Graduated January 2017*  
-Coursework in systems programming, algorithms, cryptography, and applied mathematics.  
-**Key Courses:** Operating Systems, Data Structures, Computer Graphics, Analysis of Algorithms, Discrete Mathematics.  
-**Independent Study:** Blockchain research on decentralized networks and cryptographic security models.  
-Balanced full-time course load while working 25+ hours weekly.
-
----
-
-## **Interests**
-AI-assisted music production, creative automation, open-source development, geospatial visualization, and building expressive human-machine interfaces.
+<h2 align="center">Interests</h2>
+<p style="text-align:justify;">
+AI-assisted music production, creative automation, open-source development, geospatial visualization, and building expressive human–machine interfaces.
+</p>
