@@ -26,7 +26,9 @@ Develops full-stack geospatial and decision-support systems for research sponsor
 engineering, visualization, and automation technologies.
 </p>
 <ul>
-  <li>Led Kotlin-based Android GIS tools with offline-first sync, Keycloak authentication, and local SQLite persistence.</li>
+  <li>Led Android mobile app development for USAID to track commodities using barcode scanning, offline-first sync for low connectivity geographic areas, and successfully field tested at pilot location in Texas for shipments to Africa that had supply chain visibility of each commodity.</li>
+  
+  
   <li>Built React + Redux + Deck.gl/Kepler.gl dashboards for real-time spatial visualization.</li>
   <li>Created Python data-triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to enhance document indexing.</li>
   <li>Designed Flask / GraphQL APIs backed by PostgreSQL (PostGIS) and TileDB for structured geospatial queries.</li>
@@ -35,7 +37,15 @@ engineering, visualization, and automation technologies.
   <li>Architected DevOps infrastructure (Kubernetes, Docker, Pulumi, MinIO, Caddy) with automated CI/CD deployments.</li>
   <li>Extended QGroundControl (C++) to integrate custom drone-tracking APIs; provided international field support and training.</li>
 </ul>
-<p><strong>Technologies:</strong> Kotlin, React, Python, Flask, GraphQL, PostgreSQL/PostGIS, TileDB, Docker, Kubernetes, Pulumi, Solidity, Elasticsearch, Apache&nbsp;Tika, CoreNLP</p>
+<p>
+  <strong>
+    Technologies:
+  </strong> 
+  Kotlin-based GIS tools with offline-first sync, Keycloak authentication, and local SQLite persistence.
+  
+  
+  Kotlin, React, Python, Flask, GraphQL, PostgreSQL/PostGIS, TileDB, Docker, Kubernetes, Pulumi, Solidity, Elasticsearch, Apache&nbsp;Tika, CoreNLP
+</p>
 
 <h3 align="center">Incompris&nbsp;LLC&nbsp;–&nbsp;Founder&nbsp;&amp;&nbsp;Music&nbsp;Business&nbsp;Architect<br/>
 <small>2023&nbsp;–&nbsp;Present</small></h3>
