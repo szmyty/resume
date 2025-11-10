@@ -19,7 +19,8 @@ technology into experiences that are efficient, expressive, and human-centered.
 
 <h2 align="center">Work Experience</h2>
 
-<h3 salign="center">MIT Lincoln Laboratory, Lexington MA – Software Engineer, Associate Staff<br/>
+<h3 salign="center">
+  <br>MIT Lincoln Laboratory, Lexington MA – Software Engineer, Associate Staff<br/>
 <small>April&nbsp;2019&nbsp;–&nbsp;Present</small></h3>
 <p style="text-align:justify;">
 Develops full-stack geospatial and decision-support systems for research sponsors, integrating modern data
@@ -34,13 +35,19 @@ engineering, visualization, and automation technologies.
     Developed Android prototype for humanitarian deconfliction notifications to enable GIS visualization of no-strike locations, to capture historical and encrypted submissions using blockchain technology, audit trail via role-based decryption keys. The proof of concept was one of the first main network Ethereum transactions at MITLL and was later funded for ~$1 million to expand web application. 
   </li>
 
+  <li>
+    Developed counter human trafficking investigation tool for triaging case evidence to enable local law enforcement investigators to effectively parse through high-volume data and information and reduce time to identify relevant leads.
+  </li>
+
+
+<li>Created Python data-triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to enhance document indexing.</li>
 
 
 
 
   
   <li>Built React + Redux + Deck.gl/Kepler.gl dashboards for real-time spatial visualization.</li>
-  <li>Created Python data-triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to enhance document indexing.</li>
+  
   <li>Designed Flask / GraphQL APIs backed by PostgreSQL (PostGIS) and TileDB for structured geospatial queries.</li>
   <li>Implemented ETL pipelines transforming NetCDF, CSV, and GeoJSON into analytics-ready datasets.</li>
   <li>Architected DevOps infrastructure (Kubernetes, Docker, Pulumi, MinIO, Caddy) with automated CI/CD deployments.</li>
