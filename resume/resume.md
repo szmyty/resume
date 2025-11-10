@@ -26,14 +26,23 @@ Develops full-stack geospatial and decision-support systems for research sponsor
 engineering, visualization, and automation technologies.
 </p>
 <ul>
-  <li>Led Android mobile app development for USAID to track commodities using barcode scanning, offline-first sync for low connectivity geographic areas, and successfully field tested at pilot location in Texas for shipments to Africa that had supply chain visibility of each commodity.</li>
-  
+  <li>
+    Led Android mobile app development for USAID to track commodities using barcode scanning, offline-first sync for low connectivity geographic areas, and successfully field tested at pilot location in Texas for shipments to Africa that had supply chain visibility of each commodity.
+  </li>
+
+  <li>
+    Developed Android prototype for humanitarian deconfliction notifications to enable GIS visualization of no-strike locations, to capture historical and encrypted submissions using blockchain technology, audit trail via role-based decryption keys. The proof of concept was one of the first main network Ethereum transactions at MITLL and was later funded for ~$1 million to expand web application. 
+  </li>
+
+
+
+
+
   
   <li>Built React + Redux + Deck.gl/Kepler.gl dashboards for real-time spatial visualization.</li>
   <li>Created Python data-triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to enhance document indexing.</li>
   <li>Designed Flask / GraphQL APIs backed by PostgreSQL (PostGIS) and TileDB for structured geospatial queries.</li>
   <li>Implemented ETL pipelines transforming NetCDF, CSV, and GeoJSON into analytics-ready datasets.</li>
-  <li>Prototyped blockchain-based GIS modules using Ethereum smart contracts (Solidity, Ganache).</li>
   <li>Architected DevOps infrastructure (Kubernetes, Docker, Pulumi, MinIO, Caddy) with automated CI/CD deployments.</li>
   <li>Extended QGroundControl (C++) to integrate custom drone-tracking APIs; provided international field support and training.</li>
 </ul>
@@ -43,7 +52,7 @@ engineering, visualization, and automation technologies.
   </strong> 
   Kotlin-based GIS tools with offline-first sync, Keycloak authentication, and local SQLite persistence.
   
-  
+  Ethereum smart contracts (Solidity, Ganache).
   Kotlin, React, Python, Flask, GraphQL, PostgreSQL/PostGIS, TileDB, Docker, Kubernetes, Pulumi, Solidity, Elasticsearch, Apache&nbsp;Tika, CoreNLP
 </p>
 
