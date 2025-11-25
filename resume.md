@@ -200,21 +200,3 @@
   AI-assisted music production, creative automation, open-source development, geospatial visualization,
   and building expressive human–machine interfaces.
 </p>
-
-<style>
-  h1, h2, h3 { margin-bottom: 0.25em; }
-  h1 { font-size: 1.8em; }
-  h2 {
-    font-size: 1.25em;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 2px;
-    margin-top: 1.5em;
-  }
-  h3 { font-size: 1em; font-weight: bold; margin-top: 1.25em; text-align: center; }
-  ul { margin-top: 0.25em; margin-bottom: 0.75em; }
-  p, ul { font-size: 0.95em; line-height: 1.5em; }
-  hr { border: none; border-top: 1px solid #ccc; margin: 1em 0; }
-  small { font-weight: normal; color: #555; }
-  a { color: #0366d6; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-</style>
