@@ -37,31 +37,26 @@ def run_command(command: list[str], working_directory: Path | None = None) -> No
     if result.returncode != 0:
         raise RuntimeError(f"Command failed ({result.returncode}): {' '.join(command)}\n{result.stdout}")
 
-def build_pdf_with_tectonic_docker(output_directory: Path, tex_filename: str = "resume.tex") -> Path:
-    # Build inside docker for deterministic CI builds
-    # Requires docker available (GitHub runners support this).
-    pdf_filename = "resume.pdf"
-    ensure_directory_exists(output_directory)
 
-    command = [
-        "docker",
-        "run",
-        "--rm",
-        "--volume",
-        f"{output_directory}:/work",
-        "--workdir",
-        "/work",
-        "ghcr.io/tectonic-typesetting/tectonic:latest",
-        "tectonic",
-        "--print",
-        "--synctex",
-        "--keep-logs",
-        tex_filename,
-    ]
-    run_command(command)
-    pdf_path = output_directory / pdf_filename
+
+def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -> Path:
+    pdf_filename = "resume.pdf"
+
+    run_command(
+        [
+            "tectonic",
+            "--print",
+            "--synctex",
+            "--keep-logs",
+            tex_filename,
+        ],
+        working_directory=build_dir,
+    )
+
+    pdf_path = build_dir / pdf_filename
     if not pdf_path.exists():
         raise RuntimeError("PDF build succeeded but resume.pdf was not found.")
+
     return pdf_path
 
 def normalize_variant_name(variant_directory: Path) -> str:
@@ -110,7 +105,7 @@ def build_variant(variant_directory: Path) -> None:
     )
 
     # Build PDF from LaTeX using tectonic docker
-    pdf_path = build_pdf_with_tectonic_docker(build_dir, "resume.tex")
+    pdf_path = build_pdf_with_tectonic(build_dir, "resume.tex")
     shutil.copy2(pdf_path, output_dir / "resume.pdf")
 
     # Publish to site/<variant>/
