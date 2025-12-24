@@ -53,9 +53,10 @@ def run_command(
 def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -> Path:
     """
     Deterministic Tectonic PDF build suitable for CI.
-    - Explicit bundle selection
-    - Explicit bundle cache
-    - Explicit TEXINPUTS for custom styles
+
+    - Uses explicit bundle
+    - Uses environment-based bundle cache (compatible with all versions)
+    - Sets TEXINPUTS for custom styles
     """
     pdf_filename = "resume.pdf"
     bundle_cache = os.path.expanduser("~/.cache/Tectonic")
@@ -70,14 +71,13 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -
             "--keep-logs",
             "--bundle",
             "latest",
-            "--bundle-cache",
-            bundle_cache,
             tex_filename,
         ],
         working_directory=build_dir,
         env={
             **os.environ,
             "TEXINPUTS": f"{build_dir}/engine/styles:",
+            "TECTONIC_BUNDLE_CACHE": bundle_cache,
         },
     )
 
