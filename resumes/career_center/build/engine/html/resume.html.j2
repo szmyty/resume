@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ config.name }} - Resume</title>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; max-width: 800px; margin: 0 auto; padding: 48px 56px; color: #111; line-height: 1.35; }
+    h1 { text-align: center; font-size: 28px; margin: 0; }
+    .contact { text-align: center; margin-top: 10px; margin-bottom: 18px; }
+    h2 { font-size: 16px; font-weight: bold; margin-top: 18px; margin-bottom: 6px; }
+    .role { margin-top: 10px; }
+    .role-title { font-weight: bold; }
+    .role-meta { font-weight: normal; }
+    p { margin: 6px 0; text-align: justify; }
+    ul { margin: 6px 0 10px 22px; }
+    li { margin: 4px 0; }
+    .tech { margin-top: 6px; }
+    .section-rule { border: none; border-top: 1px solid #999; margin: 14px 0; }
+    a { color: #111; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>{{ config.name }}</h1>
+  <div class="contact">
+    {{ config.contact.address }}<br>
+    {{ config.contact.phone }}<br>
+    <a href="mailto:{{ config.contact.email }}">{{ config.contact.email }}</a><br>
+    <a href="https://{{ config.contact.github }}">{{ config.contact.github }}</a>
+  </div>
+
+  <h2>Mission Statement</h2>
+  <p>{{ config.mission }}</p>
+
+  <h2>Work Experience</h2>
+  {% for role in config.experience %}
+    <div class="role">
+      <div class="role-title">
+        {{ role.company }}, {{ role.location }} – {{ role.title }}
+        <span class="role-meta">{{ role.dates }}</span>
+      </div>
+      <p>{{ role.summary }}</p>
+      <div><strong>Highlights included:</strong></div>
+      <ul>
+        {% for bullet in role.highlights %}
+          <li>{{ bullet }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+
+  <h2>Education</h2>
+  {% for edu in config.education %}
+    <div class="role">
+      <div class="role-title">
+        {{ edu.school }} – {{ edu.degree }} <span class="role-meta">{{ edu.dates }}</span>
+      </div>
+      {% if edu.details %}
+        <ul>
+          {% for bullet in edu.details %}
+            <li>{{ bullet }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <h2>Interests</h2>
+  <p>{{ config.interests }}</p>
+
+</body>
+</html>

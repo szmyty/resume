@@ -1,0 +1,14 @@
+\section*{Education}
+
+{% for edu in config.education %}
+\subsection*{ {{ edu.school }} — {{ edu.degree }} \hfill {{ edu.dates }} }
+
+{% if edu.details %}
+\begin{itemize}[leftmargin=1.2em]
+{% for bullet in edu.details %}
+  \item {{ bullet }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+
+{% endfor %}
