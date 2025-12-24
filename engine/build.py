@@ -95,6 +95,11 @@ def build_variant(variant_directory: Path) -> None:
 
         # Copy engine into build dir (so LaTeX can \usepackage{engine/...})
         shutil.copytree(ENGINE_DIR, build_dir / "engine", dirs_exist_ok=True)
+        
+        # Copy style files to build root so LaTeX can find them
+        styles_src = ENGINE_DIR / "styles"
+        for sty_file in styles_src.glob("*.sty"):
+            shutil.copy2(sty_file, build_dir / sty_file.name)
 
         context = {"config": config}
 
