@@ -123,18 +123,18 @@ def build_variant(variant_directory: Path) -> None:
         shutil.copy2(pdf_path, output_dir / "resume.pdf")
         
         print(f"  → Publishing to site/{variant_name}/...")
+        # Publish to site/<variant>/
+        variant_site_dir = SITE_DIR / variant_name
+        ensure_directory_exists(variant_site_dir)
+
+        shutil.copy2(output_dir / "resume.pdf", variant_site_dir / "resume.pdf")
+        shutil.copy2(output_dir / "resume.html", variant_site_dir / "index.html")
+        
+        print(f"  ✓ Variant '{variant_name}' built successfully")
     except Exception as e:
         print(f"\n✗ ERROR building variant '{variant_name}':")
         print(f"  {type(e).__name__}: {e}")
         raise RuntimeError(f"Failed to build variant '{variant_name}'") from e
-
-    # Publish to site/<variant>/
-    variant_name = normalize_variant_name(variant_directory)
-    variant_site_dir = SITE_DIR / variant_name
-    ensure_directory_exists(variant_site_dir)
-
-    shutil.copy2(output_dir / "resume.pdf", variant_site_dir / "resume.pdf")
-    shutil.copy2(output_dir / "resume.html", variant_site_dir / "index.html")
 
 def write_site_index(variant_names: list[str]) -> None:
     ensure_directory_exists(SITE_DIR)
