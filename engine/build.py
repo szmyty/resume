@@ -55,13 +55,21 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -
     Deterministic Tectonic PDF build suitable for CI.
 
     - Uses explicit bundle
-    - Uses environment-based bundle cache (compatible with all versions)
-    - Sets TEXINPUTS for custom styles
+    - Uses environment-based bundle cache
+    - Uses absolute path to input .tex file (avoids CI cwd issues)
     """
     pdf_filename = "resume.pdf"
-    bundle_cache = os.path.expanduser("~/.cache/Tectonic")
+    bundle_cache = os.environ.get(
+        "TECTONIC_BUNDLE_CACHE",
+        os.path.expanduser("~/.cache/Tectonic"),
+    )
 
     ensure_directory_exists(Path(bundle_cache))
+
+    tex_path = (build_dir / tex_filename).resolve()
+
+    if not tex_path.exists():
+        raise RuntimeError(f"Tectonic input file not found: {tex_path}")
 
     run_command(
         [
@@ -71,7 +79,7 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -
             "--keep-logs",
             "--bundle",
             "latest",
-            tex_filename,
+            str(tex_path),
         ],
         working_directory=build_dir,
         env={
@@ -86,6 +94,7 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -
         raise RuntimeError("PDF build succeeded but resume.pdf was not found.")
 
     return pdf_path
+
 
 def normalize_variant_name(variant_directory: Path) -> str:
     return variant_directory.name
