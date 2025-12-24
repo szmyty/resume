@@ -23,8 +23,12 @@ def ensure_directory_exists(directory_path: Path) -> None:
     directory_path.mkdir(parents=True, exist_ok=True)
 
 def render_template(template_path: str, output_path: Path, context: dict) -> None:
-    template = JINJA_ENV.get_template(template_path)
-    output_path.write_text(template.render(**context), encoding="utf-8")
+    try:
+        template = JINJA_ENV.get_template(template_path)
+        rendered_content = template.render(**context)
+        output_path.write_text(rendered_content, encoding="utf-8")
+    except Exception as e:
+        raise RuntimeError(f"Failed to render template '{template_path}' to '{output_path}': {e}") from e
 
 def run_command(command: list[str], working_directory: Path | None = None) -> None:
     result = subprocess.run(
@@ -64,58 +68,73 @@ def normalize_variant_name(variant_directory: Path) -> str:
     return variant_directory.name
 
 def build_variant(variant_directory: Path) -> None:
+    variant_name = normalize_variant_name(variant_directory)
+    print(f"\n{'='*60}")
+    print(f"Building variant: {variant_name}")
+    print(f"{'='*60}")
+    
     config_path = variant_directory / "resume.yaml"
     if not config_path.exists():
+        print(f"⚠ Skipping {variant_name}: no resume.yaml found")
         return
 
-    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    if "style" not in config:
-        config["style"] = {"base": "default", "override": None}
+    try:
+        config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        if "style" not in config:
+            config["style"] = {"base": "default", "override": None}
 
-    build_dir = variant_directory / "build"
-    output_dir = variant_directory / "output"
-    ensure_directory_exists(build_dir)
-    ensure_directory_exists(output_dir)
+        build_dir = variant_directory / "build"
+        output_dir = variant_directory / "output"
+        ensure_directory_exists(build_dir)
+        ensure_directory_exists(output_dir)
 
-    # Render LaTeX sections
-    ensure_directory_exists(build_dir / "engine/latex/sections")
-    ensure_directory_exists(build_dir / "engine/latex/styles")
-    ensure_directory_exists(build_dir / "engine/html")
+        # Render LaTeX sections
+        ensure_directory_exists(build_dir / "engine/latex/sections")
+        ensure_directory_exists(build_dir / "engine/latex/styles")
+        ensure_directory_exists(build_dir / "engine/html")
 
-    # Copy engine into build dir (so LaTeX can \usepackage{engine/...})
-    shutil.copytree(ENGINE_DIR, build_dir / "engine", dirs_exist_ok=True)
+        # Copy engine into build dir (so LaTeX can \usepackage{engine/...})
+        shutil.copytree(ENGINE_DIR, build_dir / "engine", dirs_exist_ok=True)
 
-    context = {"config": config}
+        context = {"config": config}
 
-    render_template("engine/latex/resume.tex.j2", build_dir / "resume.tex", context)
-    render_template("engine/latex/sections/header.tex.j2", build_dir / "engine/latex/sections/header.tex", context)
-    render_template("engine/latex/sections/mission.tex.j2", build_dir / "engine/latex/sections/mission.tex", context)
-    render_template("engine/latex/sections/experience.tex.j2", build_dir / "engine/latex/sections/experience.tex", context)
-    render_template("engine/latex/sections/education.tex.j2", build_dir / "engine/latex/sections/education.tex", context)
-    render_template("engine/latex/sections/interests.tex.j2", build_dir / "engine/latex/sections/interests.tex", context)
+        print(f"  → Rendering templates...")
+        render_template("engine/latex/resume.tex.j2", build_dir / "resume.tex", context)
+        render_template("engine/latex/sections/header.tex.j2", build_dir / "engine/latex/sections/header.tex", context)
+        render_template("engine/latex/sections/mission.tex.j2", build_dir / "engine/latex/sections/mission.tex", context)
+        render_template("engine/latex/sections/experience.tex.j2", build_dir / "engine/latex/sections/experience.tex", context)
+        render_template("engine/latex/sections/education.tex.j2", build_dir / "engine/latex/sections/education.tex", context)
+        render_template("engine/latex/sections/interests.tex.j2", build_dir / "engine/latex/sections/interests.tex", context)
 
-    # Render HTML
-    rendered_html_path = output_dir / "resume.html"
-    render_template("engine/html/resume.html.j2", rendered_html_path, context)
+        # Render HTML
+        rendered_html_path = output_dir / "resume.html"
+        render_template("engine/html/resume.html.j2", rendered_html_path, context)
 
-    # Render Markdown (simple canonical output)
-    rendered_md_path = output_dir / "resume.md"
-    rendered_md_path.write_text(
-        json.dumps(config, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+        # Render Markdown (simple canonical output)
+        rendered_md_path = output_dir / "resume.md"
+        rendered_md_path.write_text(
+            json.dumps(config, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
 
-    # Build PDF from LaTeX using tectonic docker
-    pdf_path = build_pdf_with_tectonic(build_dir, "resume.tex")
-    shutil.copy2(pdf_path, output_dir / "resume.pdf")
+        print(f"  → Building PDF with Tectonic...")
+        # Build PDF from LaTeX using tectonic docker
+        pdf_path = build_pdf_with_tectonic(build_dir, "resume.tex")
+        shutil.copy2(pdf_path, output_dir / "resume.pdf")
+        
+        print(f"  → Publishing to site/{variant_name}/...")
+        # Publish to site/<variant>/
+        variant_site_dir = SITE_DIR / variant_name
+        ensure_directory_exists(variant_site_dir)
 
-    # Publish to site/<variant>/
-    variant_name = normalize_variant_name(variant_directory)
-    variant_site_dir = SITE_DIR / variant_name
-    ensure_directory_exists(variant_site_dir)
-
-    shutil.copy2(output_dir / "resume.pdf", variant_site_dir / "resume.pdf")
-    shutil.copy2(output_dir / "resume.html", variant_site_dir / "index.html")
+        shutil.copy2(output_dir / "resume.pdf", variant_site_dir / "resume.pdf")
+        shutil.copy2(output_dir / "resume.html", variant_site_dir / "index.html")
+        
+        print(f"  ✓ Variant '{variant_name}' built successfully")
+    except Exception as e:
+        print(f"\n✗ ERROR building variant '{variant_name}':")
+        print(f"  {type(e).__name__}: {e}")
+        raise RuntimeError(f"Failed to build variant '{variant_name}'") from e
 
 def write_site_index(variant_names: list[str]) -> None:
     ensure_directory_exists(SITE_DIR)
@@ -146,6 +165,10 @@ def write_site_index(variant_names: list[str]) -> None:
     (SITE_DIR / "index.html").write_text(index_html, encoding="utf-8")
 
 def main() -> None:
+    print("\n" + "="*60)
+    print("Starting resume build pipeline")
+    print("="*60)
+    
     ensure_directory_exists(SITE_DIR)
     variant_names: list[str] = []
 
@@ -154,7 +177,15 @@ def main() -> None:
           build_variant(variant_dir)
           variant_names.append(variant_dir.name)
 
+    print(f"\n{'='*60}")
+    print("Generating site index...")
+    print(f"{'='*60}")
     write_site_index(variant_names)
+    
+    print(f"\n✓ Build complete! Generated {len(variant_names)} variant(s):")
+    for name in sorted(variant_names):
+        print(f"  - {name}")
+    print()
 
 if __name__ == "__main__":
     main()

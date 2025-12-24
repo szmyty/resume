@@ -1,0 +1,27 @@
+# Build artifacts
+resumes/*/build/
+resumes/*/output/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Site output (generated, but we want to commit this for GitHub Pages)
+# site/
