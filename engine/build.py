@@ -98,8 +98,9 @@ def build_variant(variant_directory: Path) -> None:
         
         # Copy style files to build root so LaTeX can find them
         styles_src = ENGINE_DIR / "styles"
-        for sty_file in styles_src.glob("*.sty"):
-            shutil.copy2(sty_file, build_dir / sty_file.name)
+        if styles_src.exists() and styles_src.is_dir():
+            for sty_file in styles_src.glob("*.sty"):
+                shutil.copy2(sty_file, build_dir / sty_file.name)
 
         context = {"config": config}
 
