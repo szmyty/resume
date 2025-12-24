@@ -48,6 +48,8 @@ jobs:
           key: tectonic-bundles-v1
 
       - name: Build resume site
+        env:
+          TECTONIC_BUNDLE_CACHE: ~/.cache/Tectonic
         run: |
           python engine/build.py
 
