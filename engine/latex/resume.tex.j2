@@ -1,0 +1,19 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+
+\usepackage{engine/latex/styles/{{ config.style.base }}}
+{% if config.style.override %}
+\usepackage{engine/latex/styles/{{ config.style.override }}}
+{% endif %}
+
+\begin{document}
+
+\input{engine/latex/sections/header.tex}
+\input{engine/latex/sections/mission.tex}
+\input{engine/latex/sections/experience.tex}
+\input{engine/latex/sections/education.tex}
+\input{engine/latex/sections/interests.tex}
+
+\end{document}
