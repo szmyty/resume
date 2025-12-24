@@ -3,9 +3,9 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
 
-\usepackage{engine/latex/styles/{{ config.style.base }}}
+\usepackage{{{ config.style.base }}}
 {% if config.style.override %}
-\usepackage{engine/latex/styles/{{ config.style.override }}}
+\usepackage{{{ config.style.override }}}
 {% endif %}
 
 \begin{document}
