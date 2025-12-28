@@ -126,6 +126,15 @@ def build_variant(variant_directory: Path) -> None:
 
         context = {"config": config}
 
+        print("  → Validating configuration...")
+        style_base = config.get("style", {}).get("base", "default")
+        style_file = ENGINE_DIR / "styles" / f"{style_base}.sty"
+        if not style_file.exists():
+            raise RuntimeError(
+                f"Style file not found: {style_file}\n"
+                f"  Available styles: {', '.join([f.stem for f in (ENGINE_DIR / 'styles').glob('*.sty')])}"
+            )
+
         print("  → Rendering templates...")
         render_template("engine/latex/resume.tex.j2", build_dir / "resume.tex", context)
         render_template("engine/latex/sections/header.tex.j2", build_dir / "engine/latex/sections/header.tex", context)
