@@ -14,6 +14,9 @@ ENGINE_DIR = REPO_ROOT / "engine"
 RESUMES_DIR = REPO_ROOT / "resumes"
 SITE_DIR = REPO_ROOT / "site"
 
+# Required fields for resume configuration validation
+REQUIRED_CONFIG_FIELDS = ["name", "contact", "experience", "education"]
+
 JINJA_ENV = Environment(
     loader=FileSystemLoader(str(REPO_ROOT)),
     autoescape=False,
@@ -163,8 +166,7 @@ def validate_resume_config(config: dict, variant_name: str, config_path: Path) -
     Raises:
         RuntimeError: If validation fails
     """
-    required_fields = ["name", "contact", "experience", "education"]
-    missing_fields = [field for field in required_fields if field not in config]
+    missing_fields = [field for field in REQUIRED_CONFIG_FIELDS if field not in config]
     
     if missing_fields:
         raise RuntimeError(
@@ -252,7 +254,7 @@ def build_variant(variant_directory: Path) -> None:
         print("  → Rendering HTML...")
         render_template("engine/html/resume.html.j2", output_dir / "resume.html", context, variant_name)
 
-        print("  → Rendering Markdown...")
+        print("  → Writing configuration as JSON...")
         (output_dir / "resume.md").write_text(
             json.dumps(config, indent=2, ensure_ascii=False),
             encoding="utf-8",
