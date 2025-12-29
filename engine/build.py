@@ -128,9 +128,9 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
         working_directory=build_dir,
         env={
             **os.environ,
-            # Allow LaTeX to find \input{engine/...} for section files
-            # Style files are in build_dir root, so current dir (.) is sufficient
-            "TEXINPUTS": ".:./engine/latex/sections::",
+            # Current directory includes style files and serves as base for \input{engine/...}
+            # The '::' suffix preserves default TeX search paths
+            "TEXINPUTS": ".::",
             "TECTONIC_BUNDLE_CACHE": bundle_cache,
         },
         error_context=error_context,
