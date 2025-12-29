@@ -128,7 +128,8 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
         working_directory=build_dir,
         env={
             **os.environ,
-            "TEXINPUTS": f"{build_dir}/engine/styles:",
+            # Allow LaTeX to find \input{engine/...} AND styles
+            "TEXINPUTS": f"{build_dir}:{build_dir}/engine/styles:",
             "TECTONIC_BUNDLE_CACHE": bundle_cache,
         },
         error_context=error_context,
