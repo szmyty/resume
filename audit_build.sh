@@ -27,20 +27,15 @@ collect_latex_logs() {
     echo "========================================" >> "${audit_file}"
     echo "" >> "${audit_file}"
     
-    # Helper function to append a log file
-    append_log_file() {
-        local log_file="$1"
+    # Find and append all LaTeX log files
+    # Use process substitution to avoid subshell issues
+    while IFS= read -r log_file; do
         if [ -f "${log_file}" ]; then
             echo "===== ${log_file} =====" >> "${audit_file}"
             cat "${log_file}" >> "${audit_file}"
             echo "" >> "${audit_file}"
         fi
-    }
-    
-    # Find and append all LaTeX log files
-    find resumes/*/build -name "*.log" 2>/dev/null | while read -r log_file; do
-        append_log_file "${log_file}"
-    done
+    done < <(find resumes/*/build -name "*.log" 2>/dev/null)
 }
 
 # Function to analyze build output and generate report
