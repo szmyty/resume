@@ -63,15 +63,6 @@ def run_command(
     env: dict | None = None,
     error_context: str = "",
 ) -> None:
-    """
-    Run a shell command and raise an error with detailed output if it fails.
-    
-    Args:
-        command: Command and arguments to run
-        working_directory: Directory to run the command in
-        env: Environment variables for the command
-        error_context: Additional context to include in error messages
-    """
     result = subprocess.run(
         command,
         cwd=str(working_directory) if working_directory else None,
@@ -80,12 +71,27 @@ def run_command(
         stderr=subprocess.STDOUT,
         text=True,
     )
+
     if result.returncode != 0:
-        error_msg = f"Command failed with exit code {result.returncode}"
+        logs = []
+
+        if working_directory:
+            for log_name in ("resume.log", "texput.log"):
+                log_path = Path(working_directory) / log_name
+                if log_path.exists():
+                    logs.append(f"\n===== {log_name} =====\n{log_path.read_text()}")
+
+        error_msg = "Command failed"
         if error_context:
-            error_msg = f"{error_context}\n{error_msg}"
+            error_msg = error_context
+
         error_msg += f"\nCommand: {' '.join(command)}"
+        error_msg += f"\nExit code: {result.returncode}"
         error_msg += f"\nOutput:\n{result.stdout}"
+
+        if logs:
+            error_msg += "\n\nLaTeX logs:\n" + "\n".join(logs)
+
         raise RuntimeError(error_msg)
 
 def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", variant_name: str = "") -> Path:
