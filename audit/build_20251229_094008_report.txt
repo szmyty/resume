@@ -1,0 +1,39 @@
+========================================
+BUILD AUDIT DIAGNOSTIC REPORT
+========================================
+Generated: 2025-12-29 09:40:08 UTC
+Timestamp: 20251229_094008
+Build Command: python engine/build.py
+Audit File: audit/build_20251229_094008.txt
+
+VARIANTS ATTEMPTED:
+- career_center
+
+BUILD PHASE PROGRESSION:
+✓ Configuration loading
+✓ Configuration validation
+✓ Template rendering
+✓ LaTeX compilation started
+
+FAILURE ANALYSIS:
+Error Type: Build Error Detected
+
+Error Messages:
+✗ ERROR building variant 'career_center':
+  FileNotFoundError: [Errno 2] No such file or directory: 'tectonic'
+Traceback (most recent call last):
+  File "/home/runner/work/resume/resume/engine/build.py", line 355, in <module>
+    main()
+  File "/home/runner/work/resume/resume/engine/build.py", line 340, in main
+
+Failure Category: Missing File or Command
+
+RECOMMENDATIONS:
+1. Verify all required files and commands are present
+2. Check file paths and permissions
+
+LOG SECTIONS TO REVIEW:
+No LaTeX log files were found.
+This may indicate the build failed before LaTeX compilation.
+
+Full build output is available in: audit/build_20251229_094008.txt
