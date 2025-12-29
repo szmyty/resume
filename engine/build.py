@@ -92,14 +92,9 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
     """
     Deterministic Tectonic PDF build suitable for CI.
 
-    - Uses explicit bundle
-    - Uses environment-based bundle cache
-    - Uses absolute path to input .tex file (avoids CI cwd issues)
-    
-    Args:
-        build_dir: Directory containing the .tex file
-        tex_filename: Name of the .tex file to compile
-        variant_name: Name of the resume variant being built
+    IMPORTANT:
+    - Tectonic must be invoked with a RELATIVE input path when using --bundle.
+    - working_directory must be the directory containing the .tex file.
     """
     pdf_filename = "resume.pdf"
     bundle_cache = os.environ.get(
@@ -109,18 +104,16 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
 
     ensure_directory_exists(Path(bundle_cache))
 
-    tex_path = (build_dir / tex_filename).resolve()
-
+    tex_path = build_dir / tex_filename
     if not tex_path.exists():
-        error_msg = f"LaTeX source file not found: {tex_path}"
-        if variant_name:
-            error_msg += f" (variant: {variant_name})"
-        raise RuntimeError(error_msg)
+        raise RuntimeError(
+            f"LaTeX source file not found: {tex_path}"
+            + (f" (variant: {variant_name})" if variant_name else "")
+        )
 
     error_context = f"LaTeX compilation failed for '{tex_filename}'"
     if variant_name:
         error_context += f" (variant: {variant_name})"
-    error_context += f"\nTeX file: {tex_path}"
 
     run_command(
         [
@@ -130,7 +123,7 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
             "--keep-logs",
             "--bundle",
             "latest",
-            str(tex_path),
+            tex_filename,  # ← RELATIVE PATH (this is the fix)
         ],
         working_directory=build_dir,
         env={
@@ -143,13 +136,12 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
 
     pdf_path = build_dir / pdf_filename
     if not pdf_path.exists():
-        error_msg = "PDF build succeeded but resume.pdf was not found"
-        if variant_name:
-            error_msg += f" (variant: {variant_name})"
-        raise RuntimeError(error_msg)
+        raise RuntimeError(
+            "PDF build succeeded but resume.pdf was not found"
+            + (f" (variant: {variant_name})" if variant_name else "")
+        )
 
     return pdf_path
-
 
 def normalize_variant_name(variant_directory: Path) -> str:
     return variant_directory.name
