@@ -89,13 +89,14 @@ def run_command(
         raise RuntimeError(error_msg)
 
 def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", variant_name: str = "") -> Path:
-    """
+    r"""
     Build PDF from LaTeX source using Tectonic.
 
     IMPORTANT:
     - Tectonic must be invoked with a RELATIVE input path.
     - working_directory must be the directory containing the .tex file.
-    - TEXINPUTS must use relative paths since cwd is build_dir.
+    - Style files (.sty) are copied to build_dir for direct resolution.
+    - TEXINPUTS includes engine subdirectories for \input{engine/...} statements.
     """
     pdf_filename = "resume.pdf"
     bundle_cache = os.environ.get(
@@ -127,9 +128,9 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
         working_directory=build_dir,
         env={
             **os.environ,
-            # Allow LaTeX to find \input{engine/...} AND styles
-            # Use relative paths since working_directory is build_dir
-            "TEXINPUTS": ".:./engine/styles::",
+            # Allow LaTeX to find \input{engine/...} for section files
+            # Style files are in build_dir root, so current dir (.) is sufficient
+            "TEXINPUTS": ".:./engine/latex/sections::",
             "TECTONIC_BUNDLE_CACHE": bundle_cache,
         },
         error_context=error_context,
@@ -226,6 +227,12 @@ def build_variant(variant_directory: Path) -> None:
 
         # Copy engine into build dir
         shutil.copytree(ENGINE_DIR, build_dir / "engine", dirs_exist_ok=True)
+
+        # Copy style files to build root for LaTeX to find them
+        # This ensures \usepackage{default} works without complex TEXINPUTS configuration
+        styles_source = ENGINE_DIR / "styles"
+        for style_file in styles_source.glob("*.sty"):
+            shutil.copy2(style_file, build_dir / style_file.name)
 
         context = {"config": config}
 
