@@ -24,7 +24,7 @@ experience:
       engineering, visualization, and automation technologies.
     highlights:
       - "Led development of a mobile tracking system for USAID to monitor commodities in low-connectivity environments; successfully field tested the pilot in Texas for shipments to Africa, enabling reliable end-to-end supply chain visibility."
-      - "Developed an Android prototype for humanitarian deconfliction notifications, enabling GIS visualization of no-strike zones and encrypted submissions via blockchain-based audit trails; the proof of concept represented one of the first Ethereum transactions at MIT Lincoln Laboratory and received approximately $1M in follow-on funding."
+      - "Designed and built a mobile prototype for humanitarian deconfliction notifications, enabling analysts to visualize no-strike zones and submit secure, auditable reports; the prototype contributed to a larger program that later received approximately $1M in follow-on funding."
       - "Built a counter–human-trafficking investigation tool for law enforcement to triage large volumes of digital evidence and reduce time to actionable investigative leads."
       - "Created Python-based data triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to improve document indexing, semantic tagging, and content discovery across structured and unstructured datasets."
       - "Designed and implemented REST and GraphQL APIs backed by PostgreSQL (PostGIS) and TileDB to support scalable geospatial queries."
