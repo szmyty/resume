@@ -231,7 +231,20 @@ def build_variant(variant_directory: Path) -> None:
         # Copy style files to build root for LaTeX to find them
         # This ensures \usepackage{default} works without complex TEXINPUTS configuration
         styles_source = ENGINE_DIR / "styles"
-        for style_file in styles_source.glob("*.sty"):
+        if not styles_source.exists():
+            raise RuntimeError(
+                f"Style directory not found: {styles_source}\n"
+                f"This is a repository structure issue."
+            )
+        
+        style_files = list(styles_source.glob("*.sty"))
+        if not style_files:
+            raise RuntimeError(
+                f"No .sty files found in {styles_source}\n"
+                f"This is a repository structure issue."
+            )
+        
+        for style_file in style_files:
             shutil.copy2(style_file, build_dir / style_file.name)
 
         context = {"config": config}
