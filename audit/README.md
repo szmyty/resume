@@ -2,9 +2,14 @@
 
 This directory contains build diagnostic files generated when audit mode is enabled.
 
+⚠️ **IMPORTANT: This is a temporary debugging feature**  
+Audit mode grants the workflow write access to commit diagnostic files. **Disable audit mode after debugging** to restore read-only permissions and remove collected audit files.
+
 ## Overview
 
 The build audit mode captures comprehensive diagnostics from the resume build pipeline to help debug failures that occur in CI environments where LaTeX errors may not be fully visible.
+
+**Security Note:** When enabled, the workflow has write permissions to commit audit files. This is required for the feature to work, but should only be enabled temporarily during debugging.
 
 ## How to Enable Audit Mode
 

@@ -144,7 +144,7 @@ EOF
     fi
     echo "" >> "${report_file}"
     
-    # Check for LaTeX-specific errors in logs
+    # Point to relevant log sections
     echo "LOG SECTIONS TO REVIEW:" >> "${report_file}"
     
     # Check if any log files were collected

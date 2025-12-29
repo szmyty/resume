@@ -2,6 +2,9 @@
 
 This guide explains how to enable the build audit mode in GitHub Actions to capture full diagnostics when the resume build fails.
 
+⚠️ **IMPORTANT: Temporary Debugging Feature**  
+Audit mode is designed for short-term debugging only. It grants the workflow write permissions to commit diagnostic files. **Always disable after debugging** and clean up audit files.
+
 ## Quick Start
 
 1. **Add the BUILD_AUDIT variable to your repository:**
