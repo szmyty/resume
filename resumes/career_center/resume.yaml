@@ -23,12 +23,12 @@ experience:
       Developed full-stack geospatial and decision-support systems for research sponsors, integrating modern data
       engineering, visualization, and automation technologies.
     highlights:
-      - "Led development of a mobile tracking system for USAID to monitor commodities in low-connectivity environments; successfully field tested the pilot in Texas for shipments to Africa, enabling reliable end-to-end supply chain visibility."
-      - "Designed and built a mobile prototype for humanitarian deconfliction notifications, enabling analysts to visualize no-strike zones and submit secure, auditable reports; the prototype contributed to a larger program that later received approximately $1M in follow-on funding."
-      - "Designed and built a counter–human-trafficking investigation tool for law enforcement, enabling investigators to triage large volumes of digital evidence and reduce time to actionable leads."
-      - "Designed and built an externally accessible, map-based decision support tool that allowed sponsors and analysts to visualize and contextualize datasets from a shared data hub, supporting higher-level awareness of complex information such as crop calendars and regional trends."
-      - "Supported NATO disaster-response exercises by developing and extending field-ready mobile capabilities, including map-based hazard and area-of-interest features and real-time location reporting, ensuring reliable situational awareness for teams operating across multiple countries."
-      - "Proactively explored reproducible development environments to reduce friction in fast-paced research workflows, aiming to make it easier to switch between prototype projects and onboard into new problem spaces with minimal setup overhead."
+      - "Led the creation of a mobile tracking system for USAID to monitor commodities in low-connectivity environments; successfully field tested the pilot in Texas for shipments to Africa, enabling reliable end-to-end supply chain visibility."
+      - "Delivered a mobile prototype for humanitarian deconfliction notifications that enabled analysts to visualize no-strike zones and submit secure, auditable reports; the prototype contributed to a larger program that later received approximately $1M in follow-on funding."
+      - "Built a counter–human-trafficking investigation tool for law enforcement that enabled investigators to triage large volumes of digital evidence and reduce time to actionable leads."
+      - "Developed an externally accessible, map-based decision support tool that allowed sponsors and analysts to visualize and contextualize datasets from a shared data hub, supporting higher-level awareness of complex information such as crop calendars and regional trends."
+      - "Contributed to NATO disaster-response exercises by extending field-ready mobile capabilities, including map-based hazard and area-of-interest features and real-time location reporting, ensuring reliable situational awareness across multinational operations."
+      - "Proactively explored reproducible development environments to reduce friction in fast-paced research workflows, with the goal of enabling faster context switching between prototype projects and smoother onboarding into new problem spaces."
 
   - company: "Incompris LLC"
     location: "Independent"
