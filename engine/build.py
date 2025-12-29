@@ -90,11 +90,12 @@ def run_command(
 
 def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", variant_name: str = "") -> Path:
     """
-    Deterministic Tectonic PDF build suitable for CI.
+    Build PDF from LaTeX source using Tectonic.
 
     IMPORTANT:
-    - Tectonic must be invoked with a RELATIVE input path when using --bundle.
+    - Tectonic must be invoked with a RELATIVE input path.
     - working_directory must be the directory containing the .tex file.
+    - TEXINPUTS must use relative paths since cwd is build_dir.
     """
     pdf_filename = "resume.pdf"
     bundle_cache = os.environ.get(
@@ -121,15 +122,14 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
             "--print",
             "--synctex",
             "--keep-logs",
-            "--bundle",
-            "latest",
-            tex_filename,  # ← RELATIVE PATH (this is the fix)
+            tex_filename,  # ← RELATIVE PATH
         ],
         working_directory=build_dir,
         env={
             **os.environ,
             # Allow LaTeX to find \input{engine/...} AND styles
-            "TEXINPUTS": f"{build_dir}:{build_dir}/engine/styles:",
+            # Use relative paths since working_directory is build_dir
+            "TEXINPUTS": ".:./engine/styles::",
             "TECTONIC_BUNDLE_CACHE": bundle_cache,
         },
         error_context=error_context,
