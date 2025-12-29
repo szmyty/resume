@@ -1,0 +1,74 @@
+========================================
+BUILD AUDIT MODE ENABLED
+========================================
+Timestamp: 20251229_093440
+Audit file: audit/build_20251229_093440.txt
+Report file: audit/build_20251229_093440_report.txt
+========================================
+
+Running build with full diagnostics...
+
+
+============================================================
+Starting resume build pipeline
+============================================================
+
+============================================================
+Building variant: career_center
+============================================================
+  → Loading configuration from resume.yaml...
+  → Validating configuration...
+  → Rendering Jinja templates...
+     - resume.tex
+     - header.tex
+     - mission.tex
+     - experience.tex
+     - education.tex
+     - interests.tex
+  → Rendering HTML...
+  → Writing configuration as JSON...
+  → Compiling LaTeX to PDF with Tectonic...
+
+✗ ERROR building variant 'career_center':
+  FileNotFoundError: [Errno 2] No such file or directory: 'tectonic'
+Traceback (most recent call last):
+  File "/home/runner/work/resume/resume/engine/build.py", line 355, in <module>
+    main()
+  File "/home/runner/work/resume/resume/engine/build.py", line 340, in main
+    build_variant(variant_dir)
+  File "/home/runner/work/resume/resume/engine/build.py", line 283, in build_variant
+    pdf_path = build_pdf_with_tectonic(build_dir, "resume.tex", variant_name)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/resume/resume/engine/build.py", line 126, in build_pdf_with_tectonic
+    run_command(
+  File "/home/runner/work/resume/resume/engine/build.py", line 66, in run_command
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'tectonic'
+
+========================================
+BUILD COMPLETED WITH EXIT CODE: 1
+========================================
+
+Collecting LaTeX log files...
+
+========================================
+LATEX LOG FILES
+========================================
+
+
+Generating diagnostic report...
+
+========================================
+AUDIT COMPLETE
+========================================
+Audit file: audit/build_20251229_093440.txt
+Report file: audit/build_20251229_093440_report.txt
+
