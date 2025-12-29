@@ -25,11 +25,10 @@ experience:
     highlights:
       - "Led development of a mobile tracking system for USAID to monitor commodities in low-connectivity environments; successfully field tested the pilot in Texas for shipments to Africa, enabling reliable end-to-end supply chain visibility."
       - "Designed and built a mobile prototype for humanitarian deconfliction notifications, enabling analysts to visualize no-strike zones and submit secure, auditable reports; the prototype contributed to a larger program that later received approximately $1M in follow-on funding."
-      - "Built a counter–human-trafficking investigation tool for law enforcement to triage large volumes of digital evidence and reduce time to actionable investigative leads."
-      - "Created Python-based data triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to improve document indexing, semantic tagging, and content discovery across structured and unstructured datasets."
-      - "Designed and implemented REST and GraphQL APIs backed by PostgreSQL (PostGIS) and TileDB to support scalable geospatial queries."
-      - "Architected containerized DevOps infrastructure using Docker, Kubernetes, Pulumi, MinIO, and automated CI/CD pipelines to support reproducible deployments."
-      - "Extended QGroundControl (C++) to integrate custom drone-tracking APIs and provided international technical support and training for deployed systems."
+      - "Designed and built a counter–human-trafficking investigation tool for law enforcement, enabling investigators to triage large volumes of digital evidence and reduce time to actionable leads."
+      - "Designed and built an externally accessible, map-based decision support tool that allowed sponsors and analysts to visualize and contextualize datasets from a shared data hub, supporting higher-level awareness of complex information such as crop calendars and regional trends."
+      - "Supported NATO disaster-response exercises by developing and extending field-ready mobile capabilities, including map-based hazard and area-of-interest features and real-time location reporting, ensuring reliable situational awareness for teams operating across multiple countries."
+      - "Proactively explored reproducible development environments to reduce friction in fast-paced research workflows, aiming to make it easier to switch between prototype projects and onboard into new problem spaces with minimal setup overhead."
 
   - company: "Incompris LLC"
     location: "Independent"
