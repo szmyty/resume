@@ -94,6 +94,25 @@ def run_command(
 
         raise RuntimeError(error_msg)
 
+def resolve_tectonic_executable() -> str:
+    """
+    Resolve the Tectonic executable using shutil.which().
+    
+    Returns:
+        Absolute path to the Tectonic executable.
+        
+    Raises:
+        RuntimeError: If Tectonic is not found on PATH.
+    """
+    tectonic_path = shutil.which("tectonic")
+    if tectonic_path is None:
+        raise RuntimeError(
+            "Tectonic executable not found on PATH.\n"
+            "  Please install Tectonic: https://tectonic-typesetting.github.io/install.html\n"
+            "  Or ensure it is available in your PATH environment variable."
+        )
+    return tectonic_path
+
 def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", variant_name: str = "") -> Path:
     r"""
     Build PDF from LaTeX source using Tectonic.
@@ -104,6 +123,9 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
     - Style files (.sty) are copied to build_dir for direct resolution.
     - TEXINPUTS includes engine subdirectories for \input{engine/...} statements.
     """
+    # Resolve Tectonic executable and fail fast if not found
+    tectonic_executable = resolve_tectonic_executable()
+    
     pdf_filename = "resume.pdf"
     bundle_cache = os.environ.get(
         "TECTONIC_BUNDLE_CACHE",
@@ -125,7 +147,7 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", v
 
     run_command(
         [
-            "tectonic",
+            tectonic_executable,
             "--print",
             "--synctex",
             "--keep-logs",
