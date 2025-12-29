@@ -23,7 +23,7 @@ experience:
       Developed full-stack geospatial and decision-support systems for research sponsors, integrating modern data
       engineering, visualization, and automation technologies.
     highlights:
-      - "Led Android mobile app development for USAID to track commodities using barcode scanning and offline-first synchronization in low-connectivity environments; successfully field tested the pilot in Texas for shipments to Africa, providing end-to-end supply chain visibility."
+      - "Led development of a mobile tracking system for USAID to monitor commodities in low-connectivity environments; successfully field tested the pilot in Texas for shipments to Africa, enabling reliable end-to-end supply chain visibility."
       - "Developed an Android prototype for humanitarian deconfliction notifications, enabling GIS visualization of no-strike zones and encrypted submissions via blockchain-based audit trails; the proof of concept represented one of the first Ethereum transactions at MIT Lincoln Laboratory and received approximately $1M in follow-on funding."
       - "Built a counter–human-trafficking investigation tool for law enforcement to triage large volumes of digital evidence and reduce time to actionable investigative leads."
       - "Created Python-based data triage pipelines using Elasticsearch, Apache Tika, and Stanford CoreNLP to improve document indexing, semantic tagging, and content discovery across structured and unstructured datasets."
