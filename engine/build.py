@@ -7,12 +7,15 @@ import subprocess
 from pathlib import Path
 
 import yaml
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError, TemplateNotFound
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENGINE_DIR = REPO_ROOT / "engine"
 RESUMES_DIR = REPO_ROOT / "resumes"
 SITE_DIR = REPO_ROOT / "site"
+
+# Required fields for resume configuration validation
+REQUIRED_CONFIG_FIELDS = ["name", "contact", "experience", "education"]
 
 JINJA_ENV = Environment(
     loader=FileSystemLoader(str(REPO_ROOT)),
@@ -22,21 +25,53 @@ JINJA_ENV = Environment(
 def ensure_directory_exists(directory_path: Path) -> None:
     directory_path.mkdir(parents=True, exist_ok=True)
 
-def render_template(template_path: str, output_path: Path, context: dict) -> None:
+def render_template(template_path: str, output_path: Path, context: dict, variant_name: str = "") -> None:
+    """
+    Render a Jinja2 template to an output file.
+    
+    Raises detailed error messages for template syntax errors and other rendering issues.
+    """
     try:
         template = JINJA_ENV.get_template(template_path)
         rendered_content = template.render(**context)
         output_path.write_text(rendered_content, encoding="utf-8")
+    except TemplateSyntaxError as e:
+        error_msg = (
+            f"Jinja2 template syntax error in '{template_path}'"
+        )
+        if variant_name:
+            error_msg += f" (variant: {variant_name})"
+        error_msg += f"\n  Line {e.lineno}: {e.message}"
+        if e.filename:
+            error_msg += f"\n  File: {e.filename}"
+        raise RuntimeError(error_msg) from e
+    except TemplateNotFound as e:
+        error_msg = f"Template file not found: '{template_path}'"
+        if variant_name:
+            error_msg += f" (variant: {variant_name})"
+        raise RuntimeError(error_msg) from e
     except Exception as e:
-        raise RuntimeError(
-            f"Failed to render template '{template_path}' → '{output_path}': {e}"
-        ) from e
+        error_msg = f"Failed to render template '{template_path}' → '{output_path}'"
+        if variant_name:
+            error_msg += f" (variant: {variant_name})"
+        error_msg += f"\n  {type(e).__name__}: {e}"
+        raise RuntimeError(error_msg) from e
 
 def run_command(
     command: list[str],
     working_directory: Path | None = None,
     env: dict | None = None,
+    error_context: str = "",
 ) -> None:
+    """
+    Run a shell command and raise an error with detailed output if it fails.
+    
+    Args:
+        command: Command and arguments to run
+        working_directory: Directory to run the command in
+        env: Environment variables for the command
+        error_context: Additional context to include in error messages
+    """
     result = subprocess.run(
         command,
         cwd=str(working_directory) if working_directory else None,
@@ -46,17 +81,25 @@ def run_command(
         text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            f"Command failed ({result.returncode}): {' '.join(command)}\n{result.stdout}"
-        )
+        error_msg = f"Command failed with exit code {result.returncode}"
+        if error_context:
+            error_msg = f"{error_context}\n{error_msg}"
+        error_msg += f"\nCommand: {' '.join(command)}"
+        error_msg += f"\nOutput:\n{result.stdout}"
+        raise RuntimeError(error_msg)
 
-def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -> Path:
+def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex", variant_name: str = "") -> Path:
     """
     Deterministic Tectonic PDF build suitable for CI.
 
     - Uses explicit bundle
     - Uses environment-based bundle cache
     - Uses absolute path to input .tex file (avoids CI cwd issues)
+    
+    Args:
+        build_dir: Directory containing the .tex file
+        tex_filename: Name of the .tex file to compile
+        variant_name: Name of the resume variant being built
     """
     pdf_filename = "resume.pdf"
     bundle_cache = os.environ.get(
@@ -69,7 +112,15 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -
     tex_path = (build_dir / tex_filename).resolve()
 
     if not tex_path.exists():
-        raise RuntimeError(f"Tectonic input file not found: {tex_path}")
+        error_msg = f"LaTeX source file not found: {tex_path}"
+        if variant_name:
+            error_msg += f" (variant: {variant_name})"
+        raise RuntimeError(error_msg)
+
+    error_context = f"LaTeX compilation failed for '{tex_filename}'"
+    if variant_name:
+        error_context += f" (variant: {variant_name})"
+    error_context += f"\nTeX file: {tex_path}"
 
     run_command(
         [
@@ -87,17 +138,63 @@ def build_pdf_with_tectonic(build_dir: Path, tex_filename: str = "resume.tex") -
             "TEXINPUTS": f"{build_dir}/engine/styles:",
             "TECTONIC_BUNDLE_CACHE": bundle_cache,
         },
+        error_context=error_context,
     )
 
     pdf_path = build_dir / pdf_filename
     if not pdf_path.exists():
-        raise RuntimeError("PDF build succeeded but resume.pdf was not found.")
+        error_msg = "PDF build succeeded but resume.pdf was not found"
+        if variant_name:
+            error_msg += f" (variant: {variant_name})"
+        raise RuntimeError(error_msg)
 
     return pdf_path
 
 
 def normalize_variant_name(variant_directory: Path) -> str:
     return variant_directory.name
+
+def validate_resume_config(config: dict, variant_name: str, config_path: Path) -> None:
+    """
+    Validate the resume configuration has required fields.
+    
+    Args:
+        config: The loaded YAML configuration
+        variant_name: Name of the variant being validated
+        config_path: Path to the config file for error messages
+    
+    Raises:
+        RuntimeError: If validation fails
+    """
+    missing_fields = [field for field in REQUIRED_CONFIG_FIELDS if field not in config]
+    
+    if missing_fields:
+        raise RuntimeError(
+            f"Invalid resume configuration for variant '{variant_name}'\n"
+            f"  Config file: {config_path}\n"
+            f"  Missing required fields: {', '.join(missing_fields)}"
+        )
+    
+    # Validate style configuration
+    if "style" in config:
+        style = config["style"]
+        if not isinstance(style, dict):
+            raise RuntimeError(
+                f"Invalid style configuration for variant '{variant_name}'\n"
+                f"  Config file: {config_path}\n"
+                f"  'style' must be a dictionary"
+            )
+        
+        style_base = style.get("base", "default")
+        style_file = ENGINE_DIR / "styles" / f"{style_base}.sty"
+        if not style_file.exists():
+            available_styles = [f.stem for f in (ENGINE_DIR / "styles").glob("*.sty")]
+            raise RuntimeError(
+                f"Style file not found for variant '{variant_name}'\n"
+                f"  Config file: {config_path}\n"
+                f"  Requested style: '{style_base}'\n"
+                f"  Available styles: {', '.join(sorted(available_styles))}"
+            )
 
 def build_variant(variant_directory: Path) -> None:
     variant_name = normalize_variant_name(variant_directory)
@@ -112,8 +209,21 @@ def build_variant(variant_directory: Path) -> None:
         return
 
     try:
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        # Load and validate configuration
+        print(f"  → Loading configuration from {config_path.name}...")
+        try:
+            config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as e:
+            raise RuntimeError(
+                f"YAML parsing error in configuration for variant '{variant_name}'\n"
+                f"  Config file: {config_path}\n"
+                f"  Error: {e}"
+            ) from e
+        
         config.setdefault("style", {"base": "default", "override": None})
+
+        print(f"  → Validating configuration...")
+        validate_resume_config(config, variant_name, config_path)
 
         build_dir = variant_directory / "build"
         output_dir = variant_directory / "output"
@@ -126,34 +236,32 @@ def build_variant(variant_directory: Path) -> None:
 
         context = {"config": config}
 
-        print("  → Validating configuration...")
-        style_base = config.get("style", {}).get("base", "default")
-        style_file = ENGINE_DIR / "styles" / f"{style_base}.sty"
-        if not style_file.exists():
-            raise RuntimeError(
-                f"Style file not found: {style_file}\n"
-                f"  Available styles: {', '.join([f.stem for f in (ENGINE_DIR / 'styles').glob('*.sty')])}"
-            )
-
-        print("  → Rendering templates...")
-        render_template("engine/latex/resume.tex.j2", build_dir / "resume.tex", context)
-        render_template("engine/latex/sections/header.tex.j2", build_dir / "engine/latex/sections/header.tex", context)
-        render_template("engine/latex/sections/mission.tex.j2", build_dir / "engine/latex/sections/mission.tex", context)
-        render_template("engine/latex/sections/experience.tex.j2", build_dir / "engine/latex/sections/experience.tex", context)
-        render_template("engine/latex/sections/education.tex.j2", build_dir / "engine/latex/sections/education.tex", context)
-        render_template("engine/latex/sections/interests.tex.j2", build_dir / "engine/latex/sections/interests.tex", context)
+        # Render Jinja templates
+        print("  → Rendering Jinja templates...")
+        print("     - resume.tex")
+        render_template("engine/latex/resume.tex.j2", build_dir / "resume.tex", context, variant_name)
+        print("     - header.tex")
+        render_template("engine/latex/sections/header.tex.j2", build_dir / "engine/latex/sections/header.tex", context, variant_name)
+        print("     - mission.tex")
+        render_template("engine/latex/sections/mission.tex.j2", build_dir / "engine/latex/sections/mission.tex", context, variant_name)
+        print("     - experience.tex")
+        render_template("engine/latex/sections/experience.tex.j2", build_dir / "engine/latex/sections/experience.tex", context, variant_name)
+        print("     - education.tex")
+        render_template("engine/latex/sections/education.tex.j2", build_dir / "engine/latex/sections/education.tex", context, variant_name)
+        print("     - interests.tex")
+        render_template("engine/latex/sections/interests.tex.j2", build_dir / "engine/latex/sections/interests.tex", context, variant_name)
 
         print("  → Rendering HTML...")
-        render_template("engine/html/resume.html.j2", output_dir / "resume.html", context)
+        render_template("engine/html/resume.html.j2", output_dir / "resume.html", context, variant_name)
 
-        print("  → Rendering Markdown...")
+        print("  → Writing configuration as JSON...")
         (output_dir / "resume.md").write_text(
             json.dumps(config, indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
 
-        print("  → Building PDF with Tectonic...")
-        pdf_path = build_pdf_with_tectonic(build_dir, "resume.tex")
+        print("  → Compiling LaTeX to PDF with Tectonic...")
+        pdf_path = build_pdf_with_tectonic(build_dir, "resume.tex", variant_name)
         shutil.copy2(pdf_path, output_dir / "resume.pdf")
 
         print(f"  → Publishing to site/{variant_name}/...")
