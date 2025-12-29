@@ -27,24 +27,19 @@ collect_latex_logs() {
     echo "========================================" >> "${audit_file}"
     echo "" >> "${audit_file}"
     
-    # Find and append all LaTeX log files
-    find resumes/*/build -name "*.log" 2>/dev/null | while read -r log_file; do
+    # Helper function to append a log file
+    append_log_file() {
+        local log_file="$1"
         if [ -f "${log_file}" ]; then
             echo "===== ${log_file} =====" >> "${audit_file}"
             cat "${log_file}" >> "${audit_file}"
             echo "" >> "${audit_file}"
         fi
-    done
+    }
     
-    # Also check for common LaTeX log files in build directories
-    for log_name in resume.log texput.log; do
-        find resumes/*/build -name "${log_name}" 2>/dev/null | while read -r log_file; do
-            if [ -f "${log_file}" ]; then
-                echo "===== ${log_file} =====" >> "${audit_file}"
-                cat "${log_file}" >> "${audit_file}"
-                echo "" >> "${audit_file}"
-            fi
-        done
+    # Find and append all LaTeX log files
+    find resumes/*/build -name "*.log" 2>/dev/null | while read -r log_file; do
+        append_log_file "${log_file}"
     done
 }
 
@@ -154,9 +149,16 @@ EOF
     fi
     echo "" >> "${report_file}"
     
-    # Point to log sections
+    # Check for LaTeX-specific errors in logs
     echo "LOG SECTIONS TO REVIEW:" >> "${report_file}"
-    if [ -n "$(find resumes/*/build -name '*.log' 2>/dev/null)" ]; then
+    
+    # Check if any log files were collected
+    local has_log_files=false
+    if grep -q "===== .*\.log =====" "${audit_file}" 2>/dev/null; then
+        has_log_files=true
+    fi
+    
+    if [ "${has_log_files}" = "true" ]; then
         echo "LaTeX logs have been appended to the audit file." >> "${report_file}"
         echo "Look for lines starting with '!' which indicate LaTeX errors." >> "${report_file}"
     else
