@@ -95,6 +95,10 @@ Profile YAML files in `profiles/` define the profile name, summary variant, sect
 
 See [`specs/resume.spec.md`](specs/resume.spec.md) for the full architecture specification.
 
+## Governance
+
+See [`specs/governance.md`](specs/governance.md) for repository publication, audit, profile, and artifact governance workflows.
+
 ## License
 
 Apache-2.0

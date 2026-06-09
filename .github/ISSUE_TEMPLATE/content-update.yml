@@ -1,0 +1,42 @@
+name: Content update
+description: Propose updates to resume section content.
+title: "content: "
+labels:
+  - content
+body:
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Target profile
+      options:
+        - ai-infra
+        - platform
+        - research
+        - general
+        - all profiles
+    validations:
+      required: true
+  - type: input
+    id: sections
+    attributes:
+      label: Sections to update
+      description: Comma-separated list (for example, summary, experience).
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_changes
+    attributes:
+      label: Proposed content changes
+      description: Describe the exact text/content updates requested.
+    validations:
+      required: true
+  - type: textarea
+    id: validation_plan
+    attributes:
+      label: Validation plan
+      description: Commands or checks to confirm the update quality.
+      value: |
+        - python scripts/quality_gates.py check-placeholders
+        - python scripts/build.py --profile <profile-id>
+    validations:
+      required: true
