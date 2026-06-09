@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+#
+# profiles/research.yaml — Research profile variant.
+# Defines sections and emphasis for research and academic roles.
+
+profile: research
+label: "Research"
+description: >
+  Targets research, academic, and applied science roles.
+  Emphasizes publications, research contributions, and technical depth.
+
+sections:
+  - header
+  - summary
+  - experience
+  - publications
+  - education
+  - skills
+
+emphasis:
+  - research
+  - publications
+  - academic contributions
+  - applied science
+  - technical writing

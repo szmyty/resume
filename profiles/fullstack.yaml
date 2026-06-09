@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+#
+# profiles/fullstack.yaml — Full-Stack Engineering profile variant.
+# Defines sections and emphasis for full-stack software engineering roles.
+
+profile: fullstack
+label: "Full-Stack Engineering"
+description: >
+  Targets full-stack software engineering roles.
+  Emphasizes frontend, backend, APIs, databases, and end-to-end delivery.
+
+sections:
+  - header
+  - summary
+  - experience
+  - skills
+  - education
+
+emphasis:
+  - frontend
+  - backend
+  - api design
+  - databases
+  - full-stack delivery
+  - software architecture
