@@ -5,13 +5,18 @@
 # Defines sections and emphasis for AI/ML infrastructure roles.
 
 profile: ai-infra
-label: "AI Infrastructure"
+name: "AI Infrastructure"
 description: >
   Targets AI infrastructure, ML platform engineering, and MLOps roles.
   Emphasizes distributed systems, model serving, data pipelines, and
   platform reliability.
 
-sections:
+summary: >
+  AI infrastructure engineer focused on resilient ML platforms,
+  production-grade model serving, and scalable data systems for
+  research and product teams.
+
+section_order:
   - header
   - summary
   - experience
@@ -19,7 +24,15 @@ sections:
   - education
   - publications
 
-emphasis:
+included_sections:
+  - header
+  - summary
+  - experience
+  - skills
+  - education
+  - publications
+
+keyword_emphasis:
   - machine learning infrastructure
   - distributed systems
   - model serving

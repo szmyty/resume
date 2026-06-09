@@ -19,7 +19,7 @@ resume/
 │   ├── ai-infra.yaml
 │   ├── platform.yaml
 │   ├── research.yaml
-│   └── fullstack.yaml
+│   └── general.yaml
 ├── assets/             # Images, icons, and other static assets
 ├── outputs/            # Generated PDF artifacts
 ├── scripts/
@@ -38,13 +38,26 @@ resume/
 - TeX Live 2023+ (with `latexmk`)
 - Python 3.10+
 
-### Build the resume PDF
+### Build all profile PDFs
 
 ```bash
 python scripts/build.py
 ```
 
-The generated PDF will be placed in `outputs/resume.pdf`.
+The generated PDFs will be placed in:
+
+- `outputs/resume-ai-infra.pdf`
+- `outputs/resume-platform.pdf`
+- `outputs/resume-research.pdf`
+- `outputs/resume-general.pdf`
+
+### Build a specific profile PDF
+
+```bash
+python scripts/build.py --profile platform
+```
+
+If the requested profile does not exist, the build will fail with the list of available profiles.
 
 ### Build with latexmk directly
 
@@ -54,14 +67,14 @@ latexmk -pdf -halt-on-error -interaction=nonstopmode -r .latexmkrc resume.tex
 
 ## Profiles
 
-Profile YAML files in `profiles/` define which sections and content are included for a given resume variant. Future profile-targeted builds will select sections and tailor content based on the active profile.
+Profile YAML files in `profiles/` define the profile name, summary variant, section ordering, included sections, and keyword emphasis for a given resume variant.
 
 | Profile | Description |
 | --- | --- |
 | `ai-infra.yaml` | AI infrastructure and ML platform roles |
 | `platform.yaml` | Platform engineering and SRE roles |
 | `research.yaml` | Research and academic roles |
-| `fullstack.yaml` | Full-stack engineering roles |
+| `general.yaml` | General software engineering roles |
 
 ## Specification
 
