@@ -22,6 +22,9 @@ _minted-*/
 outputs/*.pdf
 outputs/*.log
 
+# Audit logs (keep generated audits tracked)
+!audits/*.log
+
 # Python
 __pycache__/
 *.py[cod]
