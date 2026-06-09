@@ -1,0 +1,56 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "json.schemaDownload.trustedDomains": {
+      "https://models.dev": true,
+      "https://opencode.ai": true,
+    },
+    "latex-workshop.latex.tools": [
+      {
+        "name": "latexmk",
+        "command": "latexmk",
+        "args": [
+          "-cd",
+          "-Werror",
+          "-pdf",
+          "-dir-report",
+          "-rc-report",
+          "--aux-directory=%AUXDIR%",
+          "--output-directory=%OUTDIR%",
+          "-showextraoptions",
+          "-interaction=nonstopmode",
+          "-synctex=1",
+          "-file-line-error",
+          "-shell-escape",
+          "-f",
+          "-gg",
+          "-r",
+          "%DIR%/.latexmkrc",
+          "%DOC%",
+        ],
+      },
+    ],
+
+    "latex-workshop.latex.recipes": [
+      {
+        "name": "latexmk",
+        "tools": ["latexmk"],
+      },
+    ],
+
+    // "latex-workshop.latex.recipe.default": "latexmk",
+
+    "latex-workshop.latex.outDir": "%DIR%/.cache/out",
+    "latex-workshop.latex.auxDir": "%DIR%/.cache/aux",
+
+    "latex-workshop.format.fixQuotes.enabled": false,
+
+    "latex-workshop.format.fixMath.enabled": false,
+
+    "latex-workshop.latex.autoBuild.run": "onSave",
+  },
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://arxiv.org/schemas/00readme/v1",
+  "manifest_version": 1,
+  "publication": {
+    "title": "reflector appendix canonical artifact example",
+    "status": "draft-example",
+    "repository": "https://github.com/egohygiene/reflector"
+  },
+  "process": {
+    "compiler": "pdflatex",
+    "bibliography": "biber",
+    "deterministic": true,
+    "texlive": "2025",
+    "max_repeat": 10
+  },
+  "sources": [
+    {
+      "path": "paper/paper.tex",
+      "usage": "toplevel"
+    },
+    {
+      "path": "paper/examples/canonical/specs/synchronization.spec.md",
+      "usage": "reference"
+    },
+    {
+      "path": "paper/examples/canonical/publication/publication.manifest.yaml",
+      "usage": "reference"
+    }
+  ],
+  "architecture": {
+    "philosophy": "semantic content -> synchronization checkpoints -> publication artifact",
+    "renderer_target": "arxiv",
+    "future_portability": true
+  }
+}

@@ -1,0 +1,249 @@
+% SPDX-FileCopyrightText: 2026 Alan Szmyt
+% SPDX-License-Identifier: Apache-2.0
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{reflector}[2025/01/01 reflector Publication Style]
+
+% ============================================================
+% Encoding and Typography
+% ============================================================
+
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+
+\RequirePackage[english]{babel}
+
+\RequirePackage{lmodern}
+\RequirePackage{microtype}
+
+% ============================================================
+% Page Layout
+% ============================================================
+
+\RequirePackage[
+margin=1in,
+includeheadfoot,
+headheight=14pt
+]{geometry}
+
+\RequirePackage{setspace}
+\onehalfspacing%
+
+\RequirePackage{parskip}
+
+% ============================================================
+% Colors
+% ============================================================
+
+\RequirePackage[dvipsnames]{xcolor}
+
+\definecolor{reflectorblue}{HTML}{3B82F6}
+\definecolor{reflectorpurple}{HTML}{8B5CF6}
+\definecolor{reflectorgray}{HTML}{6B7280}
+\definecolor{reflectorborder}{HTML}{D1D5DB}
+\definecolor{reflectorbg}{HTML}{F8FAFC}
+
+% ============================================================
+% Hyperlinks and PDF Metadata
+%
+% Metadata commands (\papertitle, \paperauthor, etc.) must be
+% defined in macros/metadata.tex before this style is loaded.
+% ============================================================
+
+\RequirePackage[
+unicode=true,
+colorlinks=true,
+linkcolor=reflectorblue,
+citecolor=reflectorpurple,
+urlcolor=reflectorblue,
+pdftitle={\papertitle},
+pdfauthor={\paperauthor},
+pdfsubject={AI-Augmented Software Engineering},
+pdfkeywords={
+AI,
+recursive systems,
+governance,
+human-in-the-loop,
+software engineering,
+recursive auditing,
+milestone synchronization,
+contextual synchronization,
+recursive drift,
+reflective systems
+},
+pdfcreator={LaTeX},
+pdfproducer={reflector publication pipeline}
+]{hyperref}
+
+\RequirePackage{bookmark}
+
+% ============================================================
+% Bibliography
+% ============================================================
+
+\RequirePackage[
+backend=biber,
+style=ieee,
+sorting=nyt,
+giveninits=true,
+maxbibnames=99,
+doi=true,
+url=true,
+isbn=false,
+eprint=true
+]{biblatex}
+
+% ============================================================
+% Graphics and Figures
+% ============================================================
+
+\RequirePackage{graphicx}
+
+\graphicspath{
+{figures/}
+{assets/}
+{diagrams/}
+}
+
+\DeclareGraphicsExtensions{
+.pdf,
+.png,
+.jpg,
+.jpeg
+}
+
+\RequirePackage{float}
+\RequirePackage{caption}
+\RequirePackage{subcaption}
+
+\captionsetup{
+font=small,
+labelfont=bf,
+labelsep=period
+}
+
+% Accessibility note:
+% Provide descriptive captions and preserve high-resolution exports.
+% Future tooling may map canonical alt-text metadata into publication formats.
+
+% ============================================================
+% Tables
+% ============================================================
+
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage{longtable}
+\RequirePackage{tabularx}
+
+% ============================================================
+% Code Listings
+% ============================================================
+
+\RequirePackage{listings}
+
+\lstdefinestyle{reflector}{
+backgroundcolor=\color{reflectorbg},
+basicstyle=\ttfamily\small,
+breaklines=true,
+frame=single,
+rulecolor=\color{reflectorborder},
+numbers=left,
+numberstyle=\tiny\color{reflectorgray},
+commentstyle=\color{reflectorgray},
+keywordstyle=\color{reflectorblue},
+stringstyle=\color{ForestGreen},
+showstringspaces=false,
+tabsize=2,
+columns=fullflexible
+}
+
+\lstset{
+style=reflector
+}
+
+% ============================================================
+% Math and Formal Notation
+% ============================================================
+
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsthm}
+\RequirePackage{mathtools}
+\RequirePackage{bm}
+
+% ============================================================
+% Utilities
+% ============================================================
+
+\RequirePackage{enumitem}
+\RequirePackage{csquotes}
+\RequirePackage{multirow}
+\RequirePackage{makecell}
+
+% ============================================================
+% Intelligent References
+% ============================================================
+
+\RequirePackage[nameinlink,noabbrev]{cleveref}
+
+% ============================================================
+% Callouts and Boxes
+% ============================================================
+
+\RequirePackage[most]{tcolorbox}
+
+\tcbset{
+colback=reflectorbg,
+colframe=reflectorborder,
+arc=3pt,
+boxrule=0.5pt
+}
+
+\newtcolorbox{reflectorcallout}{
+colback=reflectorbg,
+colframe=reflectorblue,
+enhanced,
+breakable,
+left=6pt,
+right=6pt,
+top=6pt,
+bottom=6pt
+}
+
+% ============================================================
+% Header and Footer
+% ============================================================
+
+\RequirePackage{fancyhdr}
+
+\pagestyle{fancy}
+
+\fancyhf{}
+
+\fancyhead[L]{reflector}
+\fancyhead[R]{\paperauthor}
+
+\fancyfoot[C]{\thepage}
+
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% ============================================================
+% Section Styling
+% ============================================================
+
+\RequirePackage{titlesec}
+
+\titleformat{\section}
+{\large\bfseries}
+{\thesection}
+{1em}
+{}
+
+\titleformat{\subsection}
+{\normalsize\bfseries}
+{\thesubsection}
+{1em}
+{}
+
+\endinput

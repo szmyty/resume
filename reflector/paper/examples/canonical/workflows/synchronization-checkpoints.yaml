@@ -1,0 +1,23 @@
+cycle: publication-appendix-demo
+checkpoints:
+  - id: cp-orient-01
+    type: specification-checkpoint
+    evidence:
+      - specs/workflow.spec.md
+      - specs/synchronization.spec.md
+    verdict: pass
+  - id: cp-exec-01
+    type: artifact-checkpoint
+    evidence:
+      - appendix/recursive-milestone.md
+      - diagrams/recursive-sync-loop.mmd
+    verdict: conditional-pass
+    follow-up-issue: "#143"
+  - id: cp-audit-01
+    type: audit-checkpoint
+    evidence:
+      - audits/reflective-audit.md
+    verdict: pass
+continuation:
+  authorized: true
+  approver: "governance-reviewer"

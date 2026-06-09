@@ -1,0 +1,429 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "paper/**"
+      - "magazine/**"
+      - ".github/workflows/pages.yml"
+      - "scripts/build-paper.sh"
+      - "scripts/build-magazine.sh"
+  workflow_dispatch:
+    inputs:
+      deploy_scope:
+        description: "Pages scope: auto, paper, magazine, full"
+        required: false
+        default: "auto"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine deployment scope
+        id: scope
+        run: |
+          set -euo pipefail
+
+          EVENT="${{ github.event_name }}"
+          SCOPE_INPUT="${{ github.event.inputs.deploy_scope || 'auto' }}"
+          BUILD_PAPER="false"
+          BUILD_MAGAZINE="false"
+
+          if [[ "${EVENT}" == "workflow_dispatch" ]]; then
+            case "${SCOPE_INPUT}" in
+              auto|full)
+                BUILD_PAPER="true"
+                BUILD_MAGAZINE="true"
+                ;;
+              paper)
+                BUILD_PAPER="true"
+                ;;
+              magazine)
+                BUILD_MAGAZINE="true"
+                ;;
+              *)
+                echo "::error::Invalid deploy_scope='${SCOPE_INPUT}'. Use auto, paper, magazine, or full."
+                exit 1
+                ;;
+            esac
+          else
+            echo "Push event detected; rebuilding all publication PDFs to guarantee complete Pages artifacts."
+            BUILD_PAPER="true"
+            BUILD_MAGAZINE="true"
+          fi
+
+          echo "build_paper=${BUILD_PAPER}" >> "$GITHUB_OUTPUT"
+          echo "build_magazine=${BUILD_MAGAZINE}" >> "$GITHUB_OUTPUT"
+
+      - name: Build reflector PDF
+        if: steps.scope.outputs.build_paper == 'true'
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: paper.tex
+          working_directory: paper
+          extra_system_packages: "biber"
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -synctex=1
+            -file-line-error
+            -shell-escape
+            -f
+            -gg
+            -cd
+            -r
+            ../.latexmkrc
+
+      - name: Print LaTeX diagnostics on failure
+        if: failure() && steps.scope.outputs.build_paper == 'true'
+        run: ./scripts/print-latex-diagnostics.sh paper
+
+      - name: Build reflector magazine PDF (digital)
+        if: steps.scope.outputs.build_magazine == 'true'
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: tex/magazine.tex
+          working_directory: magazine
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -file-line-error
+            -f
+            -gg
+            -cd
+            -r
+            tex/.latexmkrc
+
+      - name: Build reflector magazine PDF (print)
+        if: steps.scope.outputs.build_magazine == 'true'
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: tex/magazine-print.tex
+          working_directory: magazine
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -file-line-error
+            -f
+            -gg
+            -cd
+            -r
+            tex/.latexmkrc
+
+      - name: Copy magazine PDFs to dist
+        if: steps.scope.outputs.build_magazine == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p magazine/dist
+          cp magazine/.cache/out/magazine.pdf magazine/dist/reflector-magazine.pdf
+          cp magazine/.cache/out/magazine-print.pdf magazine/dist/reflector-magazine-print.pdf
+          echo "Built: magazine/dist/reflector-magazine.pdf"
+          echo "Built: magazine/dist/reflector-magazine-print.pdf"
+
+      - name: Synchronize publication assets into docs
+        run: |
+          set -euo pipefail
+
+          PAPER_SLUG="reflector"
+          HERO_SOURCE="paper/figures/hero.png"
+          DOCS_PDF="docs/${PAPER_SLUG}.pdf"
+          DOCS_MAGAZINE_PDF="docs/reflector-magazine.pdf"
+          DOCS_MAGAZINE_PRINT_PDF="docs/reflector-magazine-print.pdf"
+          DOCS_HERO_DIR="docs/figures"
+          DOCS_HERO="${DOCS_HERO_DIR}/hero.png"
+          DOCS_MANIFEST="docs/publication.json"
+
+          PDF_SOURCE="docs/reflector.pdf"
+          if [[ "${{ steps.scope.outputs.build_paper }}" == "true" ]]; then
+            PDF_SOURCE="paper/.cache/out/paper.pdf"
+          else
+            echo "Paper build skipped; checking for existing docs/reflector.pdf as fallback."
+          fi
+
+          MAGAZINE_PDF_SOURCE="docs/reflector-magazine.pdf"
+          MAGAZINE_PRINT_PDF_SOURCE="docs/reflector-magazine-print.pdf"
+          if [[ "${{ steps.scope.outputs.build_magazine }}" == "true" ]]; then
+            MAGAZINE_PDF_SOURCE="magazine/dist/reflector-magazine.pdf"
+            MAGAZINE_PRINT_PDF_SOURCE="magazine/dist/reflector-magazine-print.pdf"
+          else
+            echo "Magazine build skipped; checking for existing docs magazine PDFs as fallback."
+          fi
+
+          if [[ ! -f "${PDF_SOURCE}" ]]; then
+            if [[ "${{ steps.scope.outputs.build_paper }}" == "true" ]]; then
+              echo "Error: Paper was built but PDF not found at '${PDF_SOURCE}'" >&2
+              exit 1
+            else
+              echo "Error: Required fallback PDF not found at '${PDF_SOURCE}'." >&2
+              exit 1
+            fi
+          fi
+
+          if [[ ! -f "${MAGAZINE_PDF_SOURCE}" ]]; then
+            if [[ "${{ steps.scope.outputs.build_magazine }}" == "true" ]]; then
+              echo "Error: Magazine was built but PDF not found at '${MAGAZINE_PDF_SOURCE}'" >&2
+              exit 1
+            else
+              echo "Error: Required fallback magazine PDF not found at '${MAGAZINE_PDF_SOURCE}'." >&2
+              exit 1
+            fi
+          fi
+
+          if [[ ! -f "${MAGAZINE_PRINT_PDF_SOURCE}" ]]; then
+            if [[ "${{ steps.scope.outputs.build_magazine }}" == "true" ]]; then
+              echo "Error: Magazine (print) was built but PDF not found at '${MAGAZINE_PRINT_PDF_SOURCE}'" >&2
+              exit 1
+            else
+              echo "Error: Required fallback magazine print PDF not found at '${MAGAZINE_PRINT_PDF_SOURCE}'." >&2
+              exit 1
+            fi
+          fi
+
+          if [[ ! -f "${HERO_SOURCE}" ]]; then
+            echo "Error: Expected hero image not found at '${HERO_SOURCE}'" >&2
+            exit 1
+          fi
+
+          mkdir --parents "${DOCS_HERO_DIR}"
+          if [[ -n "${PDF_SOURCE}" && "${PDF_SOURCE}" != "${DOCS_PDF}" ]]; then
+            cp "${PDF_SOURCE}" "${DOCS_PDF}"
+          fi
+          if [[ -n "${MAGAZINE_PDF_SOURCE}" && "${MAGAZINE_PDF_SOURCE}" != "${DOCS_MAGAZINE_PDF}" ]]; then
+            cp "${MAGAZINE_PDF_SOURCE}" "${DOCS_MAGAZINE_PDF}"
+          fi
+          if [[ -n "${MAGAZINE_PRINT_PDF_SOURCE}" && "${MAGAZINE_PRINT_PDF_SOURCE}" != "${DOCS_MAGAZINE_PRINT_PDF}" ]]; then
+            cp "${MAGAZINE_PRINT_PDF_SOURCE}" "${DOCS_MAGAZINE_PRINT_PDF}"
+          fi
+          cp "${HERO_SOURCE}" "${DOCS_HERO}"
+
+          jq -cn \
+            --arg paper "${PAPER_SLUG}" \
+            --arg sha "${GITHUB_SHA}" \
+            --arg short_sha "${GITHUB_SHA::12}" \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg pdf "${PAPER_SLUG}.pdf" \
+            --arg magazine_pdf "reflector-magazine.pdf" \
+            --arg magazine_print_pdf "reflector-magazine-print.pdf" \
+            '{paper: $paper, sha: $sha, short_sha: $short_sha, generated_at: $generated_at, pdf: $pdf, magazine_pdf: $magazine_pdf, magazine_print_pdf: $magazine_print_pdf}' \
+            > "${DOCS_MANIFEST}"
+
+          echo "Published PDF: ${DOCS_PDF}"
+          echo "Published magazine PDF: ${DOCS_MAGAZINE_PDF}"
+          echo "Published magazine print PDF: ${DOCS_MAGAZINE_PRINT_PDF}"
+          echo "Published hero image: ${DOCS_HERO}"
+          echo "Publication manifest: ${DOCS_MANIFEST}"
+          echo "docs/ file inventory:"
+          find docs -type f | sort
+
+      - name: Verify publication synchronization
+        run: |
+          set -euo pipefail
+
+          PDF_SOURCE="docs/reflector.pdf"
+          if [[ "${{ steps.scope.outputs.build_paper }}" == "true" ]]; then
+            PDF_SOURCE="paper/.cache/out/paper.pdf"
+          fi
+          MAGAZINE_SOURCE="docs/reflector-magazine.pdf"
+          MAGAZINE_PRINT_SOURCE="docs/reflector-magazine-print.pdf"
+          if [[ "${{ steps.scope.outputs.build_magazine }}" == "true" ]]; then
+            MAGAZINE_SOURCE="magazine/dist/reflector-magazine.pdf"
+            MAGAZINE_PRINT_SOURCE="magazine/dist/reflector-magazine-print.pdf"
+          fi
+
+          DOCS_PDF="docs/reflector.pdf"
+          DOCS_MAGAZINE_PDF="docs/reflector-magazine.pdf"
+          DOCS_MAGAZINE_PRINT_PDF="docs/reflector-magazine-print.pdf"
+
+          mkdir --parents _site
+          cp --recursive docs/. _site/
+
+          echo "_site/ file inventory:"
+          find _site -type f | sort
+
+          # Always-required paths
+          for required_path in \
+            "docs/reflector.pdf" \
+            "docs/reflector-magazine.pdf" \
+            "docs/reflector-magazine-print.pdf" \
+            "docs/figures/hero.png" \
+            "docs/index.html" \
+            "docs/publication.json" \
+            "_site/reflector.pdf" \
+            "_site/reflector-magazine.pdf" \
+            "_site/reflector-magazine-print.pdf" \
+            "_site/index.html" \
+            "_site/figures/hero.png" \
+            "_site/publication.json"
+          do
+            if [[ ! -f "${required_path}" ]]; then
+              echo "Error: Expected published file is missing: ${required_path}" >&2
+              exit 1
+            fi
+          done
+
+          for required_path in "${PDF_SOURCE}" "${DOCS_PDF}" "${MAGAZINE_SOURCE}" "${DOCS_MAGAZINE_PDF}" "${MAGAZINE_PRINT_SOURCE}" "${DOCS_MAGAZINE_PRINT_PDF}"; do
+            if [[ ! -f "${required_path}" ]]; then
+              echo "Error: Expected publication file is missing: ${required_path}" >&2
+              exit 1
+            fi
+          done
+
+          PDF_SOURCE_SHA="$(sha256sum "${PDF_SOURCE}" | awk '{print $1}')"
+          PDF_DOCS_SHA="$(sha256sum "${DOCS_PDF}" | awk '{print $1}')"
+          PDF_SITE_SHA="$(sha256sum "_site/reflector.pdf" | awk '{print $1}')"
+          if [[ "${{ steps.scope.outputs.build_paper }}" == "true" ]]; then
+            if [[ "${PDF_SOURCE_SHA}" != "${PDF_DOCS_SHA}" || "${PDF_SOURCE_SHA}" != "${PDF_SITE_SHA}" ]]; then
+              echo "Error: reflector.pdf checksum mismatch between built source and published routes." >&2
+              exit 1
+            fi
+          elif [[ "${PDF_DOCS_SHA}" != "${PDF_SITE_SHA}" ]]; then
+            echo "Error: reflector.pdf checksum mismatch between docs and _site routes." >&2
+            exit 1
+          fi
+
+          MAG_SOURCE_SHA="$(sha256sum "${MAGAZINE_SOURCE}" | awk '{print $1}')"
+          MAG_DOCS_SHA="$(sha256sum "${DOCS_MAGAZINE_PDF}" | awk '{print $1}')"
+          MAG_SITE_SHA="$(sha256sum "_site/reflector-magazine.pdf" | awk '{print $1}')"
+          if [[ "${{ steps.scope.outputs.build_magazine }}" == "true" ]]; then
+            if [[ "${MAG_SOURCE_SHA}" != "${MAG_DOCS_SHA}" || "${MAG_SOURCE_SHA}" != "${MAG_SITE_SHA}" ]]; then
+              echo "Error: reflector-magazine.pdf checksum mismatch between built source and published routes." >&2
+              exit 1
+            fi
+          elif [[ "${MAG_DOCS_SHA}" != "${MAG_SITE_SHA}" ]]; then
+            echo "Error: reflector-magazine.pdf checksum mismatch between docs and _site routes." >&2
+            exit 1
+          fi
+
+          PRINT_SOURCE_SHA="$(sha256sum "${MAGAZINE_PRINT_SOURCE}" | awk '{print $1}')"
+          PRINT_DOCS_SHA="$(sha256sum "${DOCS_MAGAZINE_PRINT_PDF}" | awk '{print $1}')"
+          PRINT_SITE_SHA="$(sha256sum "_site/reflector-magazine-print.pdf" | awk '{print $1}')"
+          if [[ "${{ steps.scope.outputs.build_magazine }}" == "true" ]]; then
+            if [[ "${PRINT_SOURCE_SHA}" != "${PRINT_DOCS_SHA}" || "${PRINT_SOURCE_SHA}" != "${PRINT_SITE_SHA}" ]]; then
+              echo "Error: reflector-magazine-print.pdf checksum mismatch between built source and published routes." >&2
+              exit 1
+            fi
+          elif [[ "${PRINT_DOCS_SHA}" != "${PRINT_SITE_SHA}" ]]; then
+            echo "Error: reflector-magazine-print.pdf checksum mismatch between docs and _site routes." >&2
+            exit 1
+          fi
+
+          echo "Published routes:"
+          echo "- /reflector/"
+          echo "- /reflector/reflector.pdf"
+          echo "- /reflector/reflector-magazine.pdf"
+          echo "- /reflector/reflector-magazine-print.pdf"
+          echo "- /reflector/figures/hero.png"
+
+          grep -q 'src="./figures/hero.png"' docs/index.html
+          grep -q 'href="./reflector.pdf"' docs/index.html
+          grep -q 'href="./reflector-magazine.pdf"' docs/index.html
+          grep -q 'href="./reflector-magazine-print.pdf"' docs/index.html
+
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          PDF_SIZE="$(wc -c < "${DOCS_PDF}" | tr -d '[:space:]')"
+          MAG_SIZE="$(wc -c < "${DOCS_MAGAZINE_PDF}" | tr -d '[:space:]')"
+          PRINT_SIZE="$(wc -c < "${DOCS_MAGAZINE_PRINT_PDF}" | tr -d '[:space:]')"
+          {
+            echo "## Pages Deployment Summary"
+            echo ""
+            echo "| Artifact | Version | Size (bytes) | Checksum (sha256) | Deployment Target |"
+            echo "| --- | --- | ---: | --- | --- |"
+            echo "| reflector.pdf | ${VERSION} | ${PDF_SIZE} | \`${PDF_DOCS_SHA}\` | /reflector/reflector.pdf |"
+            echo "| reflector-magazine.pdf | ${VERSION} | ${MAG_SIZE} | \`${MAG_DOCS_SHA}\` | /reflector/reflector-magazine.pdf |"
+            echo "| reflector-magazine-print.pdf | ${VERSION} | ${PRINT_SIZE} | \`${PRINT_DOCS_SHA}\` | /reflector/reflector-magazine-print.pdf |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reflector-pages-build-artifacts
+          path: |
+            paper/.cache/
+            magazine/.cache/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Validate published publication URLs
+        run: |
+          set -euo pipefail
+          BASE_URL="${{ steps.deployment.outputs.page_url }}"
+          URLS=(
+            "${BASE_URL}"
+            "${BASE_URL}reflector.pdf"
+            "${BASE_URL}reflector-magazine.pdf"
+            "${BASE_URL}reflector-magazine-print.pdf"
+            "${BASE_URL}figures/hero.png"
+          )
+
+          for url in "${URLS[@]}"; do
+            echo "Checking ${url}"
+            success="false"
+            for attempt in 1 2 3 4 5; do
+              if curl --silent --show-error --location --fail --head "${url}" >/dev/null; then
+                success="true"
+                break
+              fi
+              echo "Attempt ${attempt} failed for ${url}; retrying..."
+              sleep 10
+            done
+
+            if [[ "${success}" != "true" ]]; then
+              echo "Error: published URL check failed for ${url}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Print deployed Pages endpoint
+        run: |
+          set -euo pipefail
+          echo "Deployed page_url: ${{ steps.deployment.outputs.page_url }}"
+          echo "Route checks:"
+          echo "- ${{ steps.deployment.outputs.page_url }}"
+          echo "- ${{ steps.deployment.outputs.page_url }}reflector.pdf"
+          echo "- ${{ steps.deployment.outputs.page_url }}reflector-magazine.pdf"
+          echo "- ${{ steps.deployment.outputs.page_url }}reflector-magazine-print.pdf"

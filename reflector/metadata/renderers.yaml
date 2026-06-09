@@ -1,0 +1,76 @@
+# ============================================================
+# Renderer Compatibility Manifest
+#
+# Declares the current renderer target and documents future
+# renderer portability plans.  The metadata infrastructure is
+# designed to be renderer-agnostic: swapping the style adapter
+# (paper/styles/reflector.sty) retargets the renderer without
+# modifying semantic content.
+#
+# Renderer targets are NOT implemented here — this file serves
+# as the synchronization contract for future renderer work.
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Current renderer target
+# ---------------------------------------------------------------------------
+
+current:
+  target: arxiv
+  compiler: pdflatex
+  bibliography: biber
+  style_adapter: paper/styles/reflector.sty
+  texlive: "2025"
+  deterministic: true
+
+# ---------------------------------------------------------------------------
+# Future renderer targets (not yet implemented)
+# ---------------------------------------------------------------------------
+
+future:
+  - target: arxiv
+    status: current
+    notes: Primary publication target; arXiv e-print submission.
+
+  - target: ieee
+    status: planned
+    notes: >-
+      IEEE Transactions / Conference style. Requires IEEE-compatible
+      style adapter swap in paper/styles/.
+
+  - target: acm
+    status: planned
+    notes: >-
+      ACM SIGPLAN / SIGSOFT style. Requires ACM-compatible style
+      adapter swap in paper/styles/.
+
+  - target: web
+    status: planned
+    notes: >-
+      HTML/CSS publication surface. Potential targets include Pandoc,
+      Quarto, or a custom static site renderer.
+
+  - target: documentation
+    status: planned
+    notes: >-
+      Documentation site renderer (e.g. MkDocs, Sphinx). Separate
+      from the primary publication surface.
+
+  - target: infographic
+    status: planned
+    notes: >-
+      Visual infographic renderer for social and presentation surfaces.
+      Hero and figure assets are pre-generated at canonical dimensions.
+
+# ---------------------------------------------------------------------------
+# Architectural philosophy
+# ---------------------------------------------------------------------------
+
+architecture:
+  philosophy: >-
+    semantic content → semantic metadata → publication manifests →
+    renderer targets → generated artifacts
+  renderer_abstraction: >-
+    Swap paper/styles/reflector.sty to retarget a different publisher
+    without modifying semantic source content.
+  future_portability: true

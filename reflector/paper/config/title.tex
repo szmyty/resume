@@ -1,0 +1,31 @@
+% SPDX-FileCopyrightText: 2026 Alan Szmyt
+% SPDX-License-Identifier: Apache-2.0
+
+% ============================================================
+% Canonical Paper Title
+%
+% Single source of truth for the paper title.
+% Preserves intentional lowercase styling throughout the
+% publication pipeline.
+%
+% Load this file before the publication style so that all
+% title macros are available for hyperref, headers, and
+% other style-level configuration.
+%
+% Macros defined here:
+%   \papertitlemain      — lowercase main title token (reflector)
+%   \papertitlesubtitle  — lowercase subtitle string
+%   \papertitlefull      — full canonical title (main + colon + subtitle)
+% ============================================================
+
+\newcommand{\papertitlemain}{%
+  reflector%
+}
+
+\newcommand{\papertitlesubtitle}{%
+  reflective synchronization systems for recursive AI-assisted software engineering%
+}
+
+\newcommand{\papertitlefull}{%
+  \papertitlemain: \papertitlesubtitle%
+}

@@ -1,0 +1,128 @@
+## chktexrc — ChkTeX configuration for the reflector paper.
+##
+## ChkTeX reference: https://www.nongnu.org/chktex/
+## Format reference: /etc/chktexrc
+##
+## This file configures ChkTeX behaviour for the reflector manuscript:
+## command spacing, dash rules, math environments, verbatim environments,
+## and paper-specific custom warning patterns.
+##
+## NOTE: Warning-number suppression (-n N) is not supported in this file.
+## Suppressed warning numbers are passed as -n flags in scripts/lint-paper.sh
+## and documented there with full justifications.
+
+## ---------------------------------------------------------------------------
+## QuoteStyle
+##
+## Controls how ChkTeX checks quotation marks (Warning 18).
+## Logical — opening `` and closing '' are required (typographically correct).
+## Traditional — only checks for doubled-up characters.
+##
+## reflector uses the Logical style: all open quotes must be `` and all
+## close quotes must be ''.
+QuoteStyle = Logical
+
+## ---------------------------------------------------------------------------
+## CmdSpaceStyle
+##
+## Controls which spacing warnings ChkTeX emits after commands.
+##
+## Both         — warn on interword (W12) and intersentence (W13) spacing
+## InterWord    — warn only on interword spacing
+## InterSentence — warn only on intersentence spacing
+## Ignore       — do not emit spacing warnings after commands
+##
+## reflector uses Both: prose spacing matters for academic publication.
+CmdSpaceStyle = Both
+
+## ---------------------------------------------------------------------------
+## TabSize
+##
+## Number of spaces a tab counts as for column numbers in warning output.
+TabSize = 4
+
+## ---------------------------------------------------------------------------
+## HyphDash / NumDash / WordDash
+##
+## Acceptable counts of consecutive dashes between different character classes.
+## Omitting a count means it is flagged as an error (Warning 8).
+##
+## HyphDash — between alphabetic characters   (e.g., AI-assisted, self-referential)
+## NumDash  — between numeric characters      (e.g., pages 10--20, Algorithm 1--3)
+## WordDash — between whitespace characters   (e.g., phrase --- emphasis)
+##
+## reflector uses:
+##   1 hyphen  for compound adjectives, hyphenated words, ISO dates, and ORCID IDs
+##   2 dashes  for en-dashes in numeric ranges (pages, algorithms, sections)
+##   3 dashes  for em-dashes in parenthetical phrases
+##
+## NumDash includes 1 to allow hyphens in dates (2026-05-22), ORCID identifiers
+## (0009-0008-5291-9795), and other numeric identifiers that use single hyphens.
+##
+HyphDash { 1 }
+NumDash  { 1 2 3 }
+WordDash { 3 }
+
+## ---------------------------------------------------------------------------
+## Silent
+##
+## Commands that may be terminated by a space without triggering Warning 1
+## ("command terminated with space").  This list appends to the chktex
+## defaults defined in /etc/chktexrc.
+##
+## reflector-specific macros defined in paper/macros/metadata.tex are added
+## here so Warning 1 does not fire on \papertitlemain\ or \paperauthor\ etc.
+##
+Silent
+{
+    ## reflector metadata macros (paper/macros/metadata.tex)
+    \papertitlemain \papertitlesubtitle \papertitlefull
+    \paperauthor \paperdate \paperstatus
+    \paperorcid \paperorcidurl \paperrepository
+    \paperkeywords \paperdoi \paperversion
+
+    ## Abbreviation macros common in academic prose
+    \eg \ie \cf \etc \etal \vs
+}
+
+## ---------------------------------------------------------------------------
+## MathEnvir
+##
+## LaTeX environments treated as display-math mode.
+## This prevents false positives from W38 (dash in math) and W17 (unmatched $).
+## Appends to the chktex defaults.
+##
+MathEnvir
+{
+    ## reflector theorem-like environments (defined in reflector.sty if present)
+    definition theorem lemma corollary proposition remark example
+    ## AMS starred environments (non-numbered)
+    equation* eqnarray* align* alignat* gather* flalign* multiline*
+}
+
+## ---------------------------------------------------------------------------
+## VerbEnvir
+##
+## Environments treated as verbatim (linting is suppressed inside them).
+## Appends to the chktex defaults.
+##
+VerbEnvir
+{
+    lstlisting minted alltt tcblisting
+    BVerbatim LVerbatim SaveVerbatim
+}
+
+## ---------------------------------------------------------------------------
+## UserWarn
+##
+## Literal strings that trigger Warning 20 when found in the source.
+## Use these to catch paper-specific markers that must be replaced before
+## publication or arXiv submission.
+##
+UserWarn
+{
+    "TODO"
+    "FIXME"
+    "PLACEHOLDER"
+    "TBD"
+}

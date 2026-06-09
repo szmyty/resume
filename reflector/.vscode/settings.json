@@ -1,0 +1,33 @@
+{
+  "latex-workshop.latex.build.fromFolder": "%DIR%",
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.latex.outDir": "%DIR%/.cache/out",
+  "latex-workshop.latex.auxDir": "%DIR%/.cache/aux",
+  "latex-workshop.latex.tools": [
+    {
+      "name": "latexmk (project)",
+      "command": "latexmk",
+      "args": [
+        "-pdf",
+        "-interaction=nonstopmode",
+        "-synctex=1",
+        "-file-line-error",
+        "-shell-escape",
+        "-f",
+        "-gg",
+        "-cd",
+        "-r",
+        ".latexmkrc",
+        "%DOC%"
+      ]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "latexmk (project)",
+      "tools": [
+        "latexmk (project)"
+      ]
+    }
+  ]
+}

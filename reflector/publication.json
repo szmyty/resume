@@ -1,0 +1,41 @@
+{
+  "project": "reflector",
+  "status": "draft",
+  "version": "0.1.1",
+  "release_tag": "v0.1.1",
+  "repository_url": "https://github.com/egohygiene/reflector",
+  "pages_url": "https://egohygiene.github.io/reflector/",
+  "orcid": "https://orcid.org/0009-0008-5291-9795",
+  "release_channel": "github-releases",
+  "version_source": "VERSION",
+  "citation_source": "CITATION.cff",
+  "artifacts": {
+    "paper": {
+      "pdf": "reflector.pdf",
+      "pages_url": "https://egohygiene.github.io/reflector/reflector.pdf"
+    },
+    "magazine": {
+      "pdf": "reflector-magazine.pdf",
+      "print_pdf": "reflector-magazine-print.pdf",
+      "pages_url": "https://egohygiene.github.io/reflector/reflector-magazine.pdf",
+      "print_pages_url": "https://egohygiene.github.io/reflector/reflector-magazine-print.pdf"
+    }
+  },
+  "future": {
+    "zenodo_archive": {
+      "enabled": true,
+      "record_id": "20477044",
+      "concept_record_id": "20477045",
+      "version_doi": "10.5281/zenodo.20477044",
+      "concept_doi": "10.5281/zenodo.20477045"
+    },
+    "doi_generation": {
+      "enabled": true,
+      "provider": "zenodo",
+      "doi": "10.5281/zenodo.20477044",
+      "doi_url": "https://doi.org/10.5281/zenodo.20477044",
+      "concept_doi": "10.5281/zenodo.20477045",
+      "concept_doi_url": "https://doi.org/10.5281/zenodo.20477045"
+    }
+  }
+}

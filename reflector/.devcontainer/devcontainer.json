@@ -1,0 +1,76 @@
+{
+  "name": "reflector",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false,
+      "installDockerComposeSwitch": false
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/scripts/postCreate.sh",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "james-yu.latex-workshop",
+        "redhat.vscode-yaml",
+        "eamodio.gitlens",
+        "github.vscode-github-actions",
+        "tamasfe.even-better-toml",
+        "task.vscode-task",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python3",
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
+        },
+        "latex-workshop.latex.build.fromFolder": "%DIR%",
+        "latex-workshop.latex.autoBuild.run": "onSave",
+        "latex-workshop.latex.outDir": "%DIR%/.cache/out",
+        "latex-workshop.latex.auxDir": "%DIR%/.cache/aux",
+        "latex-workshop.latex.tools": [
+          {
+            "name": "latexmk (project)",
+            "command": "latexmk",
+            "args": [
+              "-pdf",
+              "-interaction=nonstopmode",
+              "-synctex=1",
+              "-file-line-error",
+              "-shell-escape",
+              "-f",
+              "-gg",
+              "-cd",
+              "-r",
+              ".latexmkrc",
+              "%DOC%"
+            ]
+          }
+        ],
+        "latex-workshop.latex.recipes": [
+          {
+            "name": "latexmk (project)",
+            "tools": [
+              "latexmk (project)"
+            ]
+          }
+        ],
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

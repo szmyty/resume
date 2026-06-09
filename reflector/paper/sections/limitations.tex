@@ -1,0 +1,47 @@
+\section{Limitations and Failure Modes}
+\label{sec:limitations}
+
+\reflector{} is a proposed synchronization architecture for recursive AI-assisted development, not a universal solution for correctness, alignment, or control. It is intended as stabilization infrastructure: a way to reduce drift pressure and improve traceability under recursion, while accepting that recursive systems remain probabilistic, path-dependent, and operationally constrained.
+
+\subsection{Recursive Systems Remain Imperfect}
+
+Recursive execution does not converge to guaranteed correctness by default. Each loop can introduce approximation, stale assumptions, and partial interpretations that compound over time. Reflective checkpoints can bound some classes of drift, but they cannot eliminate uncertainty, latent inconsistency, or recursive amplification effects. As recursion depth and branching increase, global coherence becomes harder to maintain and failure modes become more difficult to localize.
+
+\subsection{Human Cognitive Constraints}
+
+Human operators remain bounded-rational participants in the synchronization loop. Review bandwidth, context retention, and attention are finite; as artifact graphs grow, humans increasingly reason through compressed summaries rather than full state. This creates risks of synchronization fatigue, fragmented understanding, and governance fatigue, especially when repeated review rituals outpace meaningful comprehension.
+
+\subsection{AI System Limitations}
+
+Model outputs remain vulnerable to hallucination, context-window compression loss, hidden assumptions, and stale reasoning. Recursive summarization can amplify small semantic errors into larger specification drift. Generated artifacts may appear internally coherent while diverging from intent, and explainability gaps can make it hard to determine why a model selected a specific plan, claim, or interpretation.
+
+\subsection{Synchronization Overhead as a Tradeoff}
+
+Reflective auditing, checkpointing, and governance contracts impose real operational cost. Additional synchronization layers improve observability and reduce uncontrolled divergence, but they also add friction, increase cycle time, and may reduce short-term delivery velocity. \reflector{} therefore makes an explicit tradeoff: spending coordination effort to buy bounded coherence rather than maximizing raw throughput.
+
+\subsection{Scaling and Observability Challenges}
+
+At larger scales, recursive systems become harder to observe end-to-end. Artifact dependencies densify, temporal desynchronization increases across asynchronous workflows, and governance coordination becomes more complex across teams or agents. Multi-agent recursion and distributed execution further complicate causal attribution, making it difficult to distinguish local defects from systemic synchronization failures.
+
+\subsection{Specification Fragility and Drift}
+
+Specifications are themselves living artifacts that can drift, become stale, or encode ambiguous semantics. Synchronization anchors require continuous maintenance and periodic reinterpretation as contexts evolve. \reflector{} can reduce ambiguity by enforcing explicit checkpoints and reconciliation steps, but it cannot remove interpretation as a fundamental part of socio-technical development.
+
+\subsection{Risks of Over-Automation}
+
+Automation can outpace understanding. Teams may over-trust generated outputs, treat synchronization rituals as checklists, or accept superficially plausible artifacts without adequate reflective challenge. If trust calibration weakens, human-in-the-loop governance degrades from active oversight to procedural compliance, undermining the very integrity the architecture is designed to protect.
+
+\subsection{\reflector{} as Ongoing Research}
+
+\reflector{} should be treated as an exploratory systems framework whose workflows, controls, and evaluation methods remain under development. It improves coordination structure, but unresolved questions remain around recursive stability guarantees, governance ergonomics, and empirical performance across heterogeneous domains.
+
+This section references \Cref{fig:figure10} to preserve stable figure placement and internal PDF navigation.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figure14.png}
+  \caption{Limitations and convergence tradeoffs: recursive complexity, synchronization overhead, cognitive load, and governance burden jointly constrain bounded coherence.}
+  \label{fig:figure10}
+\end{figure}
+
+These limitations motivate the research agenda in \Cref{sec:future-directions}: improving reflective cognition support, recursive governance patterns, and scalable synchronization infrastructure without over-claiming perfect alignment.

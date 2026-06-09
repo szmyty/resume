@@ -1,0 +1,257 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+name: Paper Quality
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "paper/**/*.tex"
+      - "paper/**/*.bib"
+      - "paper/**/*.sty"
+      - "paper/**/sections/**"
+      - "paper/**/macros/**"
+      - "paper/**/styles/**"
+      - "paper/**/figures/**"
+      - "paper/**/references/**"
+      - ".chktexrc"
+      - "scripts/lint-paper.sh"
+      - "scripts/audit-chktex.py"
+      - ".latexmkrc"
+      - ".github/workflows/paper-quality.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "paper/**/*.tex"
+      - "paper/**/*.bib"
+      - "paper/**/*.sty"
+      - "paper/**/sections/**"
+      - "paper/**/macros/**"
+      - "paper/**/styles/**"
+      - "paper/**/figures/**"
+      - "paper/**/references/**"
+      - ".chktexrc"
+      - "scripts/lint-paper.sh"
+      - "scripts/audit-chktex.py"
+      - ".latexmkrc"
+      - ".github/workflows/paper-quality.yml"
+
+  workflow_dispatch:
+    inputs:
+      paper:
+        description: "Paper directory"
+        required: false
+        default: "paper"
+      fail_on_warnings:
+        description: "Fail if any ChkTeX warnings are found (true/false)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Paper
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Determine paper directory
+        id: vars
+        run: |
+          set -euo pipefail
+          PAPER="${{ github.event.inputs.paper || 'paper' }}"
+          echo "paper=${PAPER}" >> "$GITHUB_OUTPUT"
+          echo "paper_name=$(basename "${PAPER}")" >> "$GITHUB_OUTPUT"
+
+      - name: Build LaTeX PDF
+        id: build
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: paper.tex
+          working_directory: ${{ steps.vars.outputs.paper }}
+          extra_system_packages: "biber"
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -synctex=1
+            -file-line-error
+            -shell-escape
+            -f
+            -gg
+            -cd
+            -r
+            ../.latexmkrc
+
+      - name: Print LaTeX diagnostics on failure
+        if: failure()
+        run: ./scripts/print-latex-diagnostics.sh "${{ steps.vars.outputs.paper }}"
+
+      - name: Upload PDF artifact
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.vars.outputs.paper_name }}-quality-pdf
+          path: ${{ steps.vars.outputs.paper }}/.cache/out/paper.pdf
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.vars.outputs.paper_name }}-quality-build-artifacts
+          path: ${{ steps.vars.outputs.paper }}/.cache/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+  lint:
+    name: ChkTeX Lint
+    runs-on: ubuntu-latest
+    # Run linting in parallel with the build (not sequentially)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Determine paper directory
+        id: vars
+        run: |
+          set -euo pipefail
+          PAPER="${{ github.event.inputs.paper || 'paper' }}"
+          echo "paper=${PAPER}" >> "$GITHUB_OUTPUT"
+          echo "paper_name=$(basename "${PAPER}")" >> "$GITHUB_OUTPUT"
+
+      - name: Install ChkTeX
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends chktex
+          chktex --version
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run ChkTeX lint
+        id: lint
+        run: |
+          set -euo pipefail
+
+          PAPER="${{ steps.vars.outputs.paper }}"
+          CHKTEX_OUT="chktex-output.txt"
+
+          ./scripts/lint-paper.sh "${PAPER}" --output "${CHKTEX_OUT}" || true
+
+          # Count warnings from the parseable -v0 output (file:line:col:num:msg)
+          WARNING_COUNT="$(grep -cE '^.+:[0-9]+:[0-9]+:[0-9]+:.+$' "${CHKTEX_OUT}" || true)"
+
+          echo "warning_count=${WARNING_COUNT}" >> "$GITHUB_OUTPUT"
+          echo "output_file=${CHKTEX_OUT}" >> "$GITHUB_OUTPUT"
+
+          echo ""
+          if [[ "${WARNING_COUNT}" -gt 0 ]]; then
+            echo "::warning::ChkTeX found ${WARNING_COUNT} warning(s)."
+          else
+            echo "✅ ChkTeX: no warnings found."
+          fi
+
+      - name: Generate audit report
+        if: always()
+        run: |
+          python scripts/audit-chktex.py \
+            --paper "${{ steps.vars.outputs.paper }}" \
+            --output audits/chktex-audit.md
+
+      - name: Print audit report
+        if: always()
+        run: |
+          echo "::group::ChkTeX Audit Report"
+          cat audits/chktex-audit.md
+          echo "::endgroup::"
+
+      - name: Annotate ChkTeX warnings
+        if: always() && steps.lint.outputs.warning_count != '0'
+        run: |
+          set -euo pipefail
+          OUTPUT_FILE="${{ steps.lint.outputs.output_file }}"
+          if [[ ! -f "${OUTPUT_FILE}" ]]; then
+            exit 0
+          fi
+
+          PAPER="${{ steps.vars.outputs.paper }}"
+
+          # -v0 format: /abs/path/to/file.tex:LINE:COL:WARN_NUM:message
+          while IFS=: read -r filepath lineno col num rest; do
+            # Strip leading blanks from rest
+            msg="${rest#"${rest%%[! ]*}"}"
+            if [[ -n "${filepath}" && "${lineno}" =~ ^[0-9]+$ ]]; then
+              # Convert absolute path to relative for cleaner annotations
+              rel_path="${filepath#${GITHUB_WORKSPACE}/}"
+              echo "::warning file=${rel_path},line=${lineno},col=${col}::ChkTeX W${num}: ${msg}"
+            fi
+          done < "${OUTPUT_FILE}"
+
+      - name: Upload ChkTeX output artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.vars.outputs.paper_name }}-chktex-output
+          path: chktex-output.txt
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload audit report artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.vars.outputs.paper_name }}-chktex-audit
+          path: audits/chktex-audit.md
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Quality gate — fail on critical warnings
+        if: always()
+        run: |
+          set -euo pipefail
+
+          FAIL_ON_WARNINGS="${{ github.event.inputs.fail_on_warnings || 'false' }}"
+          OUTPUT_FILE="${{ steps.lint.outputs.output_file }}"
+
+          if [[ ! -f "${OUTPUT_FILE}" ]]; then
+            echo "No ChkTeX output file — nothing to gate on."
+            exit 0
+          fi
+
+          # Critical warning numbers: W11 W17 W19 (structural integrity)
+          CRITICAL_COUNT=0
+          for num in 11 17 19; do
+            count="$(grep -cE "^.+:[0-9]+:[0-9]+:${num}:.+$" "${OUTPUT_FILE}" || true)"
+            CRITICAL_COUNT=$(( CRITICAL_COUNT + count ))
+          done
+
+          if [[ "${CRITICAL_COUNT}" -gt 0 ]]; then
+            echo "::error::❌ ${CRITICAL_COUNT} CRITICAL ChkTeX warning(s) found (W11/W17/W19)."
+            echo "   These indicate structural LaTeX issues and must be resolved before publication."
+            exit 1
+          fi
+
+          if [[ "${FAIL_ON_WARNINGS}" == "true" ]]; then
+            WARNING_COUNT="${{ steps.lint.outputs.warning_count }}"
+            if [[ "${WARNING_COUNT}" -gt 0 ]]; then
+              echo "::error::❌ ${WARNING_COUNT} ChkTeX warning(s) found and fail_on_warnings=true."
+              exit 1
+            fi
+          fi
+
+          echo "✅ Quality gate passed."

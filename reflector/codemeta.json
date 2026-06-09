@@ -1,0 +1,32 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "reflector",
+  "description": "reflector: reflective synchronization systems for recursive AI-assisted software engineering",
+  "codeRepository": "https://github.com/egohygiene/reflector",
+  "url": "https://egohygiene.github.io/reflector/",
+  "version": "0.1.1",
+  "datePublished": "2026-05-22",
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "identifier": "https://doi.org/10.5281/zenodo.20477044",
+  "keywords": [
+    "recursive development systems",
+    "AI-augmented software engineering",
+    "human-in-the-loop governance",
+    "autonomous agents",
+    "milestone synchronization",
+    "recursive drift",
+    "software governance",
+    "reflective systems",
+    "AI safety",
+    "systems thinking"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Alan",
+      "familyName": "Szmyt",
+      "@id": "https://orcid.org/0009-0008-5291-9795"
+    }
+  ]
+}

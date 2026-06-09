@@ -1,0 +1,61 @@
+cff-version: 1.2.0
+type: software
+message: If you use this work, please cite it using the metadata from this file.
+title: >-
+  reflector: reflective synchronization systems for recursive AI-assisted
+  software engineering
+authors:
+  - family-names: Szmyt
+    given-names: Alan
+    orcid: https://orcid.org/0009-0008-5291-9795
+    alias: szmyty
+contact:
+  - family-names: Szmyt
+    given-names: Alan
+    orcid: https://orcid.org/0009-0008-5291-9795
+repository-code: https://github.com/egohygiene/reflector
+url: https://doi.org/10.5281/zenodo.20477044
+doi: 10.5281/zenodo.20477044
+abstract: >-
+  Recursive AI-augmented software engineering introduces a new class of
+  development systems in which autonomous agents operate within iterative
+  feedback loops, generating, evaluating, and refining software artifacts at
+  machine speed. Without explicit governance boundaries, these systems are prone
+  to recursive optimization drift, complexity collapse, and misalignment with
+  human-defined objectives. This paper introduces reflector, a framework for
+  reflective development systems that imposes structured governance contracts on
+  recursive AI-assisted workflows. reflector defines four core mechanisms: (1)
+  scoped autonomous agents with bounded execution contexts, (2)
+  human-in-the-loop alignment checkpoints triggered by milestone events, (3)
+  recursive auditing systems that continuously validate system state against
+  defined invariants, and (4) milestone synchronization protocols that gate
+  autonomous progression. We describe the theoretical foundations of reflective
+  development, characterize common failure modes arising from unbounded
+  recursion, and present an architectural reference model for implementing
+  reflector-compliant systems.
+keywords:
+  - recursive development systems
+  - AI-augmented software engineering
+  - human-in-the-loop governance
+  - autonomous agents
+  - milestone synchronization
+  - recursive drift
+  - software governance
+  - reflective systems
+  - AI safety
+  - systems thinking
+license: Apache-2.0
+version: 0.1.1
+date-released: '2026-05-22'
+preferred-citation:
+  type: article
+  title: >-
+    reflector: reflective synchronization systems for recursive AI-assisted
+    software engineering
+  authors:
+    - family-names: Szmyt
+      given-names: Alan
+      orcid: https://orcid.org/0009-0008-5291-9795
+  year: 2026
+  doi: 10.5281/zenodo.20477044
+  url: https://doi.org/10.5281/zenodo.20477044

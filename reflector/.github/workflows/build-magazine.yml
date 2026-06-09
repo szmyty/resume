@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build Magazine
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "magazine/**"
+      - "scripts/build-magazine.sh"
+      - ".github/workflows/build-magazine.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "magazine/**"
+      - "scripts/build-magazine.sh"
+      - ".github/workflows/build-magazine.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Magazine
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - tex_file: magazine.tex
+            output_pdf: magazine.pdf
+            dist_name: reflector-magazine.pdf
+            artifact_name: reflector-magazine-pdf
+          - tex_file: magazine-print.tex
+            output_pdf: magazine-print.pdf
+            dist_name: reflector-magazine-print.pdf
+            artifact_name: reflector-magazine-print-pdf
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Build magazine PDF (${{ matrix.variant.dist_name }})
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: tex/${{ matrix.variant.tex_file }}
+          working_directory: magazine
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -file-line-error
+            -f
+            -gg
+            -cd
+            -r
+            tex/.latexmkrc
+
+      - name: Copy PDF to dist
+        run: |
+          set -euo pipefail
+          mkdir -p magazine/dist
+          cp "magazine/.cache/out/${{ matrix.variant.output_pdf }}" \
+            "magazine/dist/${{ matrix.variant.dist_name }}"
+          echo "Built: magazine/dist/${{ matrix.variant.dist_name }}"
+
+      - name: Upload magazine PDF artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.variant.artifact_name }}
+          path: magazine/dist/${{ matrix.variant.dist_name }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish magazine build summary
+        if: success()
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          ARTIFACT_PATH="magazine/dist/${{ matrix.variant.dist_name }}"
+          SHA="$(sha256sum "${ARTIFACT_PATH}" | awk '{print $1}')"
+          {
+            echo "## Magazine Build Summary (${{ matrix.variant.dist_name }})"
+            echo ""
+            echo "| Artifact | Version | Checksum (sha256) | Deployment Target |"
+            echo "| --- | --- | --- | --- |"
+            echo "| ${{ matrix.variant.dist_name }} | ${VERSION} | \`${SHA}\` | artifact:${{ matrix.variant.artifact_name }} |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: magazine-build-artifacts-${{ matrix.variant.artifact_name }}
+          path: magazine/.cache/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reflector"
+version = "0.0.1"
+description = "reflector — a bounded recursive synchronization and governance prototype."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Alan Szmyt" }
+]
+keywords = ["reflector", "ai", "synchronization", "governance", "orchestration", "audit"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12"
+]
+dependencies = [
+  "typer>=0.26.2",
+  "rich>=15.0.0",
+  "pydantic>=2.13.4",
+  "pyyaml>=6.0.3",
+]
+
+[project.optional-dependencies]
+huggingface = [
+  "huggingface_hub>=0.33.0",
+]
+dev = [
+  "pytest>=9.0.0",
+  "pre-commit>=4.0.0",
+]
+
+[project.scripts]
+reflector = "reflector.cli.main:app"
+
+[project.urls]
+Homepage = "https://egohygiene.github.io/reflector/"
+Repository = "https://github.com/egohygiene/reflector"
+Documentation = "https://egohygiene.github.io/reflector/"
+
+[tool.setuptools.packages.find]
+include = ["reflector*"]

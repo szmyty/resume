@@ -1,0 +1,146 @@
+# ============================================================
+# Canonical Publication Metadata
+#
+# Single source of truth for all publication-level metadata
+# used across the publication pipeline: LaTeX macros,
+# CITATION.cff, Zenodo records, GitHub Pages, and any future
+# renderer targets.
+#
+# Intentional lowercase title formatting is preserved here
+# and must be propagated consistently to all renderer surfaces.
+# ============================================================
+
+# ---------------------------------------------------------------------------
+# Title
+# ---------------------------------------------------------------------------
+
+title:
+  main: "reflector"
+  subtitle: "reflective synchronization systems for recursive AI-assisted software engineering"
+  full: "reflector: reflective synchronization systems for recursive AI-assisted software engineering"
+
+# ---------------------------------------------------------------------------
+# Abstract
+# ---------------------------------------------------------------------------
+
+abstract: >-
+  Recursive AI-augmented software engineering introduces a new class of
+  development systems in which autonomous agents operate within iterative
+  feedback loops, generating, evaluating, and refining software artifacts at
+  machine speed. Without explicit governance boundaries, these systems are
+  prone to recursive optimization drift, complexity collapse, and misalignment
+  with human-defined objectives. This paper introduces reflector, a framework
+  for reflective development systems that imposes structured governance
+  contracts on recursive AI-assisted workflows. reflector defines four core
+  mechanisms: (1) scoped autonomous agents with bounded execution contexts,
+  (2) human-in-the-loop alignment checkpoints triggered by milestone events,
+  (3) recursive auditing systems that continuously validate system state
+  against defined invariants, and (4) milestone synchronization protocols that
+  gate autonomous progression. We describe the theoretical foundations of
+  reflective development, characterize common failure modes arising from
+  unbounded recursion, and present an architectural reference model for
+  implementing reflector-compliant systems.
+
+# ---------------------------------------------------------------------------
+# Keywords
+# ---------------------------------------------------------------------------
+
+keywords:
+  - recursive development systems
+  - AI-augmented software engineering
+  - human-in-the-loop governance
+  - autonomous agents
+  - milestone synchronization
+  - recursive drift
+  - software governance
+  - reflective systems
+  - AI safety
+  - systems thinking
+
+# ---------------------------------------------------------------------------
+# Version and status
+# ---------------------------------------------------------------------------
+
+version: "0.1.1"
+status: draft
+date_released: "2026-05-22"
+license: MIT
+
+# ---------------------------------------------------------------------------
+# Publication identifiers (placeholders until formal publication)
+# ---------------------------------------------------------------------------
+
+identifiers:
+  doi: "10.5281/zenodo.20477044"
+  doi_url: "https://doi.org/10.5281/zenodo.20477044"
+  arxiv_id: null          # TODO: replace with real arXiv ID, e.g. 2506.00001
+  zenodo_doi: "10.5281/zenodo.20477044"
+  zenodo_concept_doi: "10.5281/zenodo.20477045"
+  zenodo_concept_doi_url: "https://doi.org/10.5281/zenodo.20477045"
+
+# ---------------------------------------------------------------------------
+# Preferred citation metadata
+# ---------------------------------------------------------------------------
+
+preferred_citation:
+  type: article
+  year: 2026
+  # journal: "[JOURNAL]"   # TODO: fill in when submitted/accepted
+  # volume: "[VOLUME]"
+  # issue: "[ISSUE]"
+  # pages: "[PAGES]"
+
+# ---------------------------------------------------------------------------
+# Academic indexing compatibility
+#
+# Declares readiness and metadata availability for major academic
+# discovery ecosystems.  These fields support future automatic
+# indexing and portfolio integration without coupling to any
+# single platform.
+# ---------------------------------------------------------------------------
+
+academic_indexing:
+  google_scholar:
+    ready: true
+    notes: >-
+      CITATION.cff, abstract, and keywords support Google Scholar indexing
+      via GitHub repository metadata discovery.
+  semantic_scholar:
+    ready: true
+    notes: >-
+      DOI assigned via Zenodo; Semantic Scholar ingestion can now resolve via DOI.
+  openalex:
+    ready: true
+    notes: >-
+      DOI assigned via Zenodo; OpenAlex can create/update work records from DOI metadata.
+  crossref:
+    ready: false
+    notes: >-
+      Pending journal/conference acceptance and DOI assignment via Crossref.
+  zenodo:
+    ready: true
+    notes: >-
+      Zenodo version DOI and concept DOI are assigned and tracked in canonical metadata.
+  orcid:
+    ready: true
+    notes: >-
+      ORCID iD present in CITATION.cff, .zenodo.json, and metadata layer.
+      DOI metadata is available for ORCID works synchronization.
+
+# ---------------------------------------------------------------------------
+# Companion publications
+# ---------------------------------------------------------------------------
+
+companion_publications:
+  magazine:
+    title: "reflector: Visual Companion Magazine"
+    description: >-
+      A visually compressed companion artifact designed to communicate
+      Reflector concepts through editorial layouts, infographics, and
+      visual storytelling.
+    artifacts:
+      pdf: "reflector-magazine.pdf"
+      print_pdf: "reflector-magazine-print.pdf"
+    source_directory: "magazine/"
+    pages_url: "https://egohygiene.github.io/reflector/reflector-magazine.pdf"
+    print_pages_url: "https://egohygiene.github.io/reflector/reflector-magazine-print.pdf"

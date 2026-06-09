@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+name: Release Tag Automation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "VERSION"
+      - "metadata/publication.yaml"
+      - "publication.json"
+      - "release-manifest.json"
+      - ".release-please-manifest.json"
+      - ".github/workflows/release-tag.yml"
+      - ".github/workflows/release-paper.yml"
+      - "scripts/validate-metadata.py"
+      - "scripts/validate-release-lifecycle.py"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    name: Create release tag from canonical version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate release synchronization
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pyyaml>=6.0
+          python scripts/validate-metadata.py
+          python scripts/validate-release-lifecycle.py
+
+      - name: Compute release tag
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Create annotated tag when missing
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+
+          if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists. No action required."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "${TAG}"

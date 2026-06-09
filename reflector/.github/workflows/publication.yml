@@ -1,0 +1,1315 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+name: Publication
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "VERSION"
+      - "metadata/**"
+      - "paper/**/*.tex"
+      - "paper/**/*.bib"
+      - "paper/**/*.sty"
+      - "paper/**/sections/**"
+      - "paper/**/macros/**"
+      - "paper/**/styles/**"
+      - "paper/**/figures/**"
+      - "paper/**/references/**"
+      - "publication.json"
+      - "release-manifest.json"
+      - "CITATION.cff"
+      - ".zenodo.json"
+      - ".latexmkrc"
+      - ".chktexrc"
+      - "scripts/build-paper.sh"
+      - "scripts/validate-metadata.py"
+      - "scripts/validate-release-lifecycle.py"
+      - "scripts/validate-arxiv-packaging.py"
+      - "scripts/validate-build-reproducibility.py"
+      - "scripts/audit-publication-readiness.py"
+      - "scripts/audit-chktex.py"
+      - "scripts/lint-paper.sh"
+      - ".github/workflows/publication.yml"
+
+  workflow_dispatch:
+    inputs:
+      paper:
+        description: "Paper directory"
+        required: false
+        default: "paper"
+      dry_run:
+        description: "Dry run — skip GitHub Release creation (true/false)"
+        required: false
+        default: "false"
+      fail_on_warnings:
+        description: "Fail if ChkTeX warnings are found (true/false)"
+        required: false
+        default: "false"
+      release_scope:
+        description: "Publication scope: auto, paper, full"
+        required: false
+        default: "auto"
+
+permissions:
+  contents: write
+
+# Cancel any in-progress publication run for the same branch.
+concurrency:
+  group: publication-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# JOBS
+# ============================================================
+
+jobs:
+
+  detect-scope:
+    name: Detect Publication Scope
+    runs-on: ubuntu-latest
+
+    outputs:
+      paper_changed: ${{ steps.scope.outputs.paper_changed }}
+      full_release: ${{ steps.scope.outputs.full_release }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine publication scope
+        id: scope
+        run: |
+          set -euo pipefail
+
+          EVENT="${{ github.event_name }}"
+          SCOPE_INPUT="${{ github.event.inputs.release_scope || 'auto' }}"
+          PAPER_CHANGED="false"
+          FULL_RELEASE="false"
+
+          if [[ "${EVENT}" == "workflow_dispatch" ]]; then
+            case "${SCOPE_INPUT}" in
+              auto|full)
+                PAPER_CHANGED="true"
+                FULL_RELEASE="true"
+                ;;
+              paper)
+                PAPER_CHANGED="true"
+                FULL_RELEASE="false"
+                ;;
+              *)
+                echo "::error::Invalid release_scope='${SCOPE_INPUT}'. Use auto, paper, or full."
+                exit 1
+                ;;
+            esac
+          else
+            BASE="${{ github.event.before }}"
+            if [[ -z "${BASE}" || "${BASE}" == "0000000000000000000000000000000000000000" ]]; then
+              BASE="$(git rev-list --max-count=1 HEAD^ 2>/dev/null || true)"
+            fi
+            if [[ -n "${BASE}" ]] && ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+              echo "Base commit ${BASE} is unavailable in checkout history; falling back to full repository scan."
+              BASE=""
+            fi
+            if [[ -n "${BASE}" ]]; then
+              CHANGED_FILES="$(git diff --name-only "${BASE}" "${GITHUB_SHA}")"
+            else
+              CHANGED_FILES="$(git ls-files)"
+            fi
+            PAPER_SCOPE_PATTERNS=(
+              '^paper/'
+              '^metadata/'
+              '^publication\.json$'
+              '^release-manifest\.json$'
+              '^CITATION\.cff$'
+              '^\.zenodo\.json$'
+              '^\.latexmkrc$'
+              '^\.chktexrc$'
+              '^scripts/build-paper\.sh$'
+              '^scripts/validate-metadata\.py$'
+              '^scripts/validate-release-lifecycle\.py$'
+              '^scripts/validate-arxiv-packaging\.py$'
+              '^scripts/validate-build-reproducibility\.py$'
+              '^scripts/audit-publication-readiness\.py$'
+              '^scripts/audit-chktex\.py$'
+              '^scripts/lint-paper\.sh$'
+            )
+            echo "Changed files:"
+            echo "${CHANGED_FILES}"
+
+            if echo "${CHANGED_FILES}" | grep -Eq '^VERSION$'; then
+              FULL_RELEASE="true"
+              PAPER_CHANGED="true"
+            else
+              for pattern in "${PAPER_SCOPE_PATTERNS[@]}"; do
+                if echo "${CHANGED_FILES}" | grep -Eq "${pattern}"; then
+                  PAPER_CHANGED="true"
+                  break
+                fi
+              done
+            fi
+          fi
+
+          echo "paper_changed=${PAPER_CHANGED}" >> "$GITHUB_OUTPUT"
+          echo "full_release=${FULL_RELEASE}" >> "$GITHUB_OUTPUT"
+
+          echo "paper_changed=${PAPER_CHANGED}"
+          echo "full_release=${FULL_RELEASE}"
+
+  # ============================================================
+  # STAGE 1 — VALIDATE
+  # Synchronization, metadata, release lifecycle, arXiv packaging,
+  # build reproducibility, and publication readiness.
+  # All validation failures block downstream stages.
+  # ============================================================
+
+  validate:
+    name: Validate Publication
+    needs: [detect-scope]
+    if: needs.detect-scope.outputs.paper_changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          pip install --quiet pyyaml>=6.0
+
+      - name: Validate metadata synchronization
+        run: python scripts/validate-metadata.py
+
+      - name: Validate release lifecycle contracts
+        run: python scripts/validate-release-lifecycle.py
+
+      - name: Validate arXiv packaging readiness
+        run: python scripts/validate-arxiv-packaging.py
+
+      - name: Validate build reproducibility
+        run: python scripts/validate-build-reproducibility.py
+
+      - name: Run publication readiness audit
+        run: python scripts/audit-publication-readiness.py
+
+      - name: Upload publication readiness report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: publication-readiness-report
+          path: audits/publication-readiness.md
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ============================================================
+  # STAGE 1 — VALIDATE REUSE (runs in parallel with validate)
+  # REUSE 3.x compliance check.
+  # ============================================================
+
+  validate-reuse:
+    name: Validate REUSE Compliance
+    needs: [detect-scope]
+    if: needs.detect-scope.outputs.full_release == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check REUSE compliance
+        uses: fsfe/reuse-action@v6
+
+  # ============================================================
+  # STAGE 2 — AUDIT (runs in parallel with validate)
+  # ChkTeX static analysis and audit report generation.
+  # ============================================================
+
+  audit-chktex:
+    name: ChkTeX Audit
+    needs: [detect-scope]
+    if: needs.detect-scope.outputs.paper_changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Determine paper directory
+        id: vars
+        run: |
+          set -euo pipefail
+          PAPER="${{ github.event.inputs.paper || 'paper' }}"
+          echo "paper=${PAPER}" >> "$GITHUB_OUTPUT"
+
+      - name: Install ChkTeX
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends chktex
+          chktex --version
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run ChkTeX lint
+        id: lint
+        run: |
+          set -euo pipefail
+
+          PAPER="${{ steps.vars.outputs.paper }}"
+          CHKTEX_OUT="chktex-output.txt"
+
+          ./scripts/lint-paper.sh "${PAPER}" --output "${CHKTEX_OUT}" || true
+
+          WARNING_COUNT="$(grep -cE '^.+:[0-9]+:[0-9]+:[0-9]+:.+$' "${CHKTEX_OUT}" || true)"
+          echo "warning_count=${WARNING_COUNT}" >> "$GITHUB_OUTPUT"
+          echo "output_file=${CHKTEX_OUT}" >> "$GITHUB_OUTPUT"
+
+          if [[ "${WARNING_COUNT}" -gt 0 ]]; then
+            echo "::warning::ChkTeX found ${WARNING_COUNT} warning(s)."
+          else
+            echo "✅ ChkTeX: no warnings found."
+          fi
+
+      - name: Generate ChkTeX audit report
+        if: always()
+        run: |
+          python scripts/audit-chktex.py \
+            --paper "${{ steps.vars.outputs.paper }}" \
+            --output audits/chktex-audit.md
+
+      - name: Print ChkTeX audit report
+        if: always()
+        run: |
+          echo "::group::ChkTeX Audit Report"
+          cat audits/chktex-audit.md
+          echo "::endgroup::"
+
+      - name: Annotate ChkTeX warnings
+        if: always() && steps.lint.outputs.warning_count != '0'
+        run: |
+          set -euo pipefail
+          OUTPUT_FILE="${{ steps.lint.outputs.output_file }}"
+          if [[ ! -f "${OUTPUT_FILE}" ]]; then
+            exit 0
+          fi
+
+          PAPER="${{ steps.vars.outputs.paper }}"
+          while IFS=: read -r filepath lineno col num rest; do
+            msg="${rest#"${rest%%[! ]*}"}"
+            if [[ -n "${filepath}" && "${lineno}" =~ ^[0-9]+$ ]]; then
+              rel_path="${filepath#${GITHUB_WORKSPACE}/}"
+              echo "::warning file=${rel_path},line=${lineno},col=${col}::ChkTeX W${num}: ${msg}"
+            fi
+          done < "${OUTPUT_FILE}"
+
+      - name: Quality gate — fail on critical ChkTeX warnings
+        if: always()
+        run: |
+          set -euo pipefail
+
+          FAIL_ON_WARNINGS="${{ github.event.inputs.fail_on_warnings || 'false' }}"
+          OUTPUT_FILE="${{ steps.lint.outputs.output_file }}"
+
+          if [[ ! -f "${OUTPUT_FILE}" ]]; then
+            echo "No ChkTeX output file — skipping quality gate."
+            exit 0
+          fi
+
+          CRITICAL_COUNT=0
+          for num in 11 17 19; do
+            count="$(grep -cE "^.+:[0-9]+:[0-9]+:${num}:.+$" "${OUTPUT_FILE}" || true)"
+            CRITICAL_COUNT=$(( CRITICAL_COUNT + count ))
+          done
+
+          if [[ "${CRITICAL_COUNT}" -gt 0 ]]; then
+            echo "::error::❌ ${CRITICAL_COUNT} CRITICAL ChkTeX warning(s) found (W11/W17/W19)."
+            exit 1
+          fi
+
+          if [[ "${FAIL_ON_WARNINGS}" == "true" ]]; then
+            WARNING_COUNT="${{ steps.lint.outputs.warning_count }}"
+            if [[ "${WARNING_COUNT}" -gt 0 ]]; then
+              echo "::error::❌ ${WARNING_COUNT} ChkTeX warning(s) found and fail_on_warnings=true."
+              exit 1
+            fi
+          fi
+
+          echo "✅ ChkTeX quality gate passed."
+
+      - name: Upload ChkTeX audit report artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: chktex-audit-report
+          path: audits/chktex-audit.md
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ============================================================
+  # STAGE 3 — BUILD PAPER
+  # Compile reflector.pdf from paper/paper.tex.
+  # Depends on validate (all validation must pass first).
+  # ============================================================
+
+  build-paper:
+    name: Build Paper
+    needs: [detect-scope, validate]
+    if: needs.detect-scope.outputs.paper_changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Determine paper directory
+        id: vars
+        run: |
+          set -euo pipefail
+          PAPER="${{ github.event.inputs.paper || 'paper' }}"
+          echo "paper=${PAPER}" >> "$GITHUB_OUTPUT"
+
+      - name: Build LaTeX PDF
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: paper.tex
+          working_directory: ${{ steps.vars.outputs.paper }}
+          extra_system_packages: "biber"
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -synctex=1
+            -file-line-error
+            -shell-escape
+            -f
+            -gg
+            -cd
+            -r
+            ../.latexmkrc
+
+      - name: Print LaTeX diagnostics on failure
+        if: failure()
+        run: ./scripts/print-latex-diagnostics.sh "${{ steps.vars.outputs.paper }}"
+
+      - name: Rename PDF to canonical asset name
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp "${{ steps.vars.outputs.paper }}/.cache/out/paper.pdf" dist/reflector.pdf
+          echo "Built: dist/reflector.pdf"
+
+      - name: Publish paper workflow summary
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          SHA="$(sha256sum dist/reflector.pdf | awk '{print $1}')"
+          {
+            echo "## Paper Build Summary"
+            echo ""
+            echo "| Artifact | Version | Checksum (sha256) | Deployment Target |"
+            echo "| --- | --- | --- | --- |"
+            echo "| reflector.pdf | ${VERSION} | \`${SHA}\` | release/reflector-v${VERSION}/reflector.pdf |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload paper PDF artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: reflector-pdf
+          path: dist/reflector.pdf
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: paper-build-artifacts
+          path: ${{ steps.vars.outputs.paper }}/.cache/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+  # ============================================================
+  # STAGE 3 — BUILD ARXIV
+  # Package arXiv source bundles from paper source inputs.
+  # Depends on build-paper to guarantee synchronized paper inputs.
+  # ============================================================
+
+  build-arxiv:
+    name: Build arXiv Bundles
+    needs: [detect-scope, build-paper]
+    # Full release runs package job, which assembles and archives canonical arXiv bundles.
+    # This job is reserved for incremental paper-only publication runs.
+    if: needs.detect-scope.outputs.paper_changed == 'true' && needs.detect-scope.outputs.full_release != 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Determine paper directory and version
+        id: vars
+        run: |
+          set -euo pipefail
+          PAPER="${{ github.event.inputs.paper || 'paper' }}"
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          TAG="v${VERSION}"
+          echo "paper=${PAPER}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble arXiv source bundle
+        run: |
+          set -euo pipefail
+
+          PAPER_DIR="${{ steps.vars.outputs.paper }}"
+          ARXIV_DIR="dist/arxiv"
+          mkdir --parents "${ARXIV_DIR}"
+
+          for file in "paper.tex" "references.bib"; do
+            if [[ -f "${PAPER_DIR}/${file}" ]]; then
+              cp "${PAPER_DIR}/${file}" "${ARXIV_DIR}/${file}"
+            fi
+          done
+
+          if [[ -f ".latexmkrc" ]]; then
+            cp ".latexmkrc" "${ARXIV_DIR}/.latexmkrc"
+          fi
+
+          for directory in "sections" "figures" "diagrams" "assets" "references" "styles" "macros" "config"; do
+            if [[ -d "${PAPER_DIR}/${directory}" ]]; then
+              cp --recursive "${PAPER_DIR}/${directory}" "${ARXIV_DIR}/${directory}"
+            fi
+          done
+
+          if [[ -f "${PAPER_DIR}/00README.json" ]]; then
+            cp "${PAPER_DIR}/00README.json" "${ARXIV_DIR}/00README.json"
+          fi
+
+      - name: Package arXiv bundles
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.vars.outputs.tag }}"
+          ARXIV_DIR="dist/arxiv"
+          ZIP_PATH="dist/reflector-arxiv-${TAG}.zip"
+          TARGZ_PATH="dist/reflector-arxiv-${TAG}.tar.gz"
+          ZIP_ABS_PATH="${GITHUB_WORKSPACE}/${ZIP_PATH}"
+
+          (
+            cd "${ARXIV_DIR}"
+            zip -X -r "${ZIP_ABS_PATH}" .
+          )
+
+          tar --sort=name \
+              --mtime="1970-01-01 00:00:00 UTC" \
+              --owner=0 --group=0 --numeric-owner \
+              -czf "${TARGZ_PATH}" \
+              -C "${ARXIV_DIR}" .
+
+      - name: Publish arXiv workflow summary
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.vars.outputs.version }}"
+          TAG="${{ steps.vars.outputs.tag }}"
+          ZIP_PATH="dist/reflector-arxiv-${TAG}.zip"
+          TARGZ_PATH="dist/reflector-arxiv-${TAG}.tar.gz"
+          ZIP_SHA="$(sha256sum "${ZIP_PATH}" | awk '{print $1}')"
+          TARGZ_SHA="$(sha256sum "${TARGZ_PATH}" | awk '{print $1}')"
+
+          {
+            echo "## arXiv Build Summary"
+            echo ""
+            echo "| Artifact | Version | Checksum (sha256) | Deployment Target |"
+            echo "| --- | --- | --- | --- |"
+            echo "| reflector-arxiv-${TAG}.zip | ${VERSION} | \`${ZIP_SHA}\` | release/reflector-${TAG}/reflector-arxiv-${TAG}.zip |"
+            echo "| reflector-arxiv-${TAG}.tar.gz | ${VERSION} | \`${TARGZ_SHA}\` | release/reflector-${TAG}/reflector-arxiv-${TAG}.tar.gz |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload arXiv bundle artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: reflector-arxiv-bundles
+          path: |
+            dist/reflector-arxiv-${{ steps.vars.outputs.tag }}.zip
+            dist/reflector-arxiv-${{ steps.vars.outputs.tag }}.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  # ============================================================
+  # STAGE 3 — BUILD MAGAZINE (parallel with build-paper)
+  # Compile reflector-magazine.pdf and reflector-magazine-print.pdf.
+  # Depends on validate (all validation must pass first).
+  # ============================================================
+
+  build-magazine:
+    name: Build Magazine
+    needs: [detect-scope, validate]
+    if: needs.detect-scope.outputs.full_release == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Build magazine PDF (digital)
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: tex/magazine.tex
+          working_directory: magazine
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -file-line-error
+            -f
+            -gg
+            -cd
+            -r
+            tex/.latexmkrc
+
+      - name: Build magazine PDF (print)
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: tex/magazine-print.tex
+          working_directory: magazine
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -file-line-error
+            -f
+            -gg
+            -cd
+            -r
+            tex/.latexmkrc
+
+      - name: Copy magazine PDFs to dist
+        run: |
+          set -euo pipefail
+          mkdir -p magazine/dist
+          cp magazine/.cache/out/magazine.pdf magazine/dist/reflector-magazine.pdf
+          cp magazine/.cache/out/magazine-print.pdf magazine/dist/reflector-magazine-print.pdf
+          echo "Built: magazine/dist/reflector-magazine.pdf"
+          echo "Built: magazine/dist/reflector-magazine-print.pdf"
+
+      - name: Publish magazine workflow summary
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          MAG_SHA="$(sha256sum magazine/dist/reflector-magazine.pdf | awk '{print $1}')"
+          PRINT_SHA="$(sha256sum magazine/dist/reflector-magazine-print.pdf | awk '{print $1}')"
+          {
+            echo "## Magazine Build Summary"
+            echo ""
+            echo "| Artifact | Version | Checksum (sha256) | Deployment Target |"
+            echo "| --- | --- | --- | --- |"
+            echo "| reflector-magazine.pdf | ${VERSION} | \`${MAG_SHA}\` | release/reflector-v${VERSION}/reflector-magazine.pdf |"
+            echo "| reflector-magazine-print.pdf | ${VERSION} | \`${PRINT_SHA}\` | release/reflector-v${VERSION}/reflector-magazine-print.pdf |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload magazine PDF artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: reflector-magazine-pdfs
+          path: magazine/dist/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: magazine-build-artifacts
+          path: magazine/.cache/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+  # ============================================================
+  # STAGE 4 — PACKAGE
+  # Aggregate all publication artifacts into release/.
+  # Generate: arXiv bundles, checksums, release manifest,
+  # Zenodo readiness report, release notes, and source archive.
+  # Depends on all build and audit stages.
+  # ============================================================
+
+  package:
+    name: Package Release Artifacts
+    needs: [detect-scope, build-paper, build-magazine, audit-chktex, validate]
+    if: needs.detect-scope.outputs.full_release == 'true'
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_no_v: ${{ steps.version.outputs.version_no_v }}
+      tag: ${{ steps.version.outputs.tag }}
+      release_dir: ${{ steps.version.outputs.release_dir }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve canonical version and paths
+        id: version
+        run: |
+          set -euo pipefail
+
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          TAG="v${VERSION}"
+          PAPER_NAME="reflector"
+          RELEASE_DIR="release/${PAPER_NAME}-${TAG}"
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version_no_v=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "paper_name=${PAPER_NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_dir=${RELEASE_DIR}" >> "$GITHUB_OUTPUT"
+
+          echo "Version: ${VERSION}"
+          echo "Tag:     ${TAG}"
+          echo "Release: ${RELEASE_DIR}"
+
+      - name: Download paper PDF
+        uses: actions/download-artifact@v4
+        with:
+          name: reflector-pdf
+          path: dist/
+
+      - name: Download magazine PDFs
+        uses: actions/download-artifact@v4
+        with:
+          name: reflector-magazine-pdfs
+          path: dist/magazine/
+
+      - name: Download ChkTeX audit report
+        uses: actions/download-artifact@v4
+        with:
+          name: chktex-audit-report
+          path: audits/
+        continue-on-error: true
+
+      - name: Download publication readiness report
+        uses: actions/download-artifact@v4
+        with:
+          name: publication-readiness-report
+          path: audits/
+        continue-on-error: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install --quiet pyyaml>=6.0
+
+      - name: Assemble release directory
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.version.outputs.tag }}"
+          PAPER_NAME="${{ steps.version.outputs.paper_name }}"
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+          PAPER_DIR="${{ github.event.inputs.paper || 'paper' }}"
+
+          mkdir --parents "${RELEASE_DIR}"
+
+          # ── Core publication PDFs ────────────────────────────────────────
+          cp dist/reflector.pdf "${RELEASE_DIR}/reflector.pdf"
+          cp dist/magazine/reflector-magazine.pdf "${RELEASE_DIR}/reflector-magazine.pdf"
+          cp dist/magazine/reflector-magazine-print.pdf "${RELEASE_DIR}/reflector-magazine-print.pdf"
+
+          # ── Hero image ───────────────────────────────────────────────────
+          if [[ -f "${PAPER_DIR}/figures/hero.png" ]]; then
+            cp "${PAPER_DIR}/figures/hero.png" "${RELEASE_DIR}/hero.png"
+          fi
+
+          # ── Audit reports ────────────────────────────────────────────────
+          for report in \
+            "audits/chktex-audit.md" \
+            "audits/publication-readiness.md" \
+            "audits/research-peer-review-audit.md" \
+            "audits/research-peer-review-tasks.md" \
+            "audits/zenodo-readiness.md"; do
+            if [[ -f "${report}" ]]; then
+              cp "${report}" "${RELEASE_DIR}/$(basename "${report}")"
+            fi
+          done
+
+          # ── Publication metadata ─────────────────────────────────────────
+          cp publication.json "${RELEASE_DIR}/publication.json"
+
+          echo "Release directory assembled at ${RELEASE_DIR}."
+          find "${RELEASE_DIR}" -maxdepth 2 -type f | sort
+
+      - name: Build arXiv source bundle
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.version.outputs.tag }}"
+          PAPER_NAME="${{ steps.version.outputs.paper_name }}"
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+          PAPER_DIR="${{ github.event.inputs.paper || 'paper' }}"
+          ARXIV_DIR="${RELEASE_DIR}/arxiv"
+
+          mkdir --parents "${ARXIV_DIR}"
+
+          # ── Copy top-level LaTeX sources ─────────────────────────────────
+          for file in "paper.tex" "references.bib"; do
+            if [[ -f "${PAPER_DIR}/${file}" ]]; then
+              cp "${PAPER_DIR}/${file}" "${ARXIV_DIR}/${file}"
+            fi
+          done
+
+          # ── Copy build configuration ─────────────────────────────────────
+          if [[ -f ".latexmkrc" ]]; then
+            cp ".latexmkrc" "${ARXIV_DIR}/.latexmkrc"
+          fi
+
+          # ── Copy source directories ──────────────────────────────────────
+          for directory in "sections" "figures" "diagrams" "assets" "references" "styles" "macros" "config"; do
+            if [[ -d "${PAPER_DIR}/${directory}" ]]; then
+              cp --recursive "${PAPER_DIR}/${directory}" "${ARXIV_DIR}/${directory}"
+            fi
+          done
+
+          # ── Copy arXiv README manifest ───────────────────────────────────
+          if [[ -f "${PAPER_DIR}/00README.json" ]]; then
+            cp "${PAPER_DIR}/00README.json" "${ARXIV_DIR}/00README.json"
+          fi
+
+          echo "arXiv source bundle assembled at ${ARXIV_DIR}."
+          find "${ARXIV_DIR}" -maxdepth 3 -type f | sort
+
+      - name: Generate source archive (source.zip)
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.version.outputs.tag }}"
+          PAPER_NAME="${{ steps.version.outputs.paper_name }}"
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+          PAPER_DIR="${{ github.event.inputs.paper || 'paper' }}"
+
+          SOURCE_ARCHIVE="${RELEASE_DIR}/source.zip"
+
+          # Collect source files: paper sources + magazine sources + metadata
+          zip -X -r "${SOURCE_ARCHIVE}" \
+            "${PAPER_DIR}/paper.tex" \
+            "${PAPER_DIR}/references.bib" \
+            ".latexmkrc" \
+            "publication.json" \
+            "release-manifest.json" \
+            "CITATION.cff" \
+            "metadata/" \
+            2>/dev/null || true
+
+          for directory in "sections" "figures" "diagrams" "assets" "references" "styles" "macros" "config"; do
+            if [[ -d "${PAPER_DIR}/${directory}" ]]; then
+              zip -X -r "${SOURCE_ARCHIVE}" "${PAPER_DIR}/${directory}" 2>/dev/null || true
+            fi
+          done
+
+          echo "Source archive: ${SOURCE_ARCHIVE}"
+
+      - name: Package arXiv bundles (zip + tar.gz)
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.version.outputs.tag }}"
+          PAPER_NAME="${{ steps.version.outputs.paper_name }}"
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+
+          ARXIV_DIR="${RELEASE_DIR}/arxiv"
+          ARXIV_ZIP="${RELEASE_DIR}/${PAPER_NAME}-arxiv-${TAG}.zip"
+          ARXIV_TARGZ="${RELEASE_DIR}/${PAPER_NAME}-arxiv-${TAG}.tar.gz"
+
+          # arXiv ZIP bundle
+          (
+            cd "${ARXIV_DIR}"
+            zip -X -r "${OLDPWD}/${ARXIV_ZIP}" .
+          )
+
+          # arXiv TAR.GZ bundle (deterministic)
+          tar --sort=name \
+              --mtime="1970-01-01 00:00:00 UTC" \
+              --owner=0 --group=0 --numeric-owner \
+              -czf "${ARXIV_TARGZ}" \
+              -C "${ARXIV_DIR}" .
+
+          echo "arXiv ZIP:    ${ARXIV_ZIP}"
+          echo "arXiv TAR.GZ: ${ARXIV_TARGZ}"
+
+      - name: Generate Zenodo readiness report
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+          ZENODO_REPORT="${RELEASE_DIR}/zenodo-readiness.md"
+
+          TAG="${TAG}" \
+          VERSION="${VERSION}" \
+          ZENODO_REPORT="${ZENODO_REPORT}" \
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          import yaml
+
+          tag = os.environ["TAG"]
+          version = os.environ["VERSION"]
+          report_path = Path(os.environ["ZENODO_REPORT"])
+          repo = os.environ.get("GITHUB_REPOSITORY", "egohygiene/reflector")
+
+          metadata = yaml.safe_load(Path("metadata/publication.yaml").read_text(encoding="utf-8"))
+          zenodo = json.loads(Path(".zenodo.json").read_text(encoding="utf-8"))
+          citation = yaml.safe_load(Path("CITATION.cff").read_text(encoding="utf-8"))
+
+          release_url = f"https://github.com/{repo}/releases/tag/{tag}"
+          source_zip = f"https://github.com/{repo}/archive/refs/tags/{tag}.zip"
+          source_targz = f"https://github.com/{repo}/archive/refs/tags/{tag}.tar.gz"
+
+          checks = [
+              ("metadata/publication.yaml version matches VERSION", str(metadata.get("version")) == version),
+              (".zenodo.json version matches VERSION", str(zenodo.get("version")) == version),
+              ("CITATION.cff version matches VERSION", str(citation.get("version")) == version),
+              ("metadata/publication.yaml has DOI", bool((metadata.get("identifiers") or {}).get("doi"))),
+              ("CITATION.cff has DOI", bool(citation.get("doi"))),
+              (".zenodo.json has DOI", bool(zenodo.get("doi"))),
+              ("ORCID present in .zenodo.json creators", bool((zenodo.get("creators") or [{}])[0].get("orcid"))),
+              (".zenodo.json has title", bool(zenodo.get("title"))),
+              (".zenodo.json has description", bool(zenodo.get("description"))),
+              (".zenodo.json has upload_type", bool(zenodo.get("upload_type"))),
+              ("CITATION.cff has orcid", any(a.get("orcid") for a in (citation.get("authors") or []))),
+          ]
+
+          all_passed = all(ok for _, ok in checks)
+          status = "✅ ready" if all_passed else "⚠️ blocked"
+
+          artifact_inventory = [
+              "reflector.pdf",
+              "reflector-magazine.pdf",
+              "reflector-magazine-print.pdf",
+              f"reflector-arxiv-{tag}.zip",
+              f"reflector-arxiv-{tag}.tar.gz",
+              "publication.json",
+              "checksums.txt",
+              "release-manifest.json",
+              "publication-inventory.json",
+              "source.zip",
+          ]
+
+          lines = [
+              f"# Zenodo Readiness Report — {tag}",
+              "",
+              f"- **Status:** {status}",
+              f"- **Version:** `{version}`",
+              f"- **Tag:** `{tag}`",
+              f"- **Release URL:** {release_url}",
+              f"- **Source ZIP:** {source_zip}",
+              f"- **Source TAR.GZ:** {source_targz}",
+              "",
+              "## Validation Checks",
+              "",
+          ]
+          for name, ok in checks:
+              lines.append(f"- [{'x' if ok else ' '}] {name}")
+
+          lines += [
+              "",
+              "## Artifact Inventory",
+              "",
+          ]
+          for artifact in artifact_inventory:
+              lines.append(f"- `{artifact}`")
+
+          lines += [
+              "",
+              "## Next Steps",
+              "",
+              "1. Verify GitHub Release contains all artifacts above.",
+              "2. Upload artifacts to Zenodo deposit manually.",
+              "3. Verify Zenodo DOI metadata remains synchronized (`metadata/publication.yaml`, `CITATION.cff`, `.zenodo.json`, `codemeta.json`).",
+              "4. Run `python scripts/validate-metadata.py` after any metadata edit.",
+              "5. Tag a metadata-update release when DOI metadata changes.",
+              "",
+          ]
+
+          report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          print(f"Zenodo readiness report written to {report_path}")
+          PY
+
+      - name: Generate release notes from changelog
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+          RELEASE_NOTES="${RELEASE_DIR}/release-notes.md"
+
+          {
+            printf "## %s\n\n" "${TAG}"
+            awk -v version="${VERSION}" '
+              $0 ~ "^## \\[" version "\\]" {capture=1; next}
+              $0 ~ "^## \\[" && capture==1 {exit}
+              capture==1 {print}
+            ' CHANGELOG.md
+          } > "${RELEASE_NOTES}"
+
+          # Validate that changelog content was extracted for this version.
+          BODY_LINES="$(awk 'NR > 2 && /\S/' "${RELEASE_NOTES}" | wc -l)"
+          if [[ "${BODY_LINES}" -eq 0 ]]; then
+            echo "::warning::No changelog entry found for version ${VERSION} in CHANGELOG.md." \
+              "Release notes will contain only the tag header."
+          fi
+
+          echo "Release notes written to ${RELEASE_NOTES}"
+          cat "${RELEASE_NOTES}"
+
+      - name: Generate checksums and release manifest
+        run: |
+          set -euo pipefail
+
+          readarray -t DOI_METADATA < <(python - <<'PY'
+          import yaml
+          from pathlib import Path
+
+          publication = yaml.safe_load(Path("metadata/publication.yaml").read_text(encoding="utf-8"))
+          repository = yaml.safe_load(Path("metadata/repository.yaml").read_text(encoding="utf-8"))
+          identifiers = publication.get("identifiers", {})
+          zenodo = repository.get("future_integrations", {}).get("zenodo", {})
+          print(identifiers.get("doi", ""))
+          print(identifiers.get("doi_url", ""))
+          print(zenodo.get("concept_doi", ""))
+          print(zenodo.get("concept_doi_url", ""))
+          PY
+          )
+          DOI="${DOI_METADATA[0]}"
+          DOI_URL="${DOI_METADATA[1]}"
+          CONCEPT_DOI="${DOI_METADATA[2]}"
+          CONCEPT_DOI_URL="${DOI_METADATA[3]}"
+
+          python scripts/stage-publication-release.py \
+            --release-dir "${{ steps.version.outputs.release_dir }}" \
+            --version "${{ steps.version.outputs.version }}" \
+            --tag "${{ steps.version.outputs.tag }}" \
+            --paper-name "${{ steps.version.outputs.paper_name }}" \
+            --repository "${{ github.repository }}" \
+            --commit "${{ github.sha }}" \
+            --doi "${DOI}" \
+            --doi-url "${DOI_URL}" \
+            --concept-doi "${CONCEPT_DOI}" \
+            --concept-doi-url "${CONCEPT_DOI_URL}" \
+            --require reflector.pdf \
+            --require reflector-magazine.pdf \
+            --require reflector-magazine-print.pdf \
+            --require reflector-arxiv-${{ steps.version.outputs.tag }}.zip \
+            --require reflector-arxiv-${{ steps.version.outputs.tag }}.tar.gz \
+            --require source.zip \
+            --require publication.json \
+            --require publication-readiness.md \
+            --require chktex-audit.md \
+            --require zenodo-readiness.md \
+            --require release-notes.md
+
+      - name: Verify release artifacts
+        run: |
+          set -euo pipefail
+
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+
+          required_files=(
+            "${RELEASE_DIR}/reflector.pdf"
+            "${RELEASE_DIR}/reflector-magazine.pdf"
+            "${RELEASE_DIR}/reflector-magazine-print.pdf"
+            "${RELEASE_DIR}/reflector-arxiv-${{ steps.version.outputs.tag }}.zip"
+            "${RELEASE_DIR}/reflector-arxiv-${{ steps.version.outputs.tag }}.tar.gz"
+            "${RELEASE_DIR}/source.zip"
+            "${RELEASE_DIR}/publication.json"
+            "${RELEASE_DIR}/checksums.txt"
+            "${RELEASE_DIR}/release-manifest.json"
+            "${RELEASE_DIR}/publication-inventory.json"
+            "${RELEASE_DIR}/zenodo-readiness.md"
+            "${RELEASE_DIR}/release-notes.md"
+          )
+
+          MISSING=0
+          for f in "${required_files[@]}"; do
+            if [[ ! -f "${f}" ]]; then
+              echo "::error::Missing required release artifact: ${f}"
+              MISSING=$(( MISSING + 1 ))
+            else
+              echo "✅ ${f}"
+            fi
+          done
+
+          if [[ "${MISSING}" -gt 0 ]]; then
+            echo "::error::${MISSING} required release artifact(s) missing."
+            exit 1
+          fi
+
+          echo ""
+          echo "=== Release artifact inventory ==="
+          find "${RELEASE_DIR}" -maxdepth 1 -type f | sort
+
+      - name: Publish workflow summary
+        if: always()
+        run: |
+          set -euo pipefail
+
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+
+          {
+            echo "# Publication package summary"
+            echo ""
+            echo "- Release directory: \`${RELEASE_DIR}\`"
+            echo "- Tag: \`${TAG}\`"
+            echo "- Version: \`${VERSION}\`"
+            echo ""
+            echo "## Artifact Inventory"
+            echo ""
+            echo "| Artifact | Version | Size (bytes) | Checksum (sha256) | Deployment Target |"
+            echo "| --- | --- | ---: | --- | --- |"
+            while read -r checksum filename; do
+              target="release/reflector-${TAG}/${filename}"
+              artifact_path="${RELEASE_DIR}/${filename}"
+              size_bytes="n/a"
+              if [[ -f "${artifact_path}" ]]; then
+                size_bytes="$(wc -c < "${artifact_path}" | tr -d '[:space:]')"
+              else
+                echo "::warning::Summary artifact missing while computing size: ${artifact_path}"
+              fi
+              echo "| ${filename} | ${VERSION} | ${size_bytes} | \`${checksum}\` | ${target} |"
+            done < "${RELEASE_DIR}/checksums.txt"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Flatten release artifacts for upload
+        run: |
+          set -euo pipefail
+
+          RELEASE_DIR="${{ steps.version.outputs.release_dir }}"
+          FLAT_DIR="release-flat"
+
+          mkdir -p "${FLAT_DIR}"
+
+          # Copy all top-level files from the release directory to a flat staging area.
+          # This ensures download-artifact preserves a simple flat structure in the
+          # release job, avoiding nested release/reflector-vX.Y.Z/ path components.
+          find "${RELEASE_DIR}" -maxdepth 1 -type f | while read -r f; do
+            cp "${f}" "${FLAT_DIR}/"
+          done
+
+          echo "Flattened release artifacts:"
+          ls -lh "${FLAT_DIR}/"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-artifacts-${{ steps.version.outputs.tag }}
+          path: release-flat/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-build-failure-artifacts
+          path: |
+            dist/
+            audits/
+          if-no-files-found: warn
+          retention-days: 7
+
+  # ============================================================
+  # STAGE 5 — RELEASE
+  # Create annotated release tag (if missing) and publish a
+  # GitHub Release with all canonical publication artifacts.
+  # Only runs on push to main or explicit workflow_dispatch.
+  # Skipped on dry_run=true.
+  # ============================================================
+
+  release:
+    name: Create GitHub Release
+    needs: [detect-scope, package, validate-reuse]
+    runs-on: ubuntu-latest
+    if: |
+      needs.detect-scope.outputs.full_release == 'true' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      )
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.package.outputs.tag }}
+          path: release-staging/
+
+      - name: List release staging contents
+        run: |
+          echo "=== Release staging directory ==="
+          find release-staging/ -maxdepth 2 -type f | sort
+
+      - name: Create annotated release tag
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          set -euo pipefail
+
+          TAG="${{ needs.package.outputs.tag }}"
+
+          if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists — no action required."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "Publication release ${TAG}"
+          git push origin "${TAG}"
+          echo "Created and pushed tag: ${TAG}"
+
+      - name: Create GitHub Release
+        if: github.event.inputs.dry_run != 'true'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.package.outputs.tag }}
+          name: reflector ${{ needs.package.outputs.tag }}
+          generate_release_notes: true
+          body_path: release-staging/release-notes.md
+          files: |
+            release-staging/reflector.pdf
+            release-staging/reflector-magazine.pdf
+            release-staging/reflector-magazine-print.pdf
+            release-staging/reflector-arxiv-${{ needs.package.outputs.tag }}.zip
+            release-staging/reflector-arxiv-${{ needs.package.outputs.tag }}.tar.gz
+            release-staging/source.zip
+            release-staging/publication.json
+            release-staging/checksums.txt
+            release-staging/release-manifest.json
+            release-staging/publication-inventory.json
+            release-staging/publication-readiness.md
+            release-staging/chktex-audit.md
+            release-staging/zenodo-readiness.md
+
+      - name: Validate publication distribution
+        if: github.event.inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.package.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          PAGES_BASE="https://${OWNER}.github.io/${REPO_NAME}/"
+          echo "Validating Pages routes..."
+          for route in \
+            "" \
+            "reflector.pdf" \
+            "reflector-magazine.pdf" \
+            "reflector-magazine-print.pdf"; do
+            url="${PAGES_BASE}${route}"
+            echo "Checking ${url}"
+            curl --location --silent --show-error --fail --head "${url}" >/dev/null
+          done
+
+          echo "Validating release assets for ${TAG}..."
+          python - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          tag = os.environ["TAG"]
+          token = os.environ["GH_TOKEN"]
+          url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
+          request = urllib.request.Request(
+              url,
+              headers={
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": "Bearer " + token,
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+          )
+          try:
+              with urllib.request.urlopen(request) as response:
+                  release = json.load(response)
+          except urllib.error.HTTPError as exc:
+              print(f"Failed to query release metadata: HTTP {exc.code} for {url}")
+              if exc.code in (401, 403):
+                  print("Hint: verify GITHUB_TOKEN has at least contents:read permission to access release metadata.")
+              elif exc.code == 404:
+                  print(f"Hint: verify release tag '{tag}' exists before validation.")
+              raise
+          except urllib.error.URLError as exc:
+              print(f"Failed to query release metadata: {exc.reason}")
+              print("Hint: verify network connectivity to api.github.com from the runner.")
+              raise
+
+          assets = {asset["name"] for asset in release.get("assets", [])}
+          expected = {
+              "reflector.pdf",
+              "reflector-magazine.pdf",
+              "reflector-magazine-print.pdf",
+              f"reflector-arxiv-{tag}.zip",
+              f"reflector-arxiv-{tag}.tar.gz",
+              "source.zip",
+              "publication.json",
+              "checksums.txt",
+              "release-manifest.json",
+              "publication-inventory.json",
+              "publication-readiness.md",
+              "chktex-audit.md",
+              "zenodo-readiness.md",
+          }
+          missing = sorted(expected - assets)
+          if missing:
+              print("Missing release assets:")
+              for name in missing:
+                  print(f"- {name}")
+              raise SystemExit(1)
+          print("All expected release assets are present.")
+          PY
+
+      - name: Print dry run summary
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "=== DRY RUN — GitHub Release skipped ==="
+          echo "Tag:     ${{ needs.package.outputs.tag }}"
+          echo "Version: ${{ needs.package.outputs.version }}"
+          echo ""
+          echo "Artifacts that would be uploaded:"
+          find release-staging/ -maxdepth 1 -type f | sort

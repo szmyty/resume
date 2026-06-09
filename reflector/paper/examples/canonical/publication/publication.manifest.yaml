@@ -1,0 +1,17 @@
+version: 1
+name: reflector-appendix-canonical-example
+source_revision: "example-sha-001"
+semantic_inputs:
+  - paper/sections/appendix.tex
+  - paper/examples/canonical/specs/*.md
+workflow_inputs:
+  - paper/examples/canonical/workflows/recursive-issue-workflow.md
+  - paper/examples/canonical/workflows/synchronization-checkpoints.yaml
+render:
+  profile: arxiv-draft
+  entrypoint: paper/paper.tex
+outputs:
+  - paper/.cache/out/paper.pdf
+  - publication/compatibility-report.md
+audit_artifacts:
+  - paper/examples/canonical/audits/reflective-audit.md

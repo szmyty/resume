@@ -1,0 +1,691 @@
+================================================================================
+REFLECTOR REPOSITORY AUDIT REPORT
+================================================================================
+
+Timestamp    : 2026-05-23T17:06:52Z
+Auditor      : Copilot Coding Agent (automated reflective pass)
+Repository   : https://github.com/egohygiene/reflector
+Branch       : main (HEAD: b4d1fd5)
+Audit Type   : Comprehensive Repository Synchronization Audit
+Version      : 0.0.1 (draft)
+
+================================================================================
+SECTION 1 — SUMMARY
+================================================================================
+
+The reflector repository is a research-grade, publication-infrastructure-first
+repository hosting a single LaTeX manuscript titled "Reflector: Reflective
+Development Systems for Recursive AI-Augmented Software Engineering." The
+repository is currently in early draft status (v0.0.1). Phase 1 (repository
+foundation and publication infrastructure) is marked complete in ROADMAP.md.
+
+The overall architecture is coherent and well-intentioned. The publication
+pipeline (LaTeX → PDF → GitHub Pages → GitHub Release → arXiv bundle) is
+structurally complete and largely functional. CI/CD is automated using five
+GitHub Actions workflows. Semantic versioning and conventional commits are
+enforced.
+
+However, the content layer (paper sections, bibliography, Python implementation,
+demos) remains almost entirely scaffolded but unimplemented. Several
+synchronization gaps exist between metadata files, workflows, and the deployed
+site. One metadata inconsistency in the LaTeX source points to the wrong
+repository URL. The CHANGELOG.md, required by the release workflow, does not
+yet exist. The GitHub Pages hero image is not automatically copied to the
+deployment site during the pages workflow.
+
+This audit identifies these gaps and categorizes them to support future bounded
+refinement passes.
+
+================================================================================
+SECTION 2 — REPOSITORY TOPOLOGY
+================================================================================
+
+Root layout:
+
+  .commitlintrc.json          Conventional commit rules (extended, custom types)
+  .editorconfig               Consistent formatting config
+  .gitignore                  Comprehensive ignore rules (Python + LaTeX + OS)
+  .latexindent.yml            LaTeX auto-formatter configuration
+  .latexmkrc                  LaTeX build configuration (biber, .cache/out, .cache/aux)
+  .release-please-config.json Release-please package config (simple release type)
+  .release-please-manifest.json Current version manifest ("." → "0.0.1")
+  .vscode/                    VS Code workspace settings
+  CITATION.cff                CFF v1.2.0 citation metadata
+  CONTRIBUTING.md             Contributor guide (structure, build, style, commits)
+  LICENSE                     MIT
+  README.md                   Minimal (2 lines — title and emoji tagline)
+  ROADMAP.md                  Phase-based development roadmap
+  VERSION                     "0.0.1"
+  publication.json            Root-level publication state metadata
+  reflector.code-workspace    VS Code multi-root workspace config
+  release-manifest.json       Root-level release manifest schema
+
+  demos/
+    github-demo/              (empty — .gitkeep only)
+    playground/               (empty — .gitkeep only)
+    synchronization-visualizer/ (empty — .gitkeep only)
+
+  docs/
+    index.html                GitHub Pages landing page (HTML, no Jekyll)
+
+  paper/
+    paper.tex                 Main LaTeX document
+    references.bib            Bibliography (placeholder entries only)
+    README.md                 Paper status table and directory structure
+    abstract.md               Plain-text abstract draft
+    outline.md                Section outline
+    notes.md                  Research notes
+    roadmap.md                Paper-level development roadmap
+    sections/                 16 .tex section files (1 substantive, 15 TODO stubs)
+    figures/                  hero.png + .gitkeep
+    diagrams/                 3 .excalidraw source files
+    assets/                   (empty — .gitkeep only)
+    references/               (empty — .gitkeep only)
+    examples/
+      example-agent-workflow.md
+      example-audit-pipeline.md
+
+  reflector/                  Python implementation package
+    __init__.py               (empty)
+    audits/                   (empty — .gitkeep only)
+    cli/                      (empty — .gitkeep only)
+    examples/                 (empty — .gitkeep only)
+    orchestration/            (empty — .gitkeep only)
+    schemas/                  (empty — .gitkeep only)
+    synchronization/          (empty — .gitkeep only)
+    templates/                (empty — .gitkeep only)
+    workflows/                (empty — .gitkeep only)
+
+  scripts/
+    build-paper.sh            Build LaTeX PDF (latexmk)
+    scaffold-paper.sh         Scaffold new paper from template
+    watch-paper.sh            Watch-mode build script
+    publishers/
+      arxiv/
+        mirror-policies.sh    Mirror arXiv policy documentation
+
+  .github/
+    specs/
+      arxiv.spec.md           arXiv publisher specification
+      reflector.spec.md       Reflector feature specification
+    agents/
+      arxiv-publisher.agent.md (restricted — not read)
+    workflows/
+      build-paper.yml         CI: build LaTeX PDF on push/PR
+      commitlint.yml          CI: validate conventional commits on PRs
+      pages.yml               CI/CD: build + deploy GitHub Pages
+      release-paper.yml       CD: build + release on git tag
+      release-please.yml      CD: open/update release PR automatically
+
+================================================================================
+SECTION 3 — STRENGTHS
+================================================================================
+
+PUBLICATION INFRASTRUCTURE
+
+  [+] Complete LaTeX build pipeline
+      - latexmk + biber configured via root .latexmkrc
+      - Build artifacts isolated to paper/.cache/ (gitignored)
+      - PDF output at paper/.cache/out/paper.pdf
+      - Shell build script (scripts/build-paper.sh) supports --open and --publish flags
+
+  [+] Automated GitHub Pages deployment
+      - Builds fresh PDF, copies to _site/, deploys via actions/deploy-pages@v4
+      - SHA256 checksum verification between build output, docs/, and _site/
+      - Cache-busting via GITHUB_SHA applied to index.html at deploy time
+      - Publication manifest (docs/publication.json) generated at deploy time
+      - Dual PDF routes: reflector.pdf and reflector-latest.pdf
+
+  [+] Automated release pipeline
+      - release-please creates semantic version PRs (config-driven)
+      - release-paper.yml builds, bundles, and creates GitHub Releases on tag push
+      - Generates both source bundle (.zip) and arXiv bundle (.zip)
+      - Release manifest (JSON) with SHA256 checksums included
+      - CHANGELOG.md and VERSION validation before release proceeds
+
+  [+] Citation and metadata infrastructure
+      - CITATION.cff v1.2.0 with ORCID identifier
+      - release-please auto-updates CITATION.cff version via jsonpath
+      - Placeholder DOI/arXiv/Zenodo fields clearly documented for future fill-in
+      - publication.json and release-manifest.json provide structured metadata state
+
+  [+] Developer experience
+      - .editorconfig for consistent whitespace/encoding across all file types
+      - Conventional commits enforced via commitlint (PR-gated)
+      - Custom commit types: research, spec, sync, audit (domain-appropriate)
+      - .gitignore covers Python, LaTeX, OS artifacts, editor artifacts comprehensively
+      - .latexindent.yml for auto-formatting
+
+CI/CD QUALITY
+
+  [+] Minimal permissions principle applied (contents: read where possible)
+  [+] fail-fast: false on matrix builds
+  [+] Artifact upload on failure for debugging (build artifacts, 7-day retention)
+  [+] Concurrency group on pages deployment prevents race conditions
+  [+] xu-cheng/latex-action@v3 pinned to major version
+
+PAPER STRUCTURE
+
+  [+] Abstract is substantive (4 paragraphs, publication-ready draft)
+  [+] Section topology is well-defined (16 sections, clear logical flow)
+  [+] Intended figures documented inline per section (future-planning)
+  [+] Excalidraw source diagrams present (3 files: system-overview,
+      human-governance-checkpoints, recursive-audit-loop)
+  [+] hero.png present as canonical publication preview asset
+  [+] examples/ directory has two narrative example documents
+
+FUTURE IMPLEMENTATION SCAFFOLDING
+
+  [+] reflector/ Python package directory topology is coherent
+      (audits, cli, orchestration, schemas, synchronization, templates, workflows)
+  [+] demos/ directory scaffolded (github-demo, playground, synchronization-visualizer)
+  [+] Feature specification exists (.github/specs/reflector.spec.md) with
+      user stories, acceptance scenarios, and test strategy
+
+================================================================================
+SECTION 4 — WEAKNESSES
+================================================================================
+
+METADATA INCONSISTENCY
+
+  [-] paper/paper.tex — \paperrepository points to wrong URL
+      Found:    https://github.com/egohygiene/papers
+      Expected: https://github.com/egohygiene/reflector
+      Impact:   The wrong repository URL appears in the compiled PDF title block
+                and PDF metadata. This is a publication-facing error.
+
+  [-] README.md is essentially empty
+      The root README.md contains only 2 lines (title + emoji tagline).
+      No description, build instructions, or publication links are present.
+      This is the first thing visitors and GitHub bots see.
+
+  [-] CHANGELOG.md does not exist
+      The release-paper.yml workflow validates CHANGELOG.md before creating a
+      GitHub Release and will fail with a hard error if it is missing.
+      release-please will generate CHANGELOG.md on first release PR merge, but
+      until then, any manual tag-triggered release will fail.
+
+PUBLICATION INFRASTRUCTURE GAPS
+
+  [-] docs/figures/ directory missing — hero.png not deployed to Pages
+      docs/index.html references ./figures/hero.png (relative path).
+      The pages.yml workflow copies docs/ to _site/ but does NOT copy
+      paper/figures/hero.png into _site/figures/.
+      Result: The hero image will be a broken link on the deployed Pages site.
+
+  [-] docs/index.html references reflector-latest.pdf
+      pages.yml creates both reflector.pdf and reflector-latest.pdf in docs/.
+      However, if docs/ is committed without these PDFs present, the links
+      will be broken until the workflow runs.
+
+  [-] pages.yml verification step does not check for _site/figures/hero.png
+      The required-file list checks for _site/reflector.pdf and
+      _site/publication.json but does not verify the hero image is present.
+
+RELEASE WORKFLOW GAPS
+
+  [-] release-please.yml uses skip-github-release: true
+      This means release-please manages version PRs but does NOT create
+      GitHub Releases itself. The actual release depends on:
+        1. Merging the release-please PR (updates VERSION, CHANGELOG.md)
+        2. Manually pushing a matching git tag (e.g., v0.0.1)
+        3. That tag triggering release-paper.yml
+      This two-step process (PR merge + manual tag push) is fragile and
+      not self-documenting. The release-please PR does not automatically
+      push a tag if skip-github-release is true; the tag must be pushed
+      separately after the PR merges.
+
+  [-] No mechanism connects release-please PR merge to tag push
+      Without a tag-creation step (or using skip-github-release: false),
+      the release-paper.yml workflow will never be triggered automatically.
+      The release pipeline is currently a dead end in terms of automation.
+
+PAPER CONTENT GAPS
+
+  [-] 15 of 16 paper sections are empty TODO stubs
+      Only abstract.tex contains substantive content.
+      All other sections (introduction, recursive_ai_systems, recursive_drift,
+      synchronization, reflective_auditing, milestone_execution,
+      reflector_framework, operational_demonstration, limitations, conclusion,
+      visual_summary, appendix, related_work, implementation_examples,
+      case_studies) contain only a section header, label, TODO comment, and
+      an intended figure placeholder comment.
+
+  [-] All bibliography entries are placeholder entries
+      references.bib contains 3 placeholder citations with note fields
+      indicating they must be replaced with real references.
+      The paper cannot be submitted to arXiv or any venue with placeholder
+      citations.
+
+IMPLEMENTATION GAPS
+
+  [-] reflector/ Python package is entirely unimplemented
+      All 8 subdirectories contain only .gitkeep. __init__.py is empty.
+      No Python modules, classes, schemas, or CLI entry points exist.
+
+  [-] demos/ directory is entirely unimplemented
+      All 3 demo subdirectories contain only .gitkeep.
+
+  [-] No pyproject.toml, setup.py, or requirements.txt
+      The reflector/ Python package has no project configuration.
+      It cannot be installed or used as a package.
+
+DOCUMENTATION GAPS
+
+  [-] CONTRIBUTING.md references a "templates/paper/" directory
+      that does not appear to exist at the repository root.
+      scaffold-paper.sh also references this template and would fail
+      if run without the templates/ directory present.
+
+  [-] scripts/scaffold-paper.sh only accepts "paper" or "reflector" as slugs
+      The validation is unnecessarily restrictive for a general-purpose
+      scaffold tool. The paper/ directory already exists, so running
+      scaffold-paper.sh would fail regardless.
+
+================================================================================
+SECTION 5 — SYNCHRONIZATION GAPS
+================================================================================
+
+GAP 1 — Wrong repository URL in paper.tex
+  paper/paper.tex:\paperrepository → https://github.com/egohygiene/papers
+  Expected                         → https://github.com/egohygiene/reflector
+  Affected surfaces: compiled PDF, PDF metadata, Pages-deployed PDF
+
+GAP 2 — Hero image not included in Pages deployment
+  Source:       paper/figures/hero.png
+  Referenced:   docs/index.html → ./figures/hero.png
+  Deployed via: pages.yml → cp docs/. _site/ (does NOT copy paper/figures/)
+  Missing step: Copy paper/figures/hero.png → docs/figures/hero.png
+                (either committed or added to pages.yml sync step)
+
+GAP 3 — CHANGELOG.md missing; release workflow will fail
+  Required by:  release-paper.yml (validates CHANGELOG entry for version)
+  Status:       File does not exist in repository
+  Impact:       Any release tag push will immediately fail with hard error
+
+GAP 4 — release-please → release-paper.yml automation gap
+  release-please manages version bumps and PR creation
+  release-paper.yml triggers on tag push
+  Missing link: release-please PR merge does NOT push a tag automatically
+                when skip-github-release: true is set
+  Impact:       Release pipeline is not fully automated end-to-end
+
+GAP 5 — Root publication.json vs docs/publication.json divergence
+  Root publication.json:    static file committed to repo (status: draft)
+  docs/publication.json:    dynamically generated at pages deploy time
+  These serve different purposes but could cause confusion about
+  which is the authoritative publication state document.
+
+GAP 6 — Version metadata across three files
+  VERSION file:                    0.0.1
+  .release-please-manifest.json:   {"." : "0.0.1"}
+  CITATION.cff:                    version: 0.0.1
+  These are currently in sync, but all three must be updated together
+  on every release. release-please automates this via extra-files config.
+
+GAP 7 — docs/ and paper/figures/ are separate hierarchies
+  docs/index.html assumes ./figures/hero.png exists under docs/
+  paper/figures/ contains the actual hero.png asset
+  No workflow step, symlink, or committed copy bridges this gap
+
+GAP 8 — build-paper.yml triggers include pages.yml and release-paper.yml as paths
+  build-paper.yml triggers on changes to:
+    .github/workflows/pages.yml
+    .github/workflows/release-paper.yml
+  This causes a paper build CI run to trigger when only deployment or
+  release workflows change (no paper content changed). Minor but noisy.
+
+GAP 9 — pages.yml rebuilds LaTeX instead of consuming build-paper.yml artifact
+  pages.yml runs xu-cheng/latex-action@v3 independently from build-paper.yml.
+  There is no dependency or artifact-sharing between the two workflows.
+  The same PDF may be built twice on the same commit. This is by design
+  (decoupled workflows) but creates a latency and cost gap.
+
+GAP 10 — reflector/ package has no connection to paper content
+  The paper describes the reflector framework conceptually.
+  The reflector/ Python package is scaffolded to implement it.
+  There is currently no traceability between paper sections and
+  implementation modules (e.g., paper/sections/reflective_auditing.tex
+  vs reflector/audits/).
+
+================================================================================
+SECTION 6 — RECOMMENDATIONS
+================================================================================
+
+CRITICAL (blocks correct functionality or publication)
+
+  [C1] Fix \paperrepository URL in paper/paper.tex
+       Change: https://github.com/egohygiene/papers
+       To:     https://github.com/egohygiene/reflector
+       This error appears in the compiled PDF and PDF metadata.
+
+  [C2] Add hero image copy step to pages.yml
+       After building the PDF, copy paper/figures/hero.png into docs/figures/
+       so that the Pages site correctly serves the hero image:
+         mkdir -p docs/figures _site/figures
+         cp paper/figures/hero.png docs/figures/hero.png
+       Also add _site/figures/hero.png to the verification required-files list.
+
+  [C3] Create a minimal CHANGELOG.md
+       The release-paper.yml workflow requires CHANGELOG.md with an entry
+       matching the release version before it will proceed.
+       Create CHANGELOG.md with at least an initial 0.0.1 entry to unblock
+       the release pipeline.
+
+RECOMMENDED (improves correctness, maintainability, or coherence)
+
+  [R1] Resolve the release automation gap (release-please → tag push)
+       Option A: Set skip-github-release: false in release-please.yml so
+                 release-please creates both the PR and the GitHub Release
+                 (and pushes the tag). Consolidate release-paper.yml logic
+                 into release-please-action config or a separate step.
+       Option B: Add a workflow triggered on release-please PR merge that
+                 automatically pushes the version tag, triggering release-paper.yml.
+       Currently, a manual tag push is required to complete any release.
+
+  [R2] Expand README.md at repository root
+       The root README.md should include:
+       - Paper title and one-sentence description
+       - Current status badge (draft)
+       - Link to GitHub Pages publication
+       - Quick build instructions
+       - Links to CONTRIBUTING.md and ROADMAP.md
+
+  [R3] Add pyproject.toml for the reflector Python package
+       The reflector/ directory has Python package structure but no project
+       configuration. Add a minimal pyproject.toml so the package can be
+       installed, linted, and tested.
+
+  [R4] Create templates/paper/ directory or update CONTRIBUTING.md
+       CONTRIBUTING.md and scaffold-paper.sh both reference a templates/paper/
+       directory. This should either be created (as a canonical paper scaffold)
+       or the references should be updated to reflect actual paper structure.
+
+  [R5] Add a committed docs/figures/ directory (or symlink)
+       Commit docs/figures/hero.png (or a copy/symlink) so the Pages index.html
+       can reference the hero image without relying solely on the CI build step.
+       This ensures local preview of docs/index.html works correctly too.
+
+OPTIONAL (improves quality but not blocking)
+
+  [O1] Reduce redundant path triggers in build-paper.yml
+       Remove .github/workflows/pages.yml and .github/workflows/release-paper.yml
+       from build-paper.yml push/PR path triggers. Changes to deployment or
+       release workflows should not trigger paper build CI unnecessarily.
+
+  [O2] Separate paper-content triggers from all-paper triggers in pages.yml
+       pages.yml currently triggers on all of paper/** (any file change).
+       Consider scoping to paper/**/*.tex, paper/**/*.bib, paper/figures/**,
+       paper/diagrams/** to avoid triggering Pages deployments on non-content
+       changes (e.g., notes.md, outline.md, examples/).
+
+  [O3] Add a .zenodo.json file
+       publication.json and release-manifest.json reference future Zenodo
+       integration. A .zenodo.json file can be pre-created with placeholder
+       fields (matching CITATION.cff) to document Zenodo intent and simplify
+       future activation.
+
+  [O4] Add description to .github/workflows/*.yml
+       None of the workflow files have a top-level description or comment block
+       explaining their purpose and relationship to other workflows.
+       Add brief comment headers to improve maintainability.
+
+  [O5] Consider listoffigures in paper.tex
+       \listoffigures is commented out. Once figures are integrated, enabling
+       this will improve navigation in the PDF.
+
+FUTURE-FACING (for later phases)
+
+  [F1] Implement reflector/ Python package
+       Begin with schemas/ (governance contract schema), then synchronization/
+       (milestone synchronization logic), then cli/ (command-line interface).
+       Align module names with paper section topics to maintain traceability.
+
+  [F2] Implement demos/
+       Start with github-demo/ as the first concrete demonstration of the
+       reflector framework applied to a real GitHub-hosted workflow.
+
+  [F3] Replace placeholder bibliography entries
+       Before arXiv submission, replace all 3 placeholder entries in
+       references.bib with real citations. Candidate topics:
+       autonomous agents in software engineering, drift detection, HITL governance.
+
+  [F4] Draft paper sections (Phase 2 of ROADMAP.md)
+       All 9 core sections (introduction through conclusion) are TODO stubs.
+       Priority order per ROADMAP.md:
+       introduction → recursive_ai_systems → reflector_framework →
+       milestone_execution → reflective_auditing → synchronization →
+       recursive_drift → limitations → conclusion
+
+  [F5] Add Zenodo integration when DOI readiness is achieved
+       Enable .zenodo.json, populate concept DOI, and update CITATION.cff,
+       publication.json, and release-manifest.json future_integrations fields.
+
+  [F6] Add arXiv submission workflow
+       scripts/publishers/arxiv/ exists with a policy mirror script.
+       A corresponding submission validation workflow (checking arXiv
+       package structure, required files, metadata) would improve arXiv
+       readiness automation.
+
+  [F7] Add CI linting for Python implementation
+       Once reflector/ has Python code, add a CI workflow for linting
+       (ruff/flake8), type checking (mypy), and testing (pytest).
+
+================================================================================
+SECTION 7 — PUBLICATION READINESS
+================================================================================
+
+arXiv Readiness
+  Status:    NOT READY
+  Blockers:
+    - All paper sections except abstract are empty TODO stubs
+    - All bibliography entries are placeholders
+    - Wrong repository URL in paper metadata
+    - No real figures integrated (diagrams exist as .excalidraw source only)
+  Required before submission:
+    - Complete all paper sections
+    - Replace placeholder bibliography entries
+    - Generate PDF figures from Excalidraw sources
+    - Fix \paperrepository URL
+
+Release Readiness (GitHub Release)
+  Status:    BLOCKED
+  Blockers:
+    - CHANGELOG.md does not exist (release workflow hard-fails without it)
+    - release-please → tag push gap (no automated tag creation)
+  Resolved by:
+    - Creating CHANGELOG.md with 0.0.1 entry
+    - Resolving release automation gap (see R1)
+
+Pages Readiness
+  Status:    PARTIALLY READY (hero image missing)
+  Issues:
+    - hero.png not copied to _site/figures/ during Pages deployment
+    - Pages site will show broken hero image on first deployment
+  Resolved by:
+    - Adding hero image copy step to pages.yml (see C2)
+  Otherwise functional:
+    - PDF build → copy → deploy flow is structurally correct
+    - SHA256 verification in place
+    - Cache-busting implemented
+
+DOI Readiness
+  Status:    NOT READY (future)
+  Notes:
+    - CITATION.cff has placeholder fields for DOI/arXiv/Zenodo identifiers
+    - publication.json and release-manifest.json track future DOI state
+    - Zenodo integration disabled (enabled: false in both files)
+    - DOI requires publication at a venue or Zenodo upload
+
+Metadata Readiness
+  Status:    PARTIALLY READY
+  Strong:
+    - CITATION.cff structure is complete and valid
+    - ORCID identifier is present
+    - Keyword list is thorough
+    - release-please will auto-update version in CITATION.cff
+  Gaps:
+    - journal/doi/arXiv/Zenodo fields are placeholders (expected at draft stage)
+    - \paperrepository in paper.tex points to wrong URL (publication-facing error)
+    - Affiliation field in CITATION.cff is commented out (TODO)
+
+================================================================================
+SECTION 8 — FUTURE OPPORTUNITIES
+================================================================================
+
+IMPLEMENTATION OPPORTUNITIES
+
+  [I1] Reflector governance contract schema (reflector/schemas/)
+       Define a machine-readable schema for governance contracts
+       (allowed paths, milestones, obligations, escalation rules).
+       This directly corresponds to the reflector.spec.md user stories.
+
+  [I2] Synchronization boundary events (reflector/synchronization/)
+       Implement the milestone synchronization protocol described in the paper:
+       milestone events → checkpoint evaluation → proceed or pause.
+
+  [I3] Reflective audit pipeline (reflector/audits/)
+       A self-auditing module that generates structured audit logs
+       (analogous to this very audit) automatically against repository state.
+
+  [I4] CLI entry point (reflector/cli/)
+       A command-line interface for triggering audits, validating governance
+       contracts, and running synchronization checks.
+
+INFRASTRUCTURE OPPORTUNITIES
+
+  [I5] Makefile at repository root
+       A Makefile wrapping common commands (build, watch, deploy, audit, lint)
+       would reduce cognitive load for contributors and CI/CD alike.
+
+  [I6] Pre-commit hooks
+       Add pre-commit configuration (.pre-commit-config.yaml) for:
+       - Conventional commit message validation
+       - LaTeX formatting (latexindent)
+       - Python linting (ruff)
+       - YAML/JSON validation
+
+  [I7] Dependabot for GitHub Actions versions
+       Add .github/dependabot.yml to auto-update workflow action versions
+       (currently using @v3/@v4/@v5/@v6 without version pinning via SHA).
+
+AUTOMATION OPPORTUNITIES
+
+  [I8] Auto-tag on release-please PR merge
+       A workflow triggered by release-please PR merge that automatically
+       pushes a matching semantic version tag would close the release
+       automation gap identified in GAP 4.
+
+  [I9] Figure export automation
+       An automated step (or script) to export Excalidraw diagrams to PDF/PNG
+       would ensure figures are always synchronized with their source files.
+
+  [I10] arXiv package validation CI
+        A workflow that validates the arXiv submission bundle structure
+        (correct files present, no banned packages, size limits) before
+        a release tag is pushed.
+
+VISUALIZATION OPPORTUNITIES
+
+  [I11] Synchronization visualizer demo
+        demos/synchronization-visualizer/ is scaffolded but empty.
+        A web-based interactive visualization of the reflector synchronization
+        protocol would serve as a compelling demonstration of the framework.
+
+  [I12] Architecture diagram exports
+        Convert paper/diagrams/*.excalidraw to PDF/PNG and integrate into
+        the paper. The system-overview diagram is particularly important
+        for the introduction and framework sections.
+
+WORKFLOW IMPROVEMENTS
+
+  [I13] Reuse build artifact between build-paper.yml and pages.yml
+        Use workflow_run trigger or artifact download so pages.yml consumes
+        the PDF built by build-paper.yml rather than rebuilding from scratch.
+        This would reduce CI cost and ensure Pages uses the CI-verified build.
+
+  [I14] Paper section status dashboard
+        Extend docs/index.html or paper/README.md with an auto-generated
+        section completion status (e.g., counts of TODO comments remaining
+        per section) to surface paper writing progress at a glance.
+
+================================================================================
+SECTION 9 — IMPLEMENTATION OBSERVATIONS
+================================================================================
+
+The reflector/ Python package topology mirrors the paper section structure:
+  - reflector/audits/         ↔  paper/sections/reflective_auditing.tex
+  - reflector/synchronization/ ↔ paper/sections/synchronization.tex
+  - reflector/orchestration/  ↔  paper/sections/milestone_execution.tex
+  - reflector/schemas/        ↔  paper/sections/reflector_framework.tex
+  - reflector/workflows/      ↔  paper/sections/reflector_framework.tex
+  - reflector/cli/            ↔  operational tooling
+
+This structural alignment is intentional and architecturally coherent.
+The implementation scaffold is well-positioned to grow as the paper sections
+are completed. Maintaining this traceability between paper concepts and
+implementation modules will be valuable for future readers and contributors.
+
+The .github/specs/reflector.spec.md contains detailed user stories and
+acceptance scenarios that should guide the initial implementation pass.
+Priority user story P1 (human-governed recursive development) maps most
+directly to reflector/synchronization/ and reflector/orchestration/.
+
+================================================================================
+SECTION 10 — METADATA CONSISTENCY MATRIX
+================================================================================
+
+  Field                VERSION   CITATION.cff   release-manifest.json   paper.tex
+  ─────────────────────────────────────────────────────────────────────────────
+  version              0.0.1     0.0.1           0.0.1                   (via \paperstatus "Draft")
+  repository URL       —         egohygiene/reflector  —                egohygiene/papers ✗
+  date-released        —         2026-05-22      —                       \today (dynamic)
+  ORCID                —         ✓               —                       ✓
+  DOI                  —         placeholder     placeholder             (not present)
+  arXiv ID             —         placeholder     (not tracked)           (not present)
+  Zenodo DOI           —         placeholder     disabled                (not present)
+
+  CHANGELOG.md:        MISSING ✗
+  .zenodo.json:        MISSING (not created yet)
+
+================================================================================
+SECTION 11 — WORKFLOW DEPENDENCY MAP
+================================================================================
+
+  Trigger                 → Workflow             → Artifact/Action
+  ─────────────────────────────────────────────────────────────────────────
+  push main (paper/*)     → build-paper.yml      → paper-pdf artifact (30d)
+  push main (paper/*,docs) → pages.yml           → GitHub Pages deployment
+  push main (paper/,VERSION) → release-please.yml → Release PR
+  push tag v*.*.*          → release-paper.yml   → GitHub Release + bundles
+  PR opened/edited         → commitlint.yml      → Commit message validation
+
+  GAPS:
+  - release-please.yml → release-paper.yml: NOT connected (manual tag required)
+  - build-paper.yml → pages.yml: NOT connected (independent builds)
+
+================================================================================
+SECTION 12 — AUDIT BOUNDS AND CONSTRAINTS
+================================================================================
+
+This audit was generated as a reflective synchronization pass.
+It is intended to stabilize understanding, surface issues, identify drift,
+and support future bounded refinement passes.
+
+This audit does NOT:
+  - Rewrite repository files (with exceptions: report file creation only)
+  - Create excessive follow-up issues
+  - Recursively expand scope beyond repository state inspection
+
+Recommended next actions (bounded):
+  1. Fix \paperrepository URL (C1) — single-line change
+  2. Add hero image copy step to pages.yml (C2) — ~5 lines
+  3. Create minimal CHANGELOG.md (C3) — ~10 lines
+  4. Expand README.md (R2) — ~30 lines
+  5. Create initial pyproject.toml (R3) — ~20 lines
+
+Each of these can be addressed as a separate scoped PR.
+
+================================================================================
+END OF AUDIT REPORT
+================================================================================

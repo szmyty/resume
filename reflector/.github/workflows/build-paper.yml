@@ -1,0 +1,145 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build Paper
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "paper/**/*.tex"
+      - "paper/**/*.bib"
+      - "paper/**/*.sty"
+      - "paper/**/sections/**"
+      - "paper/**/macros/**"
+      - "paper/**/styles/**"
+      - "paper/**/figures/**"
+      - "paper/**/diagrams/**"
+      - "paper/**/assets/**"
+      - "paper/**/references/**"
+      - "paper/**/examples/**"
+      - "scripts/build-paper.sh"
+      - "scripts/print-latex-diagnostics.sh"
+      - "scripts/watch-paper.sh"
+      - ".latexmkrc"
+      - ".latexindent.yml"
+      - ".github/workflows/build-paper.yml"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/release-paper.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "paper/**/*.tex"
+      - "paper/**/*.bib"
+      - "paper/**/*.sty"
+      - "paper/**/sections/**"
+      - "paper/**/macros/**"
+      - "paper/**/styles/**"
+      - "paper/**/figures/**"
+      - "paper/**/diagrams/**"
+      - "paper/**/assets/**"
+      - "paper/**/references/**"
+      - "paper/**/examples/**"
+      - "scripts/build-paper.sh"
+      - "scripts/print-latex-diagnostics.sh"
+      - "scripts/watch-paper.sh"
+      - ".latexmkrc"
+      - ".latexindent.yml"
+      - ".github/workflows/build-paper.yml"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/release-paper.yml"
+
+  workflow_dispatch:
+    inputs:
+      paper:
+        description: "Paper directory"
+        required: false
+        default: "paper"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Paper
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        paper:
+          - paper
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set artifact names
+        id: vars
+        run: |
+          PAPER_NAME="$(basename "${{ matrix.paper }}")"
+
+          echo "paper_name=${PAPER_NAME}" >> "$GITHUB_OUTPUT"
+          echo "pdf_artifact=${PAPER_NAME}-pdf" >> "$GITHUB_OUTPUT"
+          echo "build_artifact=${PAPER_NAME}-build-artifacts" >> "$GITHUB_OUTPUT"
+
+      - name: Build LaTeX PDF
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: paper.tex
+          working_directory: ${{ matrix.paper }}
+          extra_system_packages: "biber"
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -synctex=1
+            -file-line-error
+            -shell-escape
+            -f
+            -gg
+            -cd
+            -r
+            ../.latexmkrc
+
+      - name: Print LaTeX diagnostics on failure
+        if: failure()
+        run: ./scripts/print-latex-diagnostics.sh "${{ matrix.paper }}"
+
+      - name: Upload PDF artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.vars.outputs.pdf_artifact }}
+          path: ${{ matrix.paper }}/.cache/out/paper.pdf
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish paper build summary
+        if: success()
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          ARTIFACT_PATH="${{ matrix.paper }}/.cache/out/paper.pdf"
+          SHA="$(sha256sum "${ARTIFACT_PATH}" | awk '{print $1}')"
+          {
+            echo "## Paper Build Summary"
+            echo ""
+            echo "| Artifact | Version | Checksum (sha256) | Deployment Target |"
+            echo "| --- | --- | --- | --- |"
+            echo "| reflector.pdf | ${VERSION} | \`${SHA}\` | artifact:${{ steps.vars.outputs.pdf_artifact }} |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.vars.outputs.build_artifact }}
+          path: ${{ matrix.paper }}/.cache/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
