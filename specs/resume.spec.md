@@ -26,7 +26,7 @@ resume/
 │   ├── ai-infra.yaml
 │   ├── platform.yaml
 │   ├── research.yaml
-│   └── fullstack.yaml
+│   └── general.yaml
 ├── assets/             # Images, icons, and other static assets
 ├── outputs/            # Generated PDF artifacts
 ├── scripts/
@@ -53,23 +53,26 @@ Each resume section is a standalone LaTeX file under `sections/`. Sections are i
 | `skills.tex` | Technical skills grouped by category |
 | `publications.tex` | Publications, papers, or articles |
 
-Sections can be conditionally included or reordered by modifying `resume.tex` or by generating a profile-targeted entry point in future build iterations.
+Sections can be conditionally included or reordered by generating a profile-targeted entry point from the YAML profile definitions at build time.
 
 ---
 
 ## Profile Architecture
 
-Profile YAML files in `profiles/` define the intended audience, section ordering, and emphasis areas for a given resume variant.
+Profile YAML files in `profiles/` define the intended audience, summary variant, section ordering, included sections, and keyword emphasis areas for a given resume variant.
 
 ### Profile Schema
 
 ```yaml
 profile: <identifier>          # machine-readable profile ID
-label: "<Human-Readable Label>"
+name: "<Human-Readable Label>"
 description: >
   <Description of the target role family>
 
-sections:                      # ordered list of sections to include
+summary: >
+  <Profile-specific summary variant>
+
+section_order:                 # ordered list of sections to include
   - header
   - summary
   - experience
@@ -77,7 +80,15 @@ sections:                      # ordered list of sections to include
   - education
   - publications               # optional
 
-emphasis:                      # keywords to highlight in content
+included_sections:             # sections enabled for the profile
+  - header
+  - summary
+  - experience
+  - skills
+  - education
+  - publications               # optional
+
+keyword_emphasis:              # keywords to highlight in content
   - keyword one
   - keyword two
 ```
@@ -89,7 +100,7 @@ emphasis:                      # keywords to highlight in content
 | `ai-infra` | AI infrastructure and ML platform engineering |
 | `platform` | Platform engineering, DevOps, and SRE |
 | `research` | Research and academic positions |
-| `fullstack` | Full-stack software engineering |
+| `general` | General software engineering |
 
 ---
 
@@ -111,11 +122,13 @@ emphasis:                      # keywords to highlight in content
 ## Build Process
 
 ```
-resume.tex
-    ↓  latexmk (via .latexmkrc)
-.cache/out/resume.pdf
+profiles/*.yaml
     ↓  scripts/build.py
-outputs/resume.pdf
+generated profile-specific .tex entry points
+    ↓  latexmk (via .latexmkrc)
+.cache/out/resume-<profile>.generated.pdf
+    ↓  scripts/build.py
+outputs/resume-<profile>.pdf
 ```
 
 ### latexmkrc Configuration
@@ -131,10 +144,12 @@ outputs/resume.pdf
 
 `scripts/build.py` wraps `latexmk` and:
 
-1. Validates that `resume.tex` and `.latexmkrc` exist.
-2. Runs `latexmk` with standard flags.
-3. Copies the output PDF to `outputs/resume.pdf`.
-4. Optionally opens the PDF (`--open` flag).
+1. Validates that `resume.tex`, `.latexmkrc`, and the selected profile definitions exist.
+2. Loads profile metadata from `profiles/*.yaml`.
+3. Generates a temporary profile-specific LaTeX entry point with ordered and filtered sections.
+4. Runs `latexmk` with standard flags for each selected profile.
+5. Copies the output PDF to `outputs/resume-<profile>.pdf`.
+6. Optionally opens the generated PDF (`--open` flag).
 
 ### GitHub Actions
 
@@ -166,7 +181,6 @@ actions/upload-artifact → resume-pdf artifact
 
 ## Future Work
 
-- Profile-targeted build: extend `build.py` to generate a profile-specific `resume.tex` from profile YAML before invoking `latexmk`.
 - Multi-profile CI matrix: build all profiles in parallel in the GitHub Actions workflow.
 - Content population: fill in section files with actual resume content.
 - Assets: add a headshot, icons, or other visual elements to `assets/`.

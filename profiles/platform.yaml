@@ -5,19 +5,31 @@
 # Defines sections and emphasis for platform and SRE roles.
 
 profile: platform
-label: "Platform Engineering"
+name: "Platform Engineering"
 description: >
   Targets platform engineering, DevOps, SRE, and cloud infrastructure roles.
   Emphasizes CI/CD, observability, Kubernetes, and developer tooling.
 
-sections:
+summary: >
+  Platform engineer building reliable internal platforms, automation, and
+  cloud infrastructure that improve developer velocity and operational
+  excellence.
+
+section_order:
   - header
   - summary
   - experience
   - skills
   - education
 
-emphasis:
+included_sections:
+  - header
+  - summary
+  - experience
+  - skills
+  - education
+
+keyword_emphasis:
   - platform engineering
   - site reliability
   - kubernetes

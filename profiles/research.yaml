@@ -5,12 +5,17 @@
 # Defines sections and emphasis for research and academic roles.
 
 profile: research
-label: "Research"
+name: "Research Engineering"
 description: >
   Targets research, academic, and applied science roles.
   Emphasizes publications, research contributions, and technical depth.
 
-sections:
+summary: >
+  Research engineer translating experimental ideas into reproducible
+  systems, technical publications, and practical tools that support
+  rigorous investigation.
+
+section_order:
   - header
   - summary
   - experience
@@ -18,7 +23,15 @@ sections:
   - education
   - skills
 
-emphasis:
+included_sections:
+  - header
+  - summary
+  - experience
+  - publications
+  - education
+  - skills
+
+keyword_emphasis:
   - research
   - publications
   - academic contributions
