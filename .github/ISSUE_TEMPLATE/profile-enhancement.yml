@@ -1,0 +1,38 @@
+name: Profile enhancement
+description: Request changes to profile definitions or profile build behavior.
+title: "profile: "
+labels:
+  - profile
+body:
+  - type: input
+    id: profile_id
+    attributes:
+      label: Profile ID
+      description: Existing or proposed profile identifier.
+      placeholder: "platform"
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What role family or profile outcome should this support?
+    validations:
+      required: true
+  - type: textarea
+    id: requested_changes
+    attributes:
+      label: Requested changes
+      description: Describe updates to summary, sections, or keyword emphasis.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance checks
+      description: How should this enhancement be verified?
+      value: |
+        - python scripts/quality_gates.py validate-profiles
+        - python scripts/build.py --profile <profile-id>
+    validations:
+      required: true

@@ -1,0 +1,43 @@
+name: Audit report
+description: Track a repository audit and actionable findings.
+title: "audit: "
+labels:
+  - audit
+body:
+  - type: input
+    id: audit_timestamp
+    attributes:
+      label: Audit timestamp (UTC)
+      description: Use `YYYY-MM-DDTHHMMSSZ`.
+      placeholder: "2026-06-09T155821Z"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List the areas reviewed in this audit.
+    validations:
+      required: true
+  - type: textarea
+    id: findings
+    attributes:
+      label: Findings
+      description: Summarize key observations by severity/topic.
+    validations:
+      required: true
+  - type: textarea
+    id: recommendations
+    attributes:
+      label: Recommendations
+      description: Provide prioritized follow-up actions.
+    validations:
+      required: true
+  - type: input
+    id: audit_log_path
+    attributes:
+      label: Audit log path
+      description: Path of the committed audit log file.
+      placeholder: "audits/audit-YYYY-MM-DDTHHMMSSZ.log"
+    validations:
+      required: true
