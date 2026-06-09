@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+#
+# profiles/ai-infra.yaml — AI Infrastructure profile variant.
+# Defines sections and emphasis for AI/ML infrastructure roles.
+
+profile: ai-infra
+label: "AI Infrastructure"
+description: >
+  Targets AI infrastructure, ML platform engineering, and MLOps roles.
+  Emphasizes distributed systems, model serving, data pipelines, and
+  platform reliability.
+
+sections:
+  - header
+  - summary
+  - experience
+  - skills
+  - education
+  - publications
+
+emphasis:
+  - machine learning infrastructure
+  - distributed systems
+  - model serving
+  - data pipelines
+  - platform engineering
+  - reliability engineering

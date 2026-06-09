@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+#
+# profiles/platform.yaml — Platform Engineering profile variant.
+# Defines sections and emphasis for platform and SRE roles.
+
+profile: platform
+label: "Platform Engineering"
+description: >
+  Targets platform engineering, DevOps, SRE, and cloud infrastructure roles.
+  Emphasizes CI/CD, observability, Kubernetes, and developer tooling.
+
+sections:
+  - header
+  - summary
+  - experience
+  - skills
+  - education
+
+emphasis:
+  - platform engineering
+  - site reliability
+  - kubernetes
+  - ci/cd
+  - observability
+  - cloud infrastructure
+  - developer tooling

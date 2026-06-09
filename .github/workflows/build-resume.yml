@@ -1,0 +1,90 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build Resume
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "resume.tex"
+      - "resume.sty"
+      - "sections/**"
+      - "assets/**"
+      - "scripts/build.py"
+      - ".latexmkrc"
+      - ".github/workflows/build-resume.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "resume.tex"
+      - "resume.sty"
+      - "sections/**"
+      - "assets/**"
+      - "scripts/build.py"
+      - ".latexmkrc"
+      - ".github/workflows/build-resume.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Resume PDF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build LaTeX PDF
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: resume.tex
+          working_directory: .
+          args: >-
+            -pdf
+            -halt-on-error
+            -interaction=nonstopmode
+            -recorder
+            -synctex=1
+            -file-line-error
+            -f
+            -gg
+            -cd
+            -r
+            .latexmkrc
+
+      - name: Copy PDF to outputs
+        if: success()
+        run: |
+          mkdir -p outputs
+          cp .cache/out/resume.pdf outputs/resume.pdf
+
+      - name: Upload resume PDF artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resume-pdf
+          path: outputs/resume.pdf
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Build summary
+        if: success()
+        run: |
+          set -euo pipefail
+          ARTIFACT_PATH="outputs/resume.pdf"
+          SHA="$(sha256sum "${ARTIFACT_PATH}" | awk '{print $1}')"
+          {
+            echo "## Resume Build Summary"
+            echo ""
+            echo "| Artifact | Checksum (sha256) |"
+            echo "| --- | --- |"
+            echo "| resume.pdf | \`${SHA}\` |"
+          } >> "${GITHUB_STEP_SUMMARY}"
