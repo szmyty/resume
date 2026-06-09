@@ -65,6 +65,21 @@ If the requested profile does not exist, the build will fail with the list of av
 latexmk -pdf -halt-on-error -interaction=nonstopmode -r .latexmkrc resume.tex
 ```
 
+## Quality Gates
+
+Run repository validation checks locally:
+
+```bash
+python scripts/quality_gates.py validate-profiles
+python scripts/quality_gates.py check-placeholders
+```
+
+Validate ATS extraction after generating a PDF:
+
+```bash
+python scripts/quality_gates.py validate-ats --pdf outputs/resume.pdf
+```
+
 ## Profiles
 
 Profile YAML files in `profiles/` define the profile name, summary variant, section ordering, included sections, and keyword emphasis for a given resume variant.
