@@ -1,0 +1,192 @@
+Resume Repository Architecture Audit
+Timestamp: 2026-06-09T155821Z
+Repository: szmyty/resume
+Scope: Repository architecture, publication pipeline, LaTeX structure, maintainability, resume organization, ATS compatibility, recruiter readability, profile readiness, documentation, workflows, artifact generation
+
+================================================================================
+1) Repository Summary
+================================================================================
+Purpose
+- Specification-driven LaTeX resume publication system intended to support reusable sections and profile-targeted variants.
+
+Architecture Overview
+- Core entrypoint: resume.tex
+- Style system: resume.sty
+- Modular content sections: sections/*.tex
+- Profile metadata: profiles/*.yaml
+- Build orchestration: scripts/build.py + .latexmkrc
+- CI pipeline: .github/workflows/build-resume.yml
+- Output artifacts: outputs/resume.pdf and workflow artifact resume-pdf
+
+Current Maturity Assessment
+- [MED] Architecture scaffolding is clean and modular, but resume content remains mostly placeholder text.
+- [MED] Profile definitions exist, but build pipeline does not yet materialize profile-specific outputs.
+- [LOW] Documentation explains the intended architecture clearly and is consistent with repository layout.
+
+================================================================================
+2) Repository Structure
+================================================================================
+Reviewed
+- sections/, profiles/, scripts/, specs/, assets/, outputs/, .github/workflows/
+
+Findings
+- [PASS] Separation of concerns is strong: content, style, profiles, and build logic are distinct.
+- [PASS] outputs/ and assets/ retain directories via .gitkeep, keeping expected tree shape stable.
+- [MED] No dedicated audits/ path existed before this audit; adding it is appropriate for operational traceability.
+- [MED] No tests/ or validation scripts for profile schema or section completeness, reducing confidence as the system scales.
+- [LOW] Single workflow file is sufficient for current scope but may become a bottleneck as variant matrix builds are introduced.
+
+Scaling Concerns
+- Lack of schema validation for profiles can allow silent drift between profile intent and generated documents.
+- Single resume.tex orchestration model will not scale for many variant outputs without a generation layer.
+
+================================================================================
+3) Resume Architecture
+================================================================================
+Findings
+- [PASS] Section modularity is good: each section is independently isolated in sections/.
+- [MED] Section ordering is currently hardcoded in resume.tex instead of generated from profile YAML.
+- [MED] Content and presentation separation is partially achieved: style is centralized, but content is still template-level placeholders.
+- [MED] Profile strategy is defined declaratively, but publication workflow is not yet profile-aware.
+
+Recommendations
+- Implement profile-driven assembly (generate profile-specific .tex from YAML section order).
+- Enforce profile schema checks before build.
+- Add per-profile output naming convention (e.g., outputs/resume.<profile>.pdf).
+
+================================================================================
+4) ATS Compatibility
+================================================================================
+Findings
+- [PASS] PDF metadata fields (title/author/subject) are present via \hypersetup.
+- [MED] Current text content is placeholder-heavy, so keyword discoverability is not yet representative.
+- [MED] Section names are ATS-friendly (Summary, Experience, Education, Skills, Publications).
+- [LOW] Build uses modern font + T1 encoding; likely acceptable extraction characteristics, but no extraction verification is automated.
+- [LOW] No ATS regression check currently validates machine-extracted text output.
+
+Recommendations
+- Add text extraction check in CI (e.g., pdftotext smoke assertions).
+- Add required keyword checklist per profile to avoid missing role-critical terms.
+- Expand metadata strategy (subject/keywords) for profile-targeted publications.
+
+================================================================================
+5) Recruiter Experience
+================================================================================
+Findings
+- [MED] Current template is scan-friendly structurally but lacks real signal due to placeholder content.
+- [HIGH] No quantified impact bullets or concrete outcomes are present in experience content.
+- [MED] Positioning is neutral because summary and experience are not populated with differentiated narrative.
+- [LOW] Visual readability baseline is strong (spacing, headings, concise sections).
+
+Recommendations
+- Replace placeholders with concise, metric-driven accomplishments.
+- Prioritize top-third signal density (role scope, outcomes, core domain fit).
+- Remove redundant generic phrasing once real content is added.
+
+================================================================================
+6) Career Narrative
+================================================================================
+Target Narrative Coverage Review
+- MIT Lincoln Laboratory experience: [HIGH] Missing explicit narrative.
+- Systems engineering: [HIGH] Missing explicit narrative and evidence.
+- Platform engineering: [HIGH] Missing explicit narrative and concrete accomplishments.
+- AI-native workflows: [HIGH] Missing explicit narrative and project examples.
+- Publications/research: [MED] Section exists but contains placeholder only.
+- Founder experience: [HIGH] Missing explicit narrative.
+
+Narrative Gaps
+- Current structure can carry these narratives, but content does not yet communicate them.
+- No storyline arc across summary -> experience -> skills -> publications.
+
+Recommendations
+- Define core narrative pillars and map each pillar to 1-3 evidence bullets.
+- Add section-level constraints for proof (metrics, scope, tooling, outcomes).
+- Create profile-specific narrative emphasis rules in profile YAML.
+
+================================================================================
+7) Publication System
+================================================================================
+Findings
+- [PASS] Build process is deterministic and uses latexmk with explicit flags.
+- [PASS] CI uploads artifact and emits checksum summary.
+- [MED] Local build requires latexmk; missing preflight dependency checks in build.py for clearer failure mode.
+- [MED] Reproducibility checks (hash compare across environments) are not automated.
+- [LOW] Documentation is clear for current single-artifact flow.
+
+Recommendations
+- Add build preflight to fail fast with actionable dependency messaging.
+- Add optional profile matrix artifact generation in CI.
+- Add artifact naming/versioning policy and retention rationale.
+
+================================================================================
+8) Technical Debt
+================================================================================
+[HIGH]
+- Placeholder content across all primary sections blocks ATS/recruiter/career narrative quality.
+  Action: Populate all sections with finalized, evidence-backed content.
+- No implemented profile-targeted generation despite profile architecture being defined.
+  Action: Introduce profile-aware assembly/build path and per-profile artifacts.
+
+[MED]
+- No schema validation for profile YAML.
+  Action: Add schema validation script and CI check.
+- No automated ATS extraction quality checks.
+  Action: Add text extraction smoke test in CI.
+- No content quality gates (placeholder detection).
+  Action: Add CI lint rule to reject placeholder tokens.
+
+[LOW]
+- Missing explicit audits/ process documentation.
+  Action: Add short docs section describing audit cadence and format.
+- Workflow currently single-job/single-output.
+  Action: Extend with variant matrix when profile build support exists.
+
+[PASS]
+- Repository modularity and separation of concerns.
+- Build pipeline includes artifact upload and checksum summary.
+- Core documentation aligns with current architecture.
+
+[INFO]
+- Current repository state is a strong scaffold for a production-grade system once content and variant automation are implemented.
+
+================================================================================
+9) Future Opportunities
+================================================================================
+Recommended Resume Variants
+- Staff Platform Engineer
+- AI Infrastructure / MLOps Lead
+- Research Engineer
+- Founder / Technical Executive
+- Systems Engineer (Defense / R&D)
+
+Portfolio & Publication Integrations
+- Link project briefs and publication index from header/footer strategy.
+- Add machine-readable profile manifest for downstream website/portfolio sync.
+
+Automation Opportunities
+- Profile matrix build and artifact fan-out.
+- Automated placeholder detection and keyword coverage scoring.
+- ATS extraction diff checks between revisions.
+
+GitHub Enhancements
+- Add workflow status badges and artifact index in README.
+- Add issue templates for profile/content updates.
+- Add CODEOWNERS for sections/profiles/specs governance.
+
+Future Issue Candidates
+- FUTURE-001: Implement profile-driven TeX assembly and per-profile PDF outputs.
+- FUTURE-002: Add YAML schema validation and CI enforcement for profiles/.
+- FUTURE-003: Add ATS extraction smoke tests and keyword coverage checks.
+- FUTURE-004: Add placeholder-content lint checks in CI.
+- FUTURE-005: Add publication system docs for audit cadence, artifact policy, and release flow.
+- FUTURE-006: Introduce multi-profile GitHub Actions matrix with artifact naming standards.
+
+================================================================================
+Audit Conclusion
+================================================================================
+Overall Status: Foundation is solid; production readiness is blocked primarily by content completion and profile-aware publication automation.
+
+Immediate Priority Order
+1. Replace placeholders with real, outcome-focused content.
+2. Implement profile-aware build/output path.
+3. Add CI quality gates (schema validation + ATS extraction + placeholder linting).
