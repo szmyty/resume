@@ -331,6 +331,39 @@ def load_simple_yaml(contents: str) -> dict[str, Any]:
 
         value = value.strip()
 
+        if value in {">", "|", ">-", "|-"}:
+            block_lines: list[str] = []
+            block_indent: int | None = None
+            index += 1
+
+            while index < len(lines):
+                block_line = lines[index]
+                block_stripped = block_line.strip()
+                current_indent = len(block_line) - len(block_line.lstrip(" "))
+
+                if not block_stripped:
+                    block_lines.append("")
+                    index += 1
+                    continue
+
+                if current_indent <= indent:
+                    break
+
+                if block_indent is None:
+                    block_indent = current_indent
+
+                normalized = block_line[block_indent:] if len(block_line) >= block_indent else block_stripped
+                block_lines.append(normalized.rstrip())
+                index += 1
+
+            if value.startswith(">"):
+                folded = " ".join(part for part in block_lines if part)
+                data[key] = strip_quotes(folded.strip())
+            else:
+                literal = "\n".join(block_lines).strip()
+                data[key] = strip_quotes(literal)
+            continue
+
         if value == "":
             items: list[str] = []
             index += 1
