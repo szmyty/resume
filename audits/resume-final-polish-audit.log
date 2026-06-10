@@ -1,0 +1,53 @@
+Resume Final Polish and Quality Audit
+Timestamp: 2026-06-10
+
+Overall Assessment
+- Strong, credible technical profile with clear systems/platform depth and differentiated research signal.
+- High-leverage gains were available in top-third scanability, ATS-readable contact/link text, and redundancy reduction.
+
+Strengths
+- Mission-critical engineering context (USAID, humanitarian workflows, law-enforcement support).
+- Strong architecture and systems-thinking signal across platform, automation, and AI-assisted workflows.
+- Real research output with DOI-backed publication and ORCID identity.
+- Broad but relevant stack coverage spanning backend, mobile, geospatial, platform, and AI workflow tooling.
+
+Weaknesses
+- Previous ordering placed a concluded role above a current role, reducing immediate recruiter clarity.
+- Header links relied on short labels over explicit machine-readable references.
+- Publications section repeated data (publication URL and ORCID) with low additional signal.
+- Experience bullets were dense and partially redundant, reducing fast-scan effectiveness.
+
+Findings
+- HIGH: Reordered experience to place current founder/systems architect role first for top-third positioning.
+- HIGH: Tightened and de-duplicated experience bullets to emphasize systems built and outcomes.
+- HIGH: Updated header links to include explicit ATS-readable URL/identifier text.
+- HIGH: Compressed publications entry while retaining DOI and publication URL for research credibility.
+- MEDIUM: Tightened summary wording for stronger narrative coherence and signal density.
+- MEDIUM: Added explicit spacing in skills macro to improve extraction consistency after category labels.
+- LOW: Build tooling in this environment lacks latexmk/pdftotext, limiting full local PDF rebuild/ATS gate validation.
+
+Recommendations
+- HIGH: Keep current-role-first ordering and maintain concise, impact-led bullets in future edits.
+- HIGH: Preserve DOI-forward publication framing; avoid repetitive metadata blocks.
+- MEDIUM: If possible in CI/local environments, keep ATS extraction checks enabled with installed pdftotext.
+- LOW: Consider profile-specific summary rendering in build pipeline to reduce profile-config drift over time.
+
+Resume Scorecard
+- Recruiter Score: 8.8/10
+  - Reasoning: Clearer top-third positioning and stronger scanability after role-order and wording refinements.
+  - Remaining opportunity: Further micro-tightening of one long publication sentence if space pressure increases.
+- Hiring Manager Score: 9.0/10
+  - Reasoning: Strong ownership, architecture, and mission-impact evidence with credible technical scope.
+  - Remaining opportunity: Add future quantified operational metrics only when verifiable.
+- ATS Score: 8.7/10
+  - Reasoning: Explicit contact/link text and stable standard section headings improve extraction robustness.
+  - Remaining opportunity: Re-run ATS extraction once pdftotext is available in local/dev environment.
+- Technical Depth Score: 9.0/10
+  - Reasoning: Demonstrates cross-domain depth (mobile, geospatial, platform, CI/CD, AI workflows) with architecture influence.
+  - Remaining opportunity: Keep newer role bullets balanced between architecture and shipped outcomes.
+- Narrative Score: 8.9/10
+  - Reasoning: Story now flows more clearly from current systems architecture work to prior mission engineering and research.
+  - Remaining opportunity: Continue reducing repeated wording around reproducibility/automation.
+- Formatting Score: 8.6/10
+  - Reasoning: Cleaner content density and reduced redundancy improve readability without complexity.
+  - Remaining opportunity: Rebuild and visual-check final pagination once latexmk is available.
