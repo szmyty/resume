@@ -1,5 +1,5 @@
 Resume Quality Review and Polish Pass
-Timestamp: 2026-06-10T172420Z
+Timestamp: 2026-06-10T174300Z
 Repository: szmyty/resume
 Scope: resume.pdf, resume.tex, resume.sty, sections/*.tex, profiles/*.yaml, scripts/*.py, specs/*.md
 
@@ -18,7 +18,7 @@ Findings
 [HIGH] Experience bullets were verbose and buried top impact signal.
 [HIGH] Fallback YAML parser did not support folded block scalars (e.g., description: >), creating CI fragility when PyYAML is unavailable.
 [MEDIUM] Publication entry used line-break formatting that can reduce extraction consistency.
-[MEDIUM] No page number footer on a two-page resume reduced navigation context.
+[MEDIUM] Section separators and heading whitespace required tightening for denser scan flow and improved page utilization.
 [MEDIUM] Summary was broader than necessary and could be more concise/high-signal.
 [LOW] Skills ATS alignment could be incrementally improved with role-aligned terminology already supported by experience content.
 
@@ -27,7 +27,10 @@ Implemented Recommendations
 [HIGH] Reordered/tightened experience bullets to front-load strongest outcomes while preserving factual accuracy.
 [HIGH] Updated scripts/build.py simple YAML fallback parser to support folded/literal block scalars.
 [MEDIUM] Refined publications wording/formatting for cleaner extraction and readability.
-[MEDIUM] Enabled page numbering footer in resume.sty for multi-page readability.
+[MEDIUM] Removed page numbering footer in resume.sty per review feedback.
+[MEDIUM] Tightened section separator styling and section spacing in resume.sty to improve whitespace utilization.
+[MEDIUM] Reordered MIT experience bullets to place USAID impact before humanitarian deconfliction.
+[MEDIUM] Moved Publication and ORCID links onto dedicated lines in the Publications section for cleaner extraction.
 [MEDIUM] Tightened summary wording for faster recruiter scan.
 [LOW] Added "Distributed Systems" to skills backend/data group for ATS keyword coverage.
 
