@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "resume"
+version = "0.1.0"
+description = "Specification-driven LaTeX resume publication system"
+authors = ["Alan Szmyt <szmyty@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyyaml = "^6.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"

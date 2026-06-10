@@ -2,37 +2,30 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # profiles/general.yaml — General Software Engineering profile variant.
-# Defines sections and emphasis for general software engineering roles.
-
+# Defines structure and emphasis for general software engineering roles.
 profile: general
 name: "General Software Engineering"
-description: >
-  Targets general software engineering roles across product and platform teams.
-  Emphasizes systems thinking, delivery, APIs, and software architecture.
-
-summary: >
-  Software engineer delivering maintainable systems, well-designed APIs,
-  and user-focused products across backend, platform, and full-stack
-  environments.
-
 section_order:
   - header
   - summary
   - experience
-  - skills
+  - publications
   - education
+  - skills
 
 included_sections:
   - header
   - summary
   - experience
-  - skills
+  - publications
   - education
+  - skills
 
 keyword_emphasis:
   - software engineering
-  - backend
-  - api design
-  - systems design
-  - product delivery
+  - systems engineering
+  - platform engineering
   - software architecture
+  - automation
+  - distributed systems
+  - developer tooling
