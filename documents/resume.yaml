@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+#
+# documents/resume.yaml — Document manifest for résumé output.
+#
+# A résumé is a concise, selective, ATS-conscious single-page (or brief)
+# document. Section composition is determined by the active profile, with
+# this manifest supplying defaults and the available section pool.
+
+document_type: resume
+
+# LaTeX style package to load (without .sty extension).
+default_template: resume
+
+# Default page size. Profiles and targets may override this.
+default_page_size: letter
+
+# Complete set of sections that may appear in a résumé.
+section_pool:
+  - header
+  - summary
+  - experience
+  - publications
+  - education
+  - skills
+
+# Default section ordering when the active profile does not specify one.
+default_section_order:
+  - header
+  - summary
+  - experience
+  - publications
+  - education
+  - skills

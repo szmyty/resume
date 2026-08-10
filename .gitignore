@@ -18,9 +18,16 @@ _minted-*/
 # LaTeX build cache
 .cache/
 
+# Generated LaTeX source files produced at build time
+*.generated.tex
+
 # Generated outputs (keep the directory, not the files)
 outputs/*.pdf
 outputs/*.log
+
+# Generated dist PDF artifacts (build outputs; not committed)
+dist/**/*.pdf
+dist/**/*.synctex.gz
 
 # Audit logs (keep generated audits tracked)
 !audits/*.log
@@ -30,8 +37,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
-dist/
-build/
+.pytest_cache/
 
 # OS artifacts
 .DS_Store

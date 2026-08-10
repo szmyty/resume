@@ -28,6 +28,7 @@ make_path($aux_dir);
 $ENV{"TEXINPUTS"} =
     "./sections//:"
     . "./styles//:"
+    . "./templates//:"
     . "./assets//:";
 
 $ENV{"TEXMFOUTPUT"} = $aux_dir;

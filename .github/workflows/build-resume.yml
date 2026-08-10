@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Alan Szmyt
 # SPDX-License-Identifier: Apache-2.0
 
-name: Build Resume
+name: Build Resume and CV
 
 on:
   push:
@@ -10,11 +10,16 @@ on:
     paths:
       - "resume.tex"
       - "resume.sty"
+      - "cv.sty"
       - "sections/**"
       - "profiles/**"
+      - "documents/**"
+      - "targets/**"
+      - "templates/**"
       - "assets/**"
       - "scripts/build.py"
       - "scripts/quality_gates.py"
+      - "tests/**"
       - ".latexmkrc"
       - ".github/workflows/build-resume.yml"
 
@@ -24,11 +29,16 @@ on:
     paths:
       - "resume.tex"
       - "resume.sty"
+      - "cv.sty"
       - "sections/**"
       - "profiles/**"
+      - "documents/**"
+      - "targets/**"
+      - "templates/**"
       - "assets/**"
       - "scripts/build.py"
       - "scripts/quality_gates.py"
+      - "tests/**"
       - ".latexmkrc"
       - ".github/workflows/build-resume.yml"
 
@@ -39,7 +49,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate Profiles and Content
+    name: Validate Profiles, Documents, and Content
     runs-on: ubuntu-latest
 
     steps:
@@ -51,24 +61,35 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install Python dependencies
+        run: pip install pyyaml pytest
+
+      - name: Validate document manifests
+        run: python scripts/quality_gates.py validate-documents
+
       - name: Validate profiles
         run: python scripts/quality_gates.py validate-profiles
 
       - name: Check placeholder content
         run: python scripts/quality_gates.py check-placeholders
 
+      - name: Run configuration and resolution tests
+        run: python -m pytest tests/ -v
+
       - name: Validation summary
         if: success()
         run: |
           {
-            echo "## Profile and Content Validation"
+            echo "## Validation and Test Results"
             echo ""
+            echo "- ✅ Document manifests are valid."
             echo "- ✅ Profile definitions are valid."
             echo "- ✅ No unresolved placeholders were detected."
+            echo "- ✅ Configuration resolution tests passed."
           } >> "${GITHUB_STEP_SUMMARY}"
 
-  ats:
-    name: ATS Extraction Validation
+  build-resume:
+    name: Build Résumé (general, letter)
     runs-on: ubuntu-latest
     needs: validate
 
@@ -81,60 +102,128 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Build LaTeX PDF
-        uses: xu-cheng/latex-action@v3
-        with:
-          root_file: resume.tex
-          working_directory: .
-          args: >-
-            -pdf
-            -halt-on-error
-            -interaction=nonstopmode
-            -recorder
-            -synctex=1
-            -file-line-error
-            -f
-            -gg
-            -cd
-            -r
-            .latexmkrc
+      - name: Install Python dependencies
+        run: pip install pyyaml
 
-      - name: Install PDF text extraction tool
+      - name: Install TeX Live
         run: |
-          sudo apt-get update
-          sudo apt-get install -y poppler-utils
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-fonts-extra \
+            latexmk \
+            poppler-utils
 
-      - name: Copy PDF to outputs
-        if: success()
+      - name: Build résumé (general, letter)
+        run: python scripts/build.py --document resume --profile general --page-size letter
+
+      - name: Locate generated résumé PDF
+        id: resume-pdf
         run: |
-          mkdir -p outputs
-          cp .cache/out/resume.pdf outputs/resume.pdf
+          PDF="dist/resume/general/alan-szmyt-resume-general.pdf"
+          if [ ! -f "${PDF}" ]; then
+            echo "PDF not found: ${PDF}" >&2
+            exit 1
+          fi
+          echo "path=${PDF}" >> "${GITHUB_OUTPUT}"
 
-      - name: Upload resume PDF artifact
+      - name: Run ATS extraction validation on résumé
+        run: >
+          python scripts/quality_gates.py validate-ats
+          --pdf "${{ steps.resume-pdf.outputs.path }}"
+          --summary-file "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload résumé PDF artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: resume-pdf
-          path: outputs/resume.pdf
+          name: resume-general-pdf
+          path: dist/resume/general/alan-szmyt-resume-general.pdf
           if-no-files-found: error
           retention-days: 30
-
-      - name: Run ATS extraction smoke test
-        run: >
-          python scripts/quality_gates.py validate-ats
-          --pdf outputs/resume.pdf
-          --summary-file "${GITHUB_STEP_SUMMARY}"
 
       - name: Build summary
         if: success()
         run: |
           set -euo pipefail
-          ARTIFACT_PATH="outputs/resume.pdf"
+          ARTIFACT_PATH="${{ steps.resume-pdf.outputs.path }}"
           SHA="$(sha256sum "${ARTIFACT_PATH}" | awk '{print $1}')"
+          SIZE="$(du -sh "${ARTIFACT_PATH}" | awk '{print $1}')"
           {
-            echo "## Resume Build Summary"
+            echo "## Résumé Build Summary"
             echo ""
-            echo "| Artifact | Checksum (sha256) |"
-            echo "| --- | --- |"
-            echo "| resume.pdf | \`${SHA}\` |"
+            echo "| Artifact | Size | SHA-256 |"
+            echo "| --- | --- | --- |"
+            echo "| alan-szmyt-resume-general.pdf | ${SIZE} | \`${SHA}\` |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  build-cv:
+    name: Build CV (research, letter)
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install pyyaml
+
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-fonts-extra \
+            latexmk \
+            poppler-utils
+
+      - name: Build CV (research, letter)
+        run: python scripts/build.py --document cv --profile research --page-size letter
+
+      - name: Locate generated CV PDF
+        id: cv-pdf
+        run: |
+          PDF="dist/cv/research/alan-szmyt-cv-research.pdf"
+          if [ ! -f "${PDF}" ]; then
+            echo "PDF not found: ${PDF}" >&2
+            exit 1
+          fi
+          echo "path=${PDF}" >> "${GITHUB_OUTPUT}"
+
+      - name: Run ATS extraction validation on CV
+        run: >
+          python scripts/quality_gates.py validate-ats
+          --pdf "${{ steps.cv-pdf.outputs.path }}"
+          --summary-file "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload CV PDF artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cv-research-pdf
+          path: dist/cv/research/alan-szmyt-cv-research.pdf
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Build summary
+        if: success()
+        run: |
+          set -euo pipefail
+          ARTIFACT_PATH="${{ steps.cv-pdf.outputs.path }}"
+          SHA="$(sha256sum "${ARTIFACT_PATH}" | awk '{print $1}')"
+          SIZE="$(du -sh "${ARTIFACT_PATH}" | awk '{print $1}')"
+          {
+            echo "## CV Build Summary"
+            echo ""
+            echo "| Artifact | Size | SHA-256 |"
+            echo "| --- | --- | --- |"
+            echo "| alan-szmyt-cv-research.pdf | ${SIZE} | \`${SHA}\` |"
           } >> "${GITHUB_STEP_SUMMARY}"

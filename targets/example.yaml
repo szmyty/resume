@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+#
+# targets/example.yaml — Example application-specific overlay.
+#
+# Targets are thin overlays applied on top of a document + profile
+# configuration. They express only what is application-specific, such as
+# page size, section selection, or output naming. They do not duplicate
+# career content.
+#
+# This file serves as a demonstration fixture and integration test target.
+# Replace with real application-specific targets in follow-up work.
+
+target: example
+
+description: >
+  Example overlay demonstrating the target mechanism.
+  Selects skills-forward section ordering on a letter-size résumé.
+
+# Override the document type (optional; inherits from --document if omitted).
+document_type: resume
+
+# Override the profile (optional; inherits from --profile if omitted).
+profile: general
+
+# Override the page size (optional).
+page_size: letter
+
+# Override the section ordering (optional). Only sections present in the
+# active profile's included_sections will actually be rendered.
+section_order:
+  - header
+  - summary
+  - skills
+  - experience
+  - education
+  - publications
+
+# Optional custom output basename. Defaults to
+# alan-szmyt-{document_type}-{profile}-{target} when omitted.
+# output_basename: alan-szmyt-resume-general-example
