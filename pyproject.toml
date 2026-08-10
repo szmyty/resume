@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "resume"
 version = "0.1.0"
-description = "Specification-driven LaTeX resume publication system"
+description = "Specification-driven LaTeX résumé and CV publishing system"
 authors = ["Alan Szmyt <szmyty@gmail.com>"]
 package-mode = false
 
@@ -9,6 +9,13 @@ package-mode = false
 python = "^3.11"
 pyyaml = "^6.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+
 [build-system]
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"

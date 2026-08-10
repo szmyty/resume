@@ -1,0 +1,137 @@
+% SPDX-FileCopyrightText: 2026 Alan Szmyt
+% SPDX-License-Identifier: Apache-2.0
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv}[2026/01/01 Curriculum Vitae Style]
+
+% ============================================================
+% Encoding and Typography
+% ============================================================
+
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+\RequirePackage[english]{babel}
+\RequirePackage{cmap}
+\RequirePackage{lmodern}
+\RequirePackage{microtype}
+
+% ============================================================
+% Page Layout — multi-page generous margins
+% ============================================================
+
+\RequirePackage[
+  top=0.75in,
+  bottom=0.75in,
+  left=0.85in,
+  right=0.85in,
+  includeheadfoot
+]{geometry}
+
+\RequirePackage{parskip}
+
+% ============================================================
+% Colors — shared palette with resume.sty
+% ============================================================
+
+\RequirePackage[dvipsnames]{xcolor}
+
+\definecolor{resumeblue}{HTML}{1D4ED8}
+\definecolor{resumegray}{HTML}{374151}
+\definecolor{resumelightgray}{HTML}{9CA3AF}
+\definecolor{resumeborder}{HTML}{E5E7EB}
+\definecolor{resumeaccent}{HTML}{2563EB}
+
+% ============================================================
+% Hyperlinks and PDF Metadata
+% ============================================================
+
+\RequirePackage[
+  colorlinks=true,
+  linkcolor=resumeblue,
+  urlcolor=resumeblue,
+  citecolor=resumeblue,
+  pdfborder={0 0 0},
+  bookmarks=true,
+  bookmarksopen=true
+]{hyperref}
+
+% ============================================================
+% Lists and Spacing
+% ============================================================
+
+\RequirePackage{enumitem}
+
+\setlist[itemize]{
+  leftmargin=1.5em,
+  topsep=2pt,
+  itemsep=1pt,
+  parsep=0pt
+}
+
+% ============================================================
+% Section Formatting
+% ============================================================
+
+\RequirePackage{titlesec}
+\RequirePackage{needspace}
+\RequirePackage{etoolbox}
+
+\pretocmd{\section}{\Needspace{6\baselineskip}}{}{}
+
+\titleformat{\section}
+  {\large\bfseries\color{resumegray}}
+  {}
+  {0em}
+  {}
+  [\vspace{0.15em}\color{resumeborder}\titlerule\vspace{0.3em}]
+
+\titlespacing{\section}{0pt}{0.6em}{0.25em}
+
+% ============================================================
+% Tables and Columns
+% ============================================================
+
+\RequirePackage{tabularx}
+\RequirePackage{array}
+\RequirePackage{multicol}
+
+% ============================================================
+% Header/Footer — page numbers on multi-page CV
+% ============================================================
+
+\RequirePackage{fancyhdr}
+
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[C]{\small\color{resumelightgray}\thepage}
+
+% ============================================================
+% Utility Commands — shared with resume.sty
+% ============================================================
+
+\newcommand{\resumeentry}[4]{%
+  \textbf{#1} \hfill \textit{#3} \\
+  \textit{#2} \hfill \small\color{resumelightgray}#4
+  \normalcolor
+}
+
+\newcommand{\resumeskillgroup}[2]{%
+  \noindent\textbf{#1:}\enspace #2\par
+}
+
+% ============================================================
+% CV-specific Commands
+% ============================================================
+
+% \cvpublication{title}{venue}{year}{doi-url}
+\newcommand{\cvpublication}[4]{%
+  \noindent\textbf{#1} \\
+  \textit{#2}, #3
+  \ifx&#4&\relax\else\space[\href{#4}{DOI}]\fi\par
+  \vspace{0.3em}
+}
+
+% \cvevent{title}{organization}{location}{date-range}
+\newcommand{\cvevent}[4]{%
+  \resumeentry{#1}{#2}{#3}{#4}%
+}

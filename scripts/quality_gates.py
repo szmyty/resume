@@ -35,6 +35,7 @@ def parse_args() -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("validate-profiles", help="Validate profile YAML definitions.")
+    subparsers.add_parser("validate-documents", help="Validate document manifest YAML definitions.")
 
     placeholders = subparsers.add_parser(
         "check-placeholders",
@@ -66,6 +67,44 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def validate_documents() -> int:
+    """Validate document manifest YAML files in documents/."""
+    try:
+        documents = build.load_document_manifests()
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Document validation failed: {exc}", file=sys.stderr)
+        return 1
+
+    errors: list[str] = []
+    for doc_path in sorted(build.DOCUMENTS_DIR.glob("*.yaml")):
+        try:
+            doc = build.load_document_manifest(doc_path)
+        except ValueError as exc:
+            errors.append(f"{doc_path.name}: {exc}")
+            continue
+
+        if doc.document_type != doc_path.stem:
+            errors.append(
+                f"{doc_path}: expected document_type '{doc_path.stem}' "
+                f"to match filename, found '{doc.document_type}'."
+            )
+
+        if not doc.default_section_order:
+            errors.append(f"{doc_path}: default_section_order must not be empty.")
+
+        if not doc.section_pool:
+            errors.append(f"{doc_path}: section_pool must not be empty.")
+
+    if errors:
+        print("Document validation failed:")
+        for error in errors:
+            print(f"  - {error}")
+        return 1
+
+    print(f"Validated {len(documents)} document manifest(s).")
+    return 0
+
+
 def validate_profiles() -> int:
     try:
         profiles = build.load_profiles()
@@ -73,9 +112,18 @@ def validate_profiles() -> int:
         print(f"Profile validation failed: {exc}", file=sys.stderr)
         return 1
 
+    # The broadest pool is CV_SECTIONS; profile sections must be known to at
+    # least one document type.
+    all_known_sections = build.CV_SECTIONS
+
     errors: list[str] = []
     for profile_path in sorted(build.PROFILES_DIR.glob("*.yaml")):
-        profile = build.load_profile(profile_path)
+        try:
+            profile = build.load_profile(profile_path)
+        except ValueError as exc:
+            errors.append(f"{profile_path.name}: {exc}")
+            continue
+
         if profile.profile != profile_path.stem:
             errors.append(
                 f"{profile_path}: expected profile id '{profile_path.stem}' "
@@ -83,6 +131,24 @@ def validate_profiles() -> int:
             )
         if not profile.keyword_emphasis:
             errors.append(f"{profile_path}: keyword_emphasis must include at least one value.")
+
+        # Validate section names against the superset of all known sections.
+        unknown = sorted(
+            (set(profile.section_order) | set(profile.included_sections)) - all_known_sections
+        )
+        if unknown:
+            errors.append(
+                f"{profile_path.name}: unknown section(s): {', '.join(unknown)}. "
+                f"Known sections: {', '.join(sorted(all_known_sections))}"
+            )
+
+        # Included sections must appear in section_order.
+        missing_order = [s for s in profile.included_sections if s not in profile.section_order]
+        if missing_order:
+            errors.append(
+                f"{profile_path.name}: included section(s) missing from section_order: "
+                f"{', '.join(missing_order)}"
+            )
 
     if errors:
         print("Profile validation failed:")
@@ -209,6 +275,8 @@ def main() -> int:
     args = parse_args()
     if args.command == "validate-profiles":
         return validate_profiles()
+    if args.command == "validate-documents":
+        return validate_documents()
     if args.command == "check-placeholders":
         return check_placeholders(args.path)
     if args.command == "validate-ats":

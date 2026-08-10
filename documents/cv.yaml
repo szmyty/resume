@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+#
+# documents/cv.yaml — Document manifest for curriculum vitae output.
+#
+# A CV is a longer, multi-page document suitable for academic, research, and
+# technical roles. It shares canonical career content with the résumé but
+# supports an extended section pool. Sections without content are omitted
+# automatically; no empty headings are emitted.
+
+document_type: cv
+
+# LaTeX style package to load (without .sty extension).
+default_template: cv
+
+# Default page size. Profiles and targets may override this.
+default_page_size: letter
+
+# Complete set of sections that may appear in a CV (superset of résumé).
+section_pool:
+  - header
+  - summary
+  - experience
+  - publications
+  - education
+  - skills
+  - projects
+  - talks
+  - awards
+  - service
+
+# Default section ordering when the active profile does not specify one.
+# Optional sections (projects, talks, awards, service) are excluded by
+# default until populated; add them to a profile's included_sections to
+# activate them.
+default_section_order:
+  - header
+  - summary
+  - experience
+  - publications
+  - education
+  - skills

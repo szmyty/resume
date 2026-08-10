@@ -1,0 +1,30 @@
+% SPDX-FileCopyrightText: 2026 Alan Szmyt
+% SPDX-License-Identifier: Apache-2.0
+%
+% templates/resume/template.tex — Résumé document preamble template.
+%
+% Placeholders replaced by the build system at generation time:
+%   {{PAGE_CLASS}}       — letterpaper | a4paper
+%   {{DOCUMENT_TITLE}}   — PDF title metadata
+%   {{DOCUMENT_SUBJECT}} — PDF subject metadata
+%   {{PDF_KEYWORDS}}     — PDF keyword metadata
+
+\documentclass[10pt,{{PAGE_CLASS}}]{article}
+
+% ============================================================
+% Resume Style
+% ============================================================
+
+\usepackage{resume}
+
+% ============================================================
+% PDF Metadata
+% ============================================================
+
+\hypersetup{
+  pdftitle={{{DOCUMENT_TITLE}}},
+  pdfauthor={Alan Szmyt},
+  pdfsubject={{{DOCUMENT_SUBJECT}}},
+  pdfkeywords={{{PDF_KEYWORDS}}},
+  pdfcreator={szmyty/resume}
+}
