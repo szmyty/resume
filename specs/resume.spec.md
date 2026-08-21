@@ -217,13 +217,13 @@ broken destinations are not.
 ## 7. CI contract
 
 CI validates facts, profiles, manifests, destinations, privacy, and unit tests.
-It builds four public résumé projections and three application role projections.
+It builds four public résumé projections and four application role projections.
 Application builds use synthetic CI-only contact data and are never uploaded.
 
 CI uploads:
 
 - public résumé PDFs;
-- the public research CV smoke artifact; and
+- the fully validated public research CV; and
 - two Poppler-rendered PNG pages for each public résumé.
 
 The artifact inventory records page count and SHA-256.

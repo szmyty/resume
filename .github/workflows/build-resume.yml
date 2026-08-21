@@ -179,7 +179,7 @@ jobs:
           )
           PY
 
-          profiles=(platform research mobile-geospatial)
+          profiles=(general platform research mobile-geospatial)
           for profile in "${profiles[@]}"; do
             python scripts/build.py \
               --document resume \
@@ -188,6 +188,9 @@ jobs:
               --contact-file "${CONTACT_FILE}"
 
             case "${profile}" in
+              general)
+                pdf="dist/resume/general/application/Alan-Szmyt-Resume-Platform-DevEx.pdf"
+                ;;
               platform)
                 pdf="dist/resume/platform/application/Alan-Szmyt-Resume-Platform-DevEx.pdf"
                 ;;
@@ -210,7 +213,7 @@ jobs:
               --summary-file "${GITHUB_STEP_SUMMARY}"
           done
 
-      - name: Smoke-test public research CV
+      - name: Build and validate public research CV
         run: |
           set -euo pipefail
           pdf="dist/cv/research/public/Alan-Szmyt-CV-Research-AI-Systems-Public.pdf"
@@ -219,6 +222,10 @@ jobs:
             --profile research \
             --audience public
           python scripts/quality_gates.py validate-ats \
+            --pdf "${pdf}" \
+            --audience public \
+            --summary-file "${GITHUB_STEP_SUMMARY}"
+          python scripts/quality_gates.py validate-pdf \
             --pdf "${pdf}" \
             --audience public \
             --summary-file "${GITHUB_STEP_SUMMARY}"

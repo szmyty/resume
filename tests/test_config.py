@@ -365,6 +365,25 @@ def test_general_baseline_keeps_independent_role_together(
     )
 
 
+def test_public_research_cv_uses_balanced_section_boundary(
+    documents: dict[str, build.DocumentManifest],
+    profiles: dict[str, build.ProfileConfig],
+) -> None:
+    config = build.resolve_config(
+        document=documents["cv"],
+        profile=profiles["research"],
+        target=None,
+        page_size_override=None,
+    )
+    rendered = build.render_document(config)
+    page_break = "\\newpage\n\\setlength{\\parskip}{0.9em}"
+    assert rendered.index("\\item Architected and developed Ego Hygiene") < (
+        rendered.index(page_break)
+    )
+    assert rendered.index(page_break) < rendered.index("\\section{Research Artifact}")
+    assert "Artifact status: Independent DOI-backed research artifact" in rendered
+
+
 def test_application_render_uses_approved_contact_and_claim_projection(
     resume_document: build.DocumentManifest,
     general_profile: build.ProfileConfig,

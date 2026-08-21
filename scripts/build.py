@@ -897,16 +897,16 @@ def _render_role_section(
 
 def _render_research_artifact(config: BuildConfig, ledger: dict[str, Any]) -> str:
     artifact = ledger["research_artifacts"]["reflector"]
-    page_break = (
-        "\\newpage\n\\setlength{\\parskip}{0.9em}\n"
-        if config.document_type == "resume" and config.profile == "general"
-        else ""
-    )
+    page_break = ""
+    if config.document_type == "resume" and config.profile == "general":
+        page_break = "\\newpage\n\\setlength{\\parskip}{0.9em}\n"
+    elif config.document_type == "cv":
+        page_break = "\\newpage\n\\setlength{\\parskip}{0.9em}\n"
     return (
         f"{page_break}\\section{{Research Artifact}}\n"
         f"\\textbf{{{career.latex_escape(artifact['title'])}}}\\par\n"
         f"Year: {career.latex_escape(artifact['year'])}\\par\n"
-        f"\\textit{{{career.latex_escape(artifact['status'])}}}\\par\n"
+        f"\\textit{{Artifact status: {career.latex_escape(artifact['status'])}}}\\par\n"
         f"{career.latex_escape(artifact['summary'])}\\par\n"
         f"\\href{{{artifact['concept_url']}}}"
         f"{{DOI: {career.latex_escape(artifact['concept_doi'])}}}"

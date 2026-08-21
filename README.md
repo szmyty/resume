@@ -119,7 +119,7 @@ python scripts/build.py \
   --profile mobile-geospatial \
   --audience public
 
-# Public research CV smoke build
+# Public research CV
 python scripts/build.py \
   --document cv \
   --profile research \
@@ -186,9 +186,9 @@ The artifact gates enforce:
 destinations, privacy policy, and tests. It then:
 
 1. builds and validates four public résumé renders;
-2. builds and validates three application role variants with synthetic CI-only
+2. builds and validates four application role variants with synthetic CI-only
    contact data;
-3. smoke-tests the public research CV;
+3. builds and fully validates the public research CV;
 4. renders both résumé pages to PNG for visual review; and
 5. uploads only public PDFs and visual renders.
 
