@@ -376,12 +376,15 @@ def test_public_research_cv_uses_balanced_section_boundary(
         page_size_override=None,
     )
     rendered = build.render_document(config)
+    artifact = career.load_ledger()["research_artifacts"]["reflector"]
     page_break = "\\newpage\n\\setlength{\\parskip}{0.9em}"
     assert rendered.index("\\item Architected and developed Ego Hygiene") < (
         rendered.index(page_break)
     )
     assert rendered.index(page_break) < rendered.index("\\section{Research Artifact}")
+    assert f"Artifact year: {artifact['year']}" in rendered
     assert "Artifact status: Independent DOI-backed research artifact" in rendered
+    assert f"Concept DOI: {artifact['concept_doi']}" in rendered
 
 
 def test_application_render_uses_approved_contact_and_claim_projection(

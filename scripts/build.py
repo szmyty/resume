@@ -905,11 +905,11 @@ def _render_research_artifact(config: BuildConfig, ledger: dict[str, Any]) -> st
     return (
         f"{page_break}\\section{{Research Artifact}}\n"
         f"\\textbf{{{career.latex_escape(artifact['title'])}}}\\par\n"
-        f"Year: {career.latex_escape(artifact['year'])}\\par\n"
+        f"Artifact year: {career.latex_escape(artifact['year'])}\\par\n"
         f"\\textit{{Artifact status: {career.latex_escape(artifact['status'])}}}\\par\n"
         f"{career.latex_escape(artifact['summary'])}\\par\n"
         f"\\href{{{artifact['concept_url']}}}"
-        f"{{DOI: {career.latex_escape(artifact['concept_doi'])}}}"
+        f"{{Concept DOI: {career.latex_escape(artifact['concept_doi'])}}}"
         r"\hspace{0.55em}\textbar{}\hspace{0.55em}"
         f"\\href{{https://orcid.org/{artifact['orcid']}}}"
         f"{{ORCID: {career.latex_escape(artifact['orcid'])}}}"
