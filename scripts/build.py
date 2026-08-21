@@ -5,13 +5,14 @@
 
 Architecture
 ------------
-Five concepts are kept distinct during build resolution:
+Six concepts are kept distinct during build resolution:
 
-  1. content/evidence  — canonical career facts in sections/*.tex
+  1. content/evidence  — canonical career facts in content/career.json
   2. document type     — resume | cv  (documents/*.yaml)
   3. profile           — broad role-family emphasis  (profiles/*.yaml)
   4. target            — optional application-specific overlay (targets/*.yaml)
   5. template/theme    — LaTeX style (templates/<type>/template.tex)
+  6. audience/contact  — public-safe or approved application projection
 
 Resolution merge order:
   document manifest defaults
@@ -21,15 +22,12 @@ Resolution merge order:
 
 Output paths
 ------------
-  dist/<document_type>/<profile>/alan-szmyt-<document_type>-<profile>.pdf
-  dist/<document_type>/<profile>/<target>/alan-szmyt-<document_type>-<profile>-<target>.pdf
+  dist/<document_type>/<profile>/<audience>/<intentional-filename>.pdf
+  dist/<document_type>/<profile>/<audience>/<target>/<intentional-filename>.pdf
 
-Backward compatibility
-----------------------
-``--document`` defaults to ``resume``, so existing ``--profile`` invocations
-continue to work. The output directory has changed from ``outputs/`` to
-``dist/``; a compatibility copy is written to ``outputs/`` for any workflow
-that still expects the old path.
+``--document`` defaults to ``resume`` and public is the privacy-safe default.
+A compatibility copy is written to ``outputs/`` for local tooling that still
+expects the old directory.
 """
 
 from __future__ import annotations
@@ -43,6 +41,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import career
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS_DIR = REPOSITORY_ROOT / "outputs"
@@ -55,7 +55,7 @@ PROFILES_DIR = REPOSITORY_ROOT / "profiles"
 DOCUMENTS_DIR = REPOSITORY_ROOT / "documents"
 TARGETS_DIR = REPOSITORY_ROOT / "targets"
 TEMPLATES_DIR = REPOSITORY_ROOT / "templates"
-RESUME_TEX = REPOSITORY_ROOT / "resume.tex"
+CAREER_LEDGER = REPOSITORY_ROOT / "content" / "career.json"
 
 SUPPORTED_DOCUMENT_TYPES = {"resume", "cv"}
 SUPPORTED_PAGE_SIZES = {"letter", "a4"}
@@ -67,6 +67,7 @@ RESUME_SECTIONS: frozenset[str] = frozenset({
     "header",
     "summary",
     "experience",
+    "independent",
     "publications",
     "education",
     "skills",
@@ -115,6 +116,11 @@ class ProfileConfig:
     section_order: tuple[str, ...]
     included_sections: tuple[str, ...]
     keyword_emphasis: tuple[str, ...]
+    claim_ids: tuple[str, ...]
+    skill_group_ids: tuple[str, ...]
+    headline: str
+    summary: str
+    output_label: str
     description: str = ""
 
 
@@ -142,6 +148,14 @@ class BuildConfig:
     section_order: tuple[str, ...]
     included_sections: tuple[str, ...]
     output_basename: str
+    headline: str
+    summary: str
+    claim_ids: tuple[str, ...]
+    skill_group_ids: tuple[str, ...]
+    keyword_emphasis: tuple[str, ...]
+    output_label: str
+    audience: str
+    contact: dict[str, str] = field(default_factory=dict)
     target: str | None = None
 
 
@@ -161,6 +175,16 @@ def main() -> None:
         ensure_paths()
         documents = load_document_manifests()
         profiles = load_profiles()
+        career.load_ledger(CAREER_LEDGER)
+
+        contact: dict[str, str] = {}
+        if args.audience == "application":
+            if not args.contact_file:
+                raise ValueError(
+                    "Application builds require --contact-file pointing to an "
+                    "owner-approved, ignored JSON overlay."
+                )
+            contact = career.load_application_contact(Path(args.contact_file))
 
         document_type = args.document or "resume"
         if document_type not in documents:
@@ -182,6 +206,8 @@ def main() -> None:
                 profile=prof,
                 target=target,
                 page_size_override=args.page_size,
+                audience=args.audience,
+                contact=contact,
             )
             pdf = build_document(config)
             built_pdfs.append(pdf)
@@ -197,9 +223,11 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Build résumé and CV PDFs from canonical LaTeX content.\n\n"
+            "Build résumé and CV PDFs from canonical career content.\n\n"
             "Examples:\n"
-            "  python scripts/build.py --document resume --profile general\n"
+            "  python scripts/build.py --document resume --profile general --audience public\n"
+            "  python scripts/build.py --document resume --profile platform "
+            "--audience application --contact-file .local/application-contact.json\n"
             "  python scripts/build.py --document cv --profile research\n"
             "  python scripts/build.py --document cv --profile research --page-size a4\n"
             "  python scripts/build.py --document resume --profile general --target example\n"
@@ -235,6 +263,23 @@ def parse_args() -> argparse.Namespace:
         default=None,
         choices=sorted(SUPPORTED_PAGE_SIZES),
         help="Override page size: letter | a4. Inherits from document/target otherwise.",
+    )
+    parser.add_argument(
+        "--audience",
+        choices=("public", "application"),
+        default="public",
+        help=(
+            "Privacy projection to render. Public is the safe default; application "
+            "requires an owner-approved contact overlay."
+        ),
+    )
+    parser.add_argument(
+        "--contact-file",
+        default=None,
+        help=(
+            "Ignored JSON contact overlay for --audience application. "
+            "Never commit this file."
+        ),
     )
     parser.add_argument(
         "--list",
@@ -369,6 +414,11 @@ def load_profile(profile_path: Path) -> ProfileConfig:
     section_order = first_sequence(data, ("section_order", "sections"), profile_path)
     included_sections = first_sequence(data, ("included_sections", "sections"), profile_path)
     keyword_emphasis = first_sequence(data, ("keyword_emphasis", "emphasis"), profile_path)
+    claim_ids = first_sequence(data, ("claim_ids",), profile_path)
+    skill_group_ids = first_sequence(data, ("skill_group_ids",), profile_path)
+    headline = require_scalar(data, "headline", profile_path)
+    summary = require_scalar(data, "summary", profile_path)
+    output_label = require_scalar(data, "output_label", profile_path)
     description = data.get("description", "")
     if description and not isinstance(description, str):
         description = str(description)
@@ -379,6 +429,11 @@ def load_profile(profile_path: Path) -> ProfileConfig:
         section_order=tuple(section_order),
         included_sections=tuple(included_sections),
         keyword_emphasis=tuple(keyword_emphasis),
+        claim_ids=tuple(claim_ids),
+        skill_group_ids=tuple(skill_group_ids),
+        headline=headline,
+        summary=summary,
+        output_label=output_label,
         description=description.strip() if description else "",
     )
 
@@ -463,6 +518,8 @@ def resolve_config(
     profile: ProfileConfig,
     target: TargetConfig | None,
     page_size_override: str | None,
+    audience: str = "public",
+    contact: dict[str, str] | None = None,
 ) -> BuildConfig:
     """Merge document → profile → target → CLI into a final BuildConfig.
 
@@ -473,6 +530,21 @@ def resolve_config(
     - template:         document default (not overridable in this release)
     """
     section_pool = set(document.section_pool)
+
+    if audience not in {"public", "application"}:
+        raise ValueError(f"Unsupported audience '{audience}'.")
+    if audience == "application" and not contact:
+        raise ValueError("Application builds require approved contact fields.")
+    if target is not None and target.document_type not in {None, document.document_type}:
+        raise ValueError(
+            f"Target '{target.target}' requires document '{target.document_type}', "
+            f"not '{document.document_type}'."
+        )
+    if target is not None and target.profile not in {None, profile.profile}:
+        raise ValueError(
+            f"Target '{target.target}' requires profile '{target.profile}', "
+            f"not '{profile.profile}'."
+        )
 
     # Section ordering: target can override, else use profile, else document default.
     if target is not None and target.section_order is not None:
@@ -502,7 +574,6 @@ def resolve_config(
         )
 
     # Ensure every included section appears in section_order.
-    included_set = set(included_sections)
     missing_from_order = [s for s in included_sections if s not in section_order]
     if missing_from_order:
         raise ValueError(
@@ -525,13 +596,21 @@ def resolve_config(
     else:
         page_size = document.default_page_size
 
-    # Output basename.
+    # Intentional recruiter-facing filename.
+    document_label = "CV" if document.document_type == "cv" else "Resume"
     if target is not None and target.output_basename:
         basename = target.output_basename
     elif target is not None:
-        basename = f"alan-szmyt-{document.document_type}-{profile.profile}-{target.target}"
+        basename = f"Alan-Szmyt-{document_label}-{profile.output_label}-{target.target}"
+    elif audience == "application":
+        basename = f"Alan-Szmyt-{document_label}-{profile.output_label}"
+    elif profile.profile == "general":
+        basename = f"Alan-Szmyt-{document_label}"
     else:
-        basename = f"alan-szmyt-{document.document_type}-{profile.profile}"
+        basename = (
+            f"Alan-Szmyt-{document_label}-"
+            f"{profile.output_label}-Public"
+        )
 
     return BuildConfig(
         document_type=document.document_type,
@@ -541,6 +620,14 @@ def resolve_config(
         section_order=tuple(section_order),
         included_sections=included_sections,
         output_basename=basename,
+        headline=profile.headline,
+        summary=profile.summary,
+        claim_ids=profile.claim_ids,
+        skill_group_ids=profile.skill_group_ids,
+        keyword_emphasis=profile.keyword_emphasis,
+        output_label=profile.output_label,
+        audience=audience,
+        contact=dict(contact or {}),
         target=target.target if target else None,
     )
 
@@ -551,7 +638,7 @@ def resolve_config(
 
 
 def ensure_paths() -> None:
-    for path in (LATEXMKRC, PROFILES_DIR, DOCUMENTS_DIR):
+    for path in (LATEXMKRC, PROFILES_DIR, DOCUMENTS_DIR, CAREER_LEDGER):
         if not path.exists():
             raise FileNotFoundError(f"Required path not found: {path}")
 
@@ -564,17 +651,26 @@ def ensure_paths() -> None:
 def build_document(config: BuildConfig) -> Path:
     stem = config.output_basename
     generated_source = REPOSITORY_ROOT / f"{stem}.generated.tex"
-    source_pdf = OUT_DIR / f"{stem}.pdf"
+    # latexmk preserves the complete source stem, including `.generated`.
+    # The previous path omitted this suffix and made successful compilations
+    # fail during artifact publication.
+    source_pdf = OUT_DIR / f"{stem}.generated.pdf"
 
     # Deterministic dist output path.
     if config.target:
-        final_pdf_dir = DIST_DIR / config.document_type / config.profile / config.target
+        final_pdf_dir = (
+            DIST_DIR
+            / config.document_type
+            / config.profile
+            / config.audience
+            / config.target
+        )
     else:
-        final_pdf_dir = DIST_DIR / config.document_type / config.profile
+        final_pdf_dir = DIST_DIR / config.document_type / config.profile / config.audience
     final_pdf = final_pdf_dir / f"{stem}.pdf"
     final_pdf_dir.mkdir(parents=True, exist_ok=True)
 
-    log_file = AUX_DIR / f"{stem}.log"
+    log_file = AUX_DIR / f"{stem}.generated.log"
 
     generated_source.write_text(render_document(config), encoding="utf-8")
 
@@ -626,29 +722,35 @@ def build_document(config: BuildConfig) -> Path:
 
 
 def render_document(config: BuildConfig) -> str:
-    """Render the generated .tex source for a given BuildConfig.
-
-    Reads the preamble from ``templates/<document_type>/template.tex`` if
-    present, otherwise falls back to reading the preamble from ``resume.tex``
-    (backward-compatible path for résumé builds).
-    """
+    """Render one audience-safe document from the canonical career ledger."""
     template_path = TEMPLATES_DIR / config.document_type / "template.tex"
-    if template_path.exists():
-        preamble = _render_preamble_from_template(template_path, config)
-    else:
-        preamble = _render_preamble_from_resume_tex(config)
+    if not template_path.exists():
+        raise FileNotFoundError(f"Document template not found: {template_path}")
+    preamble = _render_preamble_from_template(template_path, config)
+    ledger = career.load_ledger(CAREER_LEDGER)
 
     included_sections = set(config.included_sections)
     rendered_sections: list[str] = ["\\pagestyle{fancy}"]
+    section_renderers = {
+        "header": _render_header,
+        "summary": _render_summary,
+        "experience": _render_experience,
+        "independent": _render_independent,
+        "publications": _render_research_artifact,
+        "education": _render_education,
+        "skills": _render_skills,
+    }
 
     for section in config.section_order:
         if section not in included_sections:
             continue
-
-        rendered_sections.append(f"\\input{{sections/{section}}}")
-
-        if section == "header":
-            rendered_sections.append("\\vspace{0.5em}")
+        renderer = section_renderers.get(section)
+        if renderer is None:
+            extension_path = REPOSITORY_ROOT / "sections" / f"{section}.tex"
+            if extension_path.exists() and extension_path.read_text(encoding="utf-8").strip():
+                rendered_sections.append(f"\\input{{sections/{section}}}")
+            continue
+        rendered_sections.append(renderer(config, ledger))
 
     body = "\n\n".join(rendered_sections)
     return f"{preamble}\\begin{{document}}\n\n{body}\n\n\\end{{document}}\n"
@@ -656,35 +758,187 @@ def render_document(config: BuildConfig) -> str:
 
 def _render_preamble_from_template(template_path: Path, config: BuildConfig) -> str:
     """Read a structured template.tex and substitute build-time placeholders."""
-    doc_type_label = config.document_type.capitalize()
+    doc_type_label = "Resume" if config.document_type == "resume" else "CV"
     page_class = PAGE_CLASS_MAP.get(config.page_size, "letterpaper")
-    keywords = ", ".join([
-        "Software Engineering",
-        "Systems Engineering",
-        "Platform Engineering",
-        f"{doc_type_label}",
-    ])
+    keywords = ", ".join(config.keyword_emphasis)
+    title = f"Alan Szmyt {doc_type_label}"
+    if config.profile != "general" or config.audience == "application":
+        title = f"{title} - {config.output_label.replace('-', ' ')}"
+    if config.audience == "public" and config.profile != "general":
+        title = f"{title} (Public)"
 
     text = template_path.read_text(encoding="utf-8")
     text = text.replace("{{PAGE_CLASS}}", page_class)
-    text = text.replace("{{DOCUMENT_TITLE}}", f"Alan Szmyt {doc_type_label}")
-    text = text.replace(
-        "{{DOCUMENT_SUBJECT}}",
-        f"Software Engineer, Systems Architect, and Research Engineer {doc_type_label}",
-    )
-    text = text.replace("{{PDF_KEYWORDS}}", keywords)
+    text = text.replace("{{DOCUMENT_TITLE}}", career.latex_escape(title))
+    text = text.replace("{{DOCUMENT_SUBJECT}}", career.latex_escape(config.headline))
+    text = text.replace("{{PDF_KEYWORDS}}", career.latex_escape(keywords))
     return text + "\n"
 
 
-def _render_preamble_from_resume_tex(config: BuildConfig) -> str:
-    """Extract the preamble from resume.tex (legacy résumé path)."""
-    source = RESUME_TEX.read_text(encoding="utf-8")
-    document_start = "\\begin{document}"
-    try:
-        preamble, _ = source.split(document_start, maxsplit=1)
-    except ValueError as exc:
-        raise ValueError(f"Unable to locate document markers in {RESUME_TEX}") from exc
-    return preamble
+def _render_header(config: BuildConfig, ledger: dict[str, Any]) -> str:
+    identity = ledger["identity"]
+    location = identity["public_location"]
+    contact_parts: list[str] = []
+    if config.audience == "application":
+        location = config.contact.get("location") or location
+        if config.contact.get("phone"):
+            phone = career.latex_escape(config.contact["phone"])
+            contact_parts.append(f"\\href{{tel:{phone}}}{{{phone}}}")
+        if config.contact.get("email"):
+            email = career.latex_escape(config.contact["email"])
+            contact_parts.append(f"\\href{{mailto:{email}}}{{{email}}}")
+
+    links = career.destination_links(ledger, config.audience)
+    link_parts = [
+        f"\\href{{{link['url']}}}{{{career.latex_escape(str(link['label']))}}}"
+        for link in links
+    ]
+    first_line = [career.latex_escape(location), *contact_parts]
+    separator = r"\hspace{0.55em}\textbar{}\hspace{0.55em}"
+    return (
+        "\\begin{center}\n"
+        f"{{\\Huge\\bfseries {career.latex_escape(identity['name'])}}}\\par\n"
+        "\\vspace{0.22em}\n"
+        f"{{\\normalsize\\bfseries {career.latex_escape(config.headline)}}}\\par\n"
+        "\\vspace{0.28em}\n"
+        f"{{\\small {separator.join(first_line)}}}\\par\n"
+        "\\vspace{0.12em}\n"
+        f"{{\\small {separator.join(link_parts)}}}\\par\n"
+        "\\end{center}\n"
+    )
+
+
+def _render_summary(config: BuildConfig, ledger: dict[str, Any]) -> str:
+    del ledger
+    return f"\\section{{Summary}}\n{career.latex_escape(config.summary)}"
+
+
+def _render_experience(config: BuildConfig, ledger: dict[str, Any]) -> str:
+    # The intentionally shorter mobile lane distributes its four MIT bullets
+    # across the first page rather than manufacturing filler claims.
+    return _render_role_section(
+        "Experience",
+        "mit-lincoln-laboratory",
+        config,
+        ledger,
+        itemsep="14pt" if config.profile == "mobile-geospatial" else None,
+    )
+
+
+def _render_independent(config: BuildConfig, ledger: dict[str, Any]) -> str:
+    selected_claims = career.projected_claims(
+        ledger,
+        config.claim_ids,
+        subject="incompris",
+        audience=config.audience,
+    )
+    split_after = None
+    if config.document_type == "resume" and config.profile != "general":
+        split_after = 1 if len(selected_claims) <= 2 else 2
+    return _render_role_section(
+        "Independent Engineering & Research",
+        "incompris",
+        config,
+        ledger,
+        split_after=split_after,
+    )
+
+
+def _render_role_section(
+    heading: str,
+    role_id: str,
+    config: BuildConfig,
+    ledger: dict[str, Any],
+    split_after: int | None = None,
+    itemsep: str | None = None,
+) -> str:
+    role = ledger["roles"][role_id]
+    claims = career.projected_claims(
+        ledger,
+        config.claim_ids,
+        subject=role_id,
+        audience=config.audience,
+    )
+    entry = (
+        f"\\section{{{career.latex_escape(heading)}}}\n"
+        f"\\resumeentry{{{career.latex_escape(role['title'])}}}"
+        f"{{{career.latex_escape(role['organization'])}}}"
+        f"{{{career.latex_escape(role['location'])}}}"
+        f"{{{career.latex_escape(role['display_dates'])}}}\n"
+    )
+    list_start = "\\begin{itemize}"
+    if itemsep:
+        list_start = f"{list_start}[itemsep={itemsep}]"
+    if split_after is None or len(claims) <= split_after:
+        bullets = "\n".join(
+            f"\\item {career.latex_escape(claim)}" for claim in claims
+        )
+        return f"{entry}{list_start}\n{bullets}\n\\end{{itemize}}"
+
+    first = "\n".join(
+        f"\\item {career.latex_escape(claim)}" for claim in claims[:split_after]
+    )
+    remaining = "\n".join(
+        f"\\item {career.latex_escape(claim)}" for claim in claims[split_after:]
+    )
+    continued_title = career.latex_escape(f"{role['title']} (continued)")
+    continued = (
+        "\\newpage\n"
+        f"\\resumeentry{{{continued_title}}}"
+        f"{{{career.latex_escape(role['organization'])}}}"
+        f"{{{career.latex_escape(role['location'])}}}"
+        f"{{{career.latex_escape(role['display_dates'])}}}\n"
+    )
+    return (
+        f"{entry}{list_start}\n{first}\n\\end{{itemize}}\n"
+        f"{continued}{list_start}\n{remaining}\n\\end{{itemize}}"
+    )
+
+
+def _render_research_artifact(config: BuildConfig, ledger: dict[str, Any]) -> str:
+    artifact = ledger["research_artifacts"]["reflector"]
+    page_break = (
+        "\\newpage\n\\setlength{\\parskip}{0.9em}\n"
+        if config.document_type == "resume" and config.profile == "general"
+        else ""
+    )
+    return (
+        f"{page_break}\\section{{Research Artifact}}\n"
+        f"\\textbf{{{career.latex_escape(artifact['title'])}}}\\par\n"
+        f"Year: {career.latex_escape(artifact['year'])}\\par\n"
+        f"\\textit{{{career.latex_escape(artifact['status'])}}}\\par\n"
+        f"{career.latex_escape(artifact['summary'])}\\par\n"
+        f"\\href{{{artifact['concept_url']}}}"
+        f"{{DOI: {career.latex_escape(artifact['concept_doi'])}}}"
+        r"\hspace{0.55em}\textbar{}\hspace{0.55em}"
+        f"\\href{{https://orcid.org/{artifact['orcid']}}}"
+        f"{{ORCID: {career.latex_escape(artifact['orcid'])}}}"
+    )
+
+
+def _render_education(config: BuildConfig, ledger: dict[str, Any]) -> str:
+    del config
+    entries = []
+    for education in ledger["education"]:
+        entries.append(
+            f"\\resumeentry{{{career.latex_escape(education['degree'])}}}"
+            f"{{{career.latex_escape(education['institution'])}}}"
+            f"{{{career.latex_escape(education['location'])}}}"
+            f"{{{career.latex_escape(education['display_dates'])}}}"
+        )
+    return "\\section{Education}\n" + "\n\\vspace{0.42em}\n".join(entries)
+
+
+def _render_skills(config: BuildConfig, ledger: dict[str, Any]) -> str:
+    groups: list[str] = []
+    for group_id in config.skill_group_ids:
+        group = ledger["skill_groups"][group_id]
+        items = ", ".join(group["items"])
+        groups.append(
+            f"\\resumeskillgroup{{{career.latex_escape(group['label'])}}}"
+            f"{{{career.latex_escape(items)}}}"
+        )
+    return "\\section{Skills}\n" + "\n".join(groups)
 
 
 # ---------------------------------------------------------------------------
@@ -877,7 +1131,7 @@ def print_build_header(
     final_pdf: Path,
     log_file: Path,
 ) -> None:
-    doc_label = config.document_type.capitalize()
+    doc_label = "CV" if config.document_type == "cv" else "Resume"
     print()
     print(f"{Color.BOLD}{Color.BLUE}──────────────────────────────────────────────{Color.RESET}")
     print(f"{Color.BOLD}{Color.BLUE}{doc_label} Build{Color.RESET}")

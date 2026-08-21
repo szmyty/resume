@@ -1,328 +1,239 @@
-# Career Document Publishing System — Specification
+# Career Document Publishing Specification
 
 <!-- SPDX-FileCopyrightText: 2026 Alan Szmyt -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-## Overview
+## 1. Product contract
 
-This repository implements a specification-driven, LaTeX-based publishing system
-that generates résumés and CVs from **shared canonical career content**.
+The system generates deterministic, ATS-readable PDFs from one validated career
+ledger. It must support:
 
-The architecture separates five distinct concepts so documents can be varied
-without duplicating career facts:
+- a canonical two-page Platform/DevEx résumé;
+- Platform/DevEx, research/AI-assisted-systems, and mobile/geospatial role
+  variants;
+- a permanently public sanitized projection;
+- application projections containing only owner-approved contact fields; and
+- résumé and CV templates without duplicating career claims.
 
-1. **Content/evidence** — canonical facts in `sections/*.tex`
-2. **Document type** — résumé vs CV (`documents/*.yaml`)
-3. **Profile** — role-family emphasis (`profiles/*.yaml`)
-4. **Target** — optional application-specific overlay (`targets/*.yaml`)
-5. **Template/theme** — LaTeX presentation (`templates/`, `*.sty`)
+The generated PDF is the product. YAML, JSON, Python, and LaTeX are its
+implementation.
 
----
+## 2. Source layers
 
-## Repository Structure
+### 2.1 Canonical fact ledger
 
-```
-resume/
-├── documents/              # Document type manifests
-│   ├── resume.yaml
-│   └── cv.yaml
-├── profiles/               # Role-family profiles
-│   ├── ai-infra.yaml
-│   ├── platform.yaml
-│   ├── research.yaml
-│   └── general.yaml
-├── targets/                # Application-specific overlays (optional)
-│   └── example.yaml
-├── sections/               # Canonical LaTeX content (shared)
-│   ├── header.tex
-│   ├── summary.tex
-│   ├── experience.tex
-│   ├── publications.tex
-│   ├── education.tex
-│   ├── skills.tex
-│   ├── projects.tex        # CV extension point (stub)
-│   ├── talks.tex           # CV extension point (stub)
-│   ├── awards.tex          # CV extension point (stub)
-│   └── service.tex         # CV extension point (stub)
-├── templates/              # LaTeX document preamble templates
-│   ├── resume/template.tex
-│   └── cv/template.tex
-├── resume.tex              # Canonical résumé entry point (backward-compat)
-├── resume.sty              # Résumé style package
-├── cv.sty                  # CV style package
-├── scripts/
-│   ├── build.py            # Build CLI and config resolution
-│   └── quality_gates.py    # Validation and ATS extraction checks
-├── tests/
-│   └── test_config.py      # Configuration resolution tests
-├── dist/                   # Generated PDF output (not committed)
-├── outputs/                # Backward-compat copies (not committed)
-└── specs/
-    ├── resume.spec.md      # This specification
-    └── governance.md       # Repository governance
+`content/career.json` owns:
+
+- public identity and recruiter destinations;
+- public/application privacy policies;
+- role chronology and classification;
+- audience-specific claim text;
+- metric qualifiers;
+- research-artifact status and concept DOI;
+- education chronology;
+- evidenced skill groups; and
+- provenance for every role, claim, artifact, and education record.
+
+Every provenance object contains `source`, `status`, and `reviewed_on`. Only
+`status: verified` records may render.
+
+Claim identifiers are immutable references. A claim contains:
+
+```json
+{
+  "subject": "role-id",
+  "application_text": "Owner-approved application wording.",
+  "public_text": "Sanitized public wording.",
+  "profiles": ["platform"],
+  "sensitivity": "public-bounded",
+  "provenance": {
+    "source": "source-id",
+    "status": "verified",
+    "reviewed_on": "YYYY-MM-DD"
+  }
+}
 ```
 
----
+Quantified claims may define required qualifiers. Every projection must retain
+all qualifiers.
 
-## Configuration Resolution
+### 2.2 Role profiles
 
-Resolution merge order (later entries win):
-
-```
-document manifest defaults
-  → profile
-  → target overlay
-  → CLI overrides
-```
-
-### Document manifest (`documents/*.yaml`)
-
-Provides section pool, default template, default page size, and default section
-ordering. The filename stem must match `document_type`.
+`profiles/*.yaml` select and order canonical content. Required fields:
 
 ```yaml
-document_type: resume           # resume | cv
-default_template: resume        # LaTeX style package name
-default_page_size: letter       # letter | a4
-section_pool:
-  - header
-  - summary
-  - experience
-  - publications
-  - education
-  - skills
-default_section_order:
-  - header
-  - summary
-  - experience
-  - publications
-  - education
-  - skills
-```
-
-### Profile schema (`profiles/*.yaml`)
-
-Defines role-family section ordering, included sections, and keyword emphasis.
-The profile `id` must match the filename stem.
-
-```yaml
-profile: general                # must match filename
-name: "General Software Engineering"
+profile: platform
+name: "Platform and Developer Experience"
 description: >
-  Optional description of the target role family.
-
+  Human-readable lane description.
+output_label: "Platform-DevEx"
+headline: "Role-specific headline"
+summary: >
+  Role-specific summary grounded in canonical claims.
 section_order:
   - header
   - summary
   - experience
+  - independent
+  - skills
   - publications
   - education
-  - skills
-
 included_sections:
   - header
   - summary
   - experience
+  - independent
+  - skills
   - publications
   - education
-  - skills
-
+claim_ids:
+  - verified-claim-id
+skill_group_ids:
+  - evidenced-skill-group-id
 keyword_emphasis:
-  - software engineering
-  - systems architecture
+  - platform engineering
 ```
 
-Validation rules:
-- `profile` must match the filename stem.
-- All sections in `section_order` and `included_sections` must be in the
-  document's `section_pool`.
-- Every `included_sections` entry must appear in `section_order`.
-- No duplicates in `section_order`.
-- `keyword_emphasis` must have at least one entry.
+Rules:
 
-### Target overlay schema (`targets/*.yaml`)
+- the profile ID matches the filename stem;
+- claim IDs exist and explicitly allow the role lane;
+- every skill group has evidence among the selected claims;
+- included sections appear exactly once in the section order; and
+- role headlines must not upgrade verified seniority.
 
-Targets are **thin overlays** that express only what is application-specific.
-They do not duplicate career content.
+The required profile set is `general`, `platform`, `research`, and
+`mobile-geospatial`. `general` is the canonical Platform/DevEx baseline.
 
-```yaml
-target: example                 # must match filename
-description: >
-  Human-readable description of the target.
+### 2.3 Document manifests
 
-# All fields below are optional overrides:
-document_type: resume           # override document type
-profile: general                # override profile
-page_size: letter               # override page size
-section_order:                  # override section ordering
-  - header
-  - summary
-  - skills
-  - experience
-  - education
-  - publications
-output_basename: alan-szmyt-resume-general-example   # override output filename
+`documents/*.yaml` define `resume` and `cv` template, default page size, section
+pool, and default section order. Résumé sections are:
+
+```text
+header, summary, experience, independent, publications, education, skills
 ```
 
-### Resolved `BuildConfig`
+The CV may additionally use `projects`, `talks`, `awards`, and `service`. These
+extension sections live in `sections/*.tex`; canonical career sections are
+rendered from the JSON ledger and never duplicated as LaTeX source.
 
-After merging all layers, a `BuildConfig` is produced:
+### 2.4 Target overlays
 
-| Field | Source |
-|---|---|
-| `document_type` | document manifest |
-| `profile` | CLI `--profile` |
-| `template` | document manifest `default_template` |
-| `page_size` | CLI `--page-size` > target > document manifest default |
-| `section_order` | target > profile > (implicit from included_sections) |
-| `included_sections` | profile `included_sections` ∩ section_pool |
-| `output_basename` | target `output_basename` or `alan-szmyt-{doc}-{profile}[-{target}]` |
-| `target` | CLI `--target` (or None) |
+`targets/*.yaml` are optional thin overlays. They may constrain document type or
+profile and override page size, section order, or output basename. A declared
+document/profile mismatch fails; it is never silently ignored.
 
----
+### 2.5 Audience overlay
 
-## Section Architecture
+`--audience public` is the default and renders:
 
-Sections are standalone LaTeX files in `sections/`. They contain only content —
-no layout logic beyond what primitives (`\resumeentry`, `\resumeskillgroup`)
-provide.
+- `identity.public_location`;
+- allowlisted HTTPS profile links; and
+- every claim's `public_text`.
 
-### Résumé sections
+The canonical `identity.public_location` value, `Greater Boston, MA`, is an
+owner-approved permanent-public regional label. It is intentionally distinct
+from the optional application-overlay `location` field.
 
-| File | Purpose |
-|---|---|
-| `header.tex` | Name, contact, and profile links |
-| `summary.tex` | Professional summary |
-| `experience.tex` | Work history |
-| `publications.tex` | Publications and papers |
-| `education.tex` | Academic background |
-| `skills.tex` | Technical skills |
+It renders no email, phone, precise contact city, `mailto:` link, or `tel:`
+link.
 
-### CV extension points (empty stubs)
+`--audience application` requires `--contact-file`. The ignored JSON overlay may
+contain only `email`, `phone`, and `location`, and it must contain an email or a
+phone number. It renders every selected claim's `application_text`.
 
-| File | Future purpose |
-|---|---|
-| `projects.tex` | Selected projects and open-source software |
-| `talks.tex` | Talks and presentations |
-| `awards.tex` | Awards and honors |
-| `service.tex` | Professional service and open-source contributions |
+## 3. Configuration resolution
 
-Optional sections that are not in a profile's `included_sections` are silently
-omitted. No empty headings are emitted.
-
----
-
-## Template Architecture
-
-Each document type has a preamble template in `templates/<type>/template.tex`.
-
-The build system reads the template, substitutes placeholders, then appends
-`\begin{document}`, the selected section `\input` commands, and `\end{document}`.
-
-### Placeholders
-
-| Placeholder | Substituted value |
-|---|---|
-| `{{PAGE_CLASS}}` | `letterpaper` or `a4paper` |
-| `{{DOCUMENT_TITLE}}` | `Alan Szmyt Resume` or `Alan Szmyt Cv` |
-| `{{DOCUMENT_SUBJECT}}` | Descriptive subtitle |
-| `{{PDF_KEYWORDS}}` | Keyword metadata string |
-
-### Style packages
-
-| File | Purpose |
-|---|---|
-| `resume.sty` | Résumé: compact geometry, fancyhdr, shared primitives |
-| `cv.sty` | CV: generous multi-page margins, page numbers, shared primitives |
-
-Shared primitives in both styles:
-- `\resumeentry{title}{org}{location}{dates}` — work or education entry
-- `\resumeskillgroup{category}{skills}` — skill category line
-
-CV-only primitives:
-- `\cvpublication{title}{venue}{year}{doi-url}` — publication entry
-- `\cvevent{title}{org}{location}{date-range}` — CV event entry
-
----
-
-## Build Process
-
-```
-documents/*.yaml + profiles/*.yaml [+ targets/*.yaml]
-    ↓  scripts/build.py → resolve_config()
-BuildConfig
-    ↓  render_document()
-    ↓  templates/<type>/template.tex + sections/*.tex
-generated .tex file (ephemeral)
-    ↓  latexmk (via .latexmkrc)
-.cache/out/<basename>.pdf
-    ↓  scripts/build.py
-dist/<doc>/<profile>/alan-szmyt-<doc>-<profile>.pdf
-outputs/<basename>.pdf  (backward-compat copy)
+```text
+document manifest defaults
+  → profile
+  → optional target overlay
+  → explicit CLI page-size override
+  → audience/contact projection
 ```
 
-### Output naming
+The resolved `BuildConfig` contains document type, profile, template, page size,
+section order, selected claims and skills, role copy, audience, approved contact
+data, and output basename.
 
+## 4. Rendering
+
+`scripts/build.py`:
+
+1. validates all source inputs;
+2. resolves the configuration;
+3. selects public or application claim projections;
+4. escapes text for LaTeX;
+5. generates an ephemeral `<basename>.generated.tex`;
+6. runs `latexmk`;
+7. reads `.cache/out/<basename>.generated.pdf`; and
+8. publishes to `dist/` plus the compatibility `outputs/` copy.
+
+The `.generated` suffix in step 7 is part of the build contract. Dropping it
+causes successful TeX compilation to fail at artifact publication and is covered
+by a regression test.
+
+## 5. Artifact paths and names
+
+```text
+dist/<document>/<profile>/<audience>/[<target>/]<filename>.pdf
 ```
-dist/<document_type>/<profile>/<basename>.pdf
-dist/<document_type>/<profile>/<target>/<basename>.pdf
+
+Required résumé names:
+
+```text
+Alan-Szmyt-Resume.pdf
+Alan-Szmyt-Resume-Platform-DevEx.pdf
+Alan-Szmyt-Resume-Research-AI-Systems.pdf
+Alan-Szmyt-Resume-Mobile-Geospatial.pdf
 ```
 
-Examples:
-```
-dist/resume/general/alan-szmyt-resume-general.pdf
-dist/cv/research/alan-szmyt-cv-research.pdf
-dist/resume/general/example/alan-szmyt-resume-general-example.pdf
-```
+Non-baseline public role files add `-Public`. Application names never contain
+`-Public`. `CV` remains uppercase in CV filenames.
 
----
+## 6. PDF and ATS contract
 
-## Quality Validation
+Every published résumé must pass both Poppler and pypdf extraction. Gates check:
 
-| Command | Purpose |
-|---|---|
-| `validate-documents` | Validate `documents/*.yaml` manifests |
-| `validate-profiles` | Validate `profiles/*.yaml` definitions |
-| `check-placeholders` | Scan for TODO/FIXME/placeholder content |
-| `validate-ats` | Extract text from PDF and check headings |
+- non-empty text and minimum extraction length;
+- `Summary`, `Experience`, `Education`, and `Skills` headings;
+- canonical identity phrases;
+- known token-join regressions and reading-order defects;
+- exactly two pages;
+- at least 30% of words on each page, preventing near-empty spill pages while
+  permitting a section-aligned second page;
+- at least 58% vertical text occupancy on each page;
+- intentional title, subject, author, keywords, creator, and `en-US` language;
+- embedded fonts and safe catalog actions;
+- allowlisted recruiter links;
+- intentional filename; and
+- audience privacy invariants.
 
-ATS validation requirements:
-- Extracted text is non-empty and exceeds 200 characters.
-- Required headings (`Summary`, `Experience`, `Education`, `Skills`) are present.
-- Text is extractable (no content rendered solely as images).
+Public destinations are validated deterministically locally and for network
+reachability in CI. HTTP authentication/authorization responses are tolerated;
+broken destinations are not.
 
----
+## 7. CI contract
 
-## ATS and machine-readability requirements
+CI validates facts, profiles, manifests, destinations, privacy, and unit tests.
+It builds four public résumé projections and three application role projections.
+Application builds use synthetic CI-only contact data and are never uploaded.
 
-Both résumé and CV outputs must remain machine-readable:
+CI uploads:
 
-- No important content rendered solely as images.
-- No text converted to outlines.
-- Single-column layout for résumé (ATS-conservative default).
-- Hyperlinks retain readable labels.
-- Logical reading order matches visual order.
+- public résumé PDFs;
+- the public research CV smoke artifact; and
+- two Poppler-rendered PNG pages for each public résumé.
 
----
+The artifact inventory records page count and SHA-256.
 
-## Backward compatibility
+## 8. Non-negotiable facts
 
-The previous invocation `python scripts/build.py --profile <name>` continues to
-work. It defaults to `--document resume`.
+Quality gates lock the canonical lane, identity location class, verified
+employment dates and titles, education dates, Incompris independent-work
+classification, bounded funding wording, Reflector's independent-artifact
+status, and its version-independent concept DOI.
 
-Output directory changed from `outputs/resume-<profile>.pdf` to
-`dist/resume/<profile>/alan-szmyt-resume-<profile>.pdf`.
-A backward-compatible copy is written to `outputs/` for tooling that still
-reads that path.
-
----
-
-## Follow-up work (not in this release)
-
-The architecture supports the following future extensions without restructuring:
-
-- Populate CV extension-point sections (projects, talks, awards, service).
-- Add a `research-software` profile.
-- Add a UFZ RSE application target overlay (page size A4, tailored section emphasis).
-- Add evidence-maturity metadata to career claims.
-- Add a cover-letter document type.
+Incompris overlap must not acquire a part-time, full-time, consulting, or similar
+employment-status qualifier without explicit owner verification.

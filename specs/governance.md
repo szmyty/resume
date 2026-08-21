@@ -1,78 +1,120 @@
-# Resume Repository Governance
+# Career Document Governance
 
 <!-- SPDX-FileCopyrightText: 2026 Alan Szmyt -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-## Overview
+## Source of truth
 
-This document defines repeatable repository governance for publication, auditing, profile evolution, and generated artifacts.
+`content/career.json` is the only canonical source for identity, chronology,
+claims, research artifacts, education, demonstrated skills, provenance, and
+audience privacy rules. Profiles select fact IDs; they never copy or rewrite
+facts. LaTeX files control presentation only, except for optional CV extension
+sections.
 
-## Build Workflow
+Do not invent or infer:
 
-1. Run profile and content checks:
-   - `python scripts/quality_gates.py validate-profiles`
-   - `python scripts/quality_gates.py check-placeholders`
-2. Build all profiles or a specific profile:
-   - `python scripts/build.py`
-   - `python scripts/build.py --profile <profile-id>`
-3. For CI, `.github/workflows/build-resume.yml` validates profiles/content, builds the resume PDF, runs ATS extraction validation, and uploads an artifact.
+- employment status for overlapping work;
+- seniority beyond a verified title;
+- ownership, adoption, leadership, funding, or performance metrics;
+- sponsor-sensitive context in the public projection; or
+- peer review or publication status for an independent research artifact.
 
-## Audit Workflow
+## Fact change workflow
 
-Store each repository audit in `audits/` using UTC timestamps:
+1. Identify an owner-approved source.
+2. Add or update the canonical record and its provenance.
+3. Provide public/application text separately when sensitivity differs.
+4. Preserve required metric qualifiers in both projections.
+5. Select the fact by ID from the relevant profile.
+6. Run `validate-facts`, `validate-profiles`, and unit tests.
+7. Build and inspect every affected audience/profile artifact.
 
-- `audits/audit-YYYY-MM-DDTHHMMSSZ.log`
-- Example: `audits/audit-2026-06-09T155821Z.log`
+Owner verification is required before changing any locked date, title,
+classification, metric, contact policy, or artifact status.
 
-Minimum audit log structure:
+## Privacy policy
 
-1. Title line (audit name)
-2. Timestamp line in UTC (`Timestamp: YYYY-MM-DDTHHMMSSZ`)
-3. Repository and scope lines
-4. Findings grouped by topic, with actionable recommendations
-5. Final conclusion and priority order
+Public artifacts may contain only the broad public location and allowlisted
+public links. They must not contain personal email, phone, precise contact city,
+application-state notes, `mailto:` URIs, or `tel:` URIs.
 
-## Profile Workflow
+`Greater Boston, MA` is explicitly approved for the permanent-public projection
+as broad regional context. It is not sourced from an application overlay and
+must remain public unless the owner approves a canonical policy change.
 
-When introducing or modifying profile variants:
+Application contact data must live in an ignored local JSON file. Supported
+fields are exactly `email`, `phone`, and `location`. Unknown fields fail closed.
+Never commit, log, upload, or place application contact data in CI artifacts.
 
-1. Update a profile definition in `profiles/*.yaml`.
-2. Ensure section ordering and included sections remain valid for supported sections.
-3. Run profile validation:
-   - `python scripts/quality_gates.py validate-profiles`
-4. Build and review the affected profile output:
-   - `python scripts/build.py --profile <profile-id>`
+The committed example and CI fixture use non-production values only.
 
-## Artifact Generation Workflow
+## Role profile workflow
 
-Local artifact flow:
+1. Keep a profile within one named role family.
+2. Select only claims approved for that family.
+3. Select only skill groups evidenced by selected claims.
+4. Keep the headline and summary consistent with verified seniority.
+5. Validate profiles and build both public and application projections.
+6. Inspect page hierarchy, wrapping, density, and reading order.
 
-1. `scripts/build.py` generates profile-specific LaTeX entry points.
-2. `latexmk` compiles PDFs via `.latexmkrc`.
-3. Final artifacts are copied to `outputs/resume-<profile>.pdf`.
+The canonical lane is Platform/DevEx. Research/AI-assisted systems and
+mobile/geospatial are role variants, not separate fact sources.
 
-CI artifact flow:
+## Publication checklist
 
-1. `.github/workflows/build-resume.yml` builds `resume.tex`.
-2. The CI output is copied to `outputs/resume.pdf`.
-3. Artifact `resume-pdf` is uploaded by GitHub Actions.
+Before a résumé artifact is considered ready:
 
-## Artifact Policy
+```bash
+python scripts/quality_gates.py validate-facts
+python scripts/quality_gates.py validate-documents
+python scripts/quality_gates.py validate-profiles
+python scripts/quality_gates.py check-placeholders
+python scripts/quality_gates.py validate-destinations --audience public
+python -m pytest tests/ -v
+```
 
-### Naming conventions
+Then build the artifact and run `validate-ats` plus `validate-pdf` with the
+matching audience and, for application artifacts, the same contact overlay used
+to build it.
 
-- Local profile artifacts: `outputs/resume-<profile>.pdf`
-- CI publication artifact path: `outputs/resume.pdf`
-- CI artifact name: `resume-pdf`
-- Audit artifacts: `audits/audit-YYYY-MM-DDTHHMMSSZ.log`
+Finally render both pages to images and inspect:
 
-### Retention expectations
+- clipping, overlap, missing or broken glyphs;
+- hierarchy and scanability;
+- balanced page density;
+- line wrapping and bullet rhythm; and
+- public/application contact projection.
 
-- GitHub Actions artifact retention is 30 days (`retention-days: 30` in workflow configuration).
-- Audit logs in `audits/` are retained in git history for long-term traceability.
+The PDF is the release artifact. Passing source tests does not replace visual
+inspection.
 
-### Versioning approach
+## Artifact policy
 
-- Repository history (commit SHA) is the source of truth for content/version changes.
-- Audit files are timestamp-versioned through their filename.
-- Generated PDFs should be treated as build outputs tied to the commit and profile that produced them.
+Generated PDFs, PNG renders, caches, and contact overlays are not committed.
+Artifacts use intentional recruiter-facing names and live under:
+
+```text
+dist/<document>/<profile>/<audience>/[<target>/]
+```
+
+CI uploads only public PDFs and public visual renders for 30 days. Application
+variants are validation-only and remain runner-local. The CI summary records
+page counts and SHA-256 hashes.
+
+Repository history and the canonical ledger's provenance fields provide source
+traceability. Audit logs in `audits/` remain timestamped and tracked.
+
+## Pull request expectations
+
+A career-content PR documents its source and affected claim IDs. A rendering or
+quality-gate PR lists affected artifact paths and validation commands. A
+cohesive application-readiness PR may combine both when its body explicitly
+separates:
+
+- canonical fact/content changes;
+- renderer/layout changes;
+- build regressions; and
+- validation/CI changes.
+
+Do not publish a PR that exposes a local contact overlay or generated
+application artifact.

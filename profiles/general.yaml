@@ -1,14 +1,29 @@
 # SPDX-FileCopyrightText: 2026 Alan Szmyt
 # SPDX-License-Identifier: Apache-2.0
 #
-# profiles/general.yaml — General Software Engineering profile variant.
-# Defines structure and emphasis for general software engineering roles.
+# profiles/general.yaml — Canonical application-ready baseline.
 profile: general
-name: "General Software Engineering"
+name: "Application-Ready Baseline"
+description: >
+  Canonical Platform and Developer Experience baseline with research,
+  local-first, mobile, and geospatial work as supporting differentiators.
+
+output_label: "Platform-DevEx"
+
+headline: "Software Engineer | Platform, Developer Tools, and AI-Assisted Systems"
+
+summary: >
+  Software engineer with 6+ years delivering mobile, geospatial, and analytical
+  systems for government and research sponsors. Builds developer platforms,
+  local-first products, and AI-assisted workflows with reproducible
+  infrastructure and CI/CD. Contributed to approximately $1M in follow-on
+  sponsor funding and authored a DOI-backed independent research artifact.
+
 section_order:
   - header
   - summary
   - experience
+  - independent
   - publications
   - education
   - skills
@@ -17,9 +32,26 @@ included_sections:
   - header
   - summary
   - experience
+  - independent
   - publications
   - education
   - skills
+
+claim_ids:
+  - mit-build-pipelines
+  - mit-usaid-mobile
+  - mit-deconfliction-funding
+  - mit-geospatial-systems
+  - incompris-local-first
+  - incompris-publishing
+  - incompris-quality-gates
+  - incompris-bounded-agents
+
+skill_group_ids:
+  - platform-devex
+  - languages
+  - systems-workflows
+  - mobile-geospatial
 
 keyword_emphasis:
   - software engineering

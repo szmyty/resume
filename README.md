@@ -1,271 +1,211 @@
 # Career Document Publishing System
 
-A specification-driven, LaTeX-based publishing system that generates résumés and
-CVs for Alan Szmyt from **shared canonical career content** without duplicating
-source material across variants.
+A specification-driven LaTeX system for producing Alan Szmyt's résumé and CV
+from one verified career ledger. It renders a sanitized public baseline and
+role-specific application documents without forking facts or committing private
+contact data.
 
-## Architecture overview
+## Publication model
 
-Five concepts are kept explicitly separate:
+| Layer | Location | Responsibility |
+| --- | --- | --- |
+| Facts and evidence | `content/career.json` | Canonical chronology, claims, provenance, privacy rules, destinations, and demonstrated skills |
+| Role profiles | `profiles/*.yaml` | Headline, summary, selected claim IDs, evidenced skill groups, and section order |
+| Audience | `--audience public\|application` | Selects sanitized or owner-approved wording and contact projection |
+| Document type | `documents/*.yaml` | Résumé/CV section pool, template, and page-size defaults |
+| Target overlay | `targets/*.yaml` | Optional application-specific ordering, page size, and output naming |
+| Presentation | `templates/`, `*.sty` | ATS-safe LaTeX metadata, typography, and layout |
 
-| Concept | Location | Purpose |
-|---|---|---|
-| Content/evidence | `sections/*.tex` | Canonical career facts shared by all variants |
-| Document type | `documents/*.yaml` | résumé vs CV — section pool, template, page-size default |
-| Profile | `profiles/*.yaml` | Role-family emphasis — section ordering and inclusion |
-| Target | `targets/*.yaml` | Optional application-specific overlay |
-| Template/theme | `templates/`, `*.sty` | LaTeX presentation and layout |
+Configuration resolves in this order:
 
-Configuration resolution merge order:
-
-```
-document manifest defaults
-  → profile
-  → target overlay
-  → CLI overrides (--page-size)
+```text
+document manifest → role profile → optional target → CLI overrides
 ```
 
-### Architecture diagram
+Career text is always selected by ID from `content/career.json`. Profiles and
+targets cannot introduce new career facts.
 
-```mermaid
-graph TD
-    A[documents/resume.yaml\ndocuments/cv.yaml] -->|section pool\ndefault page size\ntemplate| R[resolve_config]
-    B[profiles/general.yaml\nprofiles/research.yaml\n...] -->|section order\nincluded sections\nkeyword emphasis| R
-    C[targets/example.yaml\n...] -->|optional overrides\npage size\nsection order| R
-    D[CLI --page-size\n--document\n--profile\n--target] -->|final overrides| R
-    R -->|BuildConfig| E[render_document]
-    E -->|generated .tex| F[latexmk]
-    F -->|PDF| G[dist/resume/general/alan-szmyt-resume-general.pdf\ndist/cv/research/alan-szmyt-cv-research.pdf]
-    H[sections/header.tex\nsections/experience.tex\nsections/skills.tex\n...] -->|canonical content| E
-    I[templates/resume/template.tex\ntemplates/cv/template.tex] -->|document preamble| E
-```
+## Current résumé lanes
 
----
+| Profile | Purpose | Application filename |
+| --- | --- | --- |
+| `general` | Canonical Platform/DevEx baseline | `Alan-Szmyt-Resume-Platform-DevEx.pdf` |
+| `platform` | Platform engineering and developer experience | `Alan-Szmyt-Resume-Platform-DevEx.pdf` |
+| `research` | Research software and AI-assisted systems | `Alan-Szmyt-Resume-Research-AI-Systems.pdf` |
+| `mobile-geospatial` | Resilient mobile and geospatial systems | `Alan-Szmyt-Resume-Mobile-Geospatial.pdf` |
 
-## Repository structure
+The permanent public baseline is intentionally named `Alan-Szmyt-Resume.pdf`.
+Other public role renders include `-Public` in their filenames.
 
-```
-resume/
-├── documents/              # Document type manifests
-│   ├── resume.yaml         # Résumé: section pool, defaults
-│   └── cv.yaml             # CV: extended section pool, defaults
-├── profiles/               # Role-family profile definitions
-│   ├── general.yaml
-│   ├── platform.yaml
-│   ├── research.yaml
-│   └── ai-infra.yaml
-├── targets/                # Application-specific overlays (optional)
-│   └── example.yaml        # Demonstration fixture
-├── sections/               # Canonical LaTeX career content (shared)
-│   ├── header.tex
-│   ├── summary.tex
-│   ├── experience.tex
-│   ├── publications.tex
-│   ├── education.tex
-│   ├── skills.tex
-│   ├── projects.tex        # CV extension point (empty stub)
-│   ├── talks.tex           # CV extension point (empty stub)
-│   ├── awards.tex          # CV extension point (empty stub)
-│   └── service.tex         # CV extension point (empty stub)
-├── templates/              # LaTeX document preamble templates
-│   ├── resume/template.tex
-│   └── cv/template.tex
-├── resume.tex              # Canonical résumé entry point (backward-compat)
-├── resume.sty              # Résumé LaTeX style package
-├── cv.sty                  # CV LaTeX style package
-├── scripts/
-│   ├── build.py            # Build CLI and config resolution
-│   └── quality_gates.py    # Validation and ATS checks
-├── tests/
-│   └── test_config.py      # Configuration resolution tests
-├── dist/                   # Generated PDF output (not committed)
-│   └── resume/general/alan-szmyt-resume-general.pdf
-├── specs/
-│   ├── resume.spec.md      # Architecture specification
-│   └── governance.md       # Repository governance
-└── .github/
-    ├── copilot-instructions.md
-    └── workflows/
-        └── build-resume.yml
-```
+`Greater Boston, MA` is the intentionally approved permanent-public location.
+It is broad location context, not an application-only contact value; changing
+or removing it requires an owner-approved canonical-ledger update.
 
----
+## Build
 
-## Building
+Prerequisites:
 
-### Prerequisites
-
-- TeX Live 2023+ (with `latexmk` and standard LaTeX packages)
 - Python 3.11+
-- `pyyaml` (`pip install pyyaml`)
+- PyYAML and pypdf
+- TeX Live, `latexmk`, and Poppler (`pdftotext`, `pdffonts`, `pdfinfo`)
 
-### List available documents, profiles, and targets
+Install Python dependencies with Poetry:
+
+```bash
+poetry install
+```
+
+List documents, profiles, and targets:
 
 ```bash
 python scripts/build.py --list
 ```
 
-### Build a résumé
+Build the sanitized public baseline:
 
 ```bash
-python scripts/build.py --document resume --profile general
-python scripts/build.py --document resume --profile research
-python scripts/build.py --document resume --profile platform
-python scripts/build.py --document resume --profile ai-infra
+python scripts/build.py \
+  --document resume \
+  --profile general \
+  --audience public
 ```
 
-### Build a CV
+The artifact is written to:
+
+```text
+dist/resume/general/public/Alan-Szmyt-Resume.pdf
+```
+
+### Application builds
+
+Application builds require a local, owner-approved contact overlay. Start from
+`content/application-contact.example.json`, save the completed file under
+`.local/`, and never commit it.
+
+```json
+{
+  "email": "approved-address@example.com",
+  "phone": "+1 555-010-0200",
+  "location": "Approved application location"
+}
+```
+
+Build a role variant:
 
 ```bash
-python scripts/build.py --document cv --profile research
-python scripts/build.py --document cv --profile general
+python scripts/build.py \
+  --document resume \
+  --profile research \
+  --audience application \
+  --contact-file .local/application-contact.json
 ```
 
-### Build with A4 page size
+Only `email`, `phone`, and `location` are accepted. At least one of `email` or
+`phone` is required, and unknown fields fail closed.
+
+### Other examples
 
 ```bash
-python scripts/build.py --document resume --profile general --page-size a4
-python scripts/build.py --document cv --profile research --page-size a4
+# Platform/DevEx application résumé
+python scripts/build.py \
+  --document resume \
+  --profile platform \
+  --audience application \
+  --contact-file .local/application-contact.json
+
+# Mobile/geospatial public derivative
+python scripts/build.py \
+  --document resume \
+  --profile mobile-geospatial \
+  --audience public
+
+# Public research CV smoke build
+python scripts/build.py \
+  --document cv \
+  --profile research \
+  --audience public
+
+# A4 or a thin target overlay
+python scripts/build.py \
+  --document resume \
+  --profile general \
+  --audience public \
+  --page-size a4
+python scripts/build.py \
+  --document resume \
+  --profile general \
+  --audience public \
+  --target example
 ```
 
-### Build with an application-specific target overlay
+Generated PDFs are written below:
 
-```bash
-python scripts/build.py --document resume --profile general --target example
+```text
+dist/<document>/<profile>/<audience>/[<target>/]<intentional-filename>.pdf
 ```
 
-### Backward-compatible invocation (defaults to résumé)
-
-```bash
-python scripts/build.py --profile general
-```
-
-### Output paths
-
-Generated PDFs are written to `dist/` with deterministic, collision-resistant paths:
-
-```
-dist/<document_type>/<profile>/alan-szmyt-<document_type>-<profile>.pdf
-dist/<document_type>/<profile>/<target>/alan-szmyt-<document_type>-<profile>-<target>.pdf
-```
-
-Examples:
-```
-dist/resume/general/alan-szmyt-resume-general.pdf
-dist/resume/research/alan-szmyt-resume-research.pdf
-dist/cv/research/alan-szmyt-cv-research.pdf
-dist/resume/general/example/alan-szmyt-resume-general-example.pdf
-```
-
-Backward-compatible copies are also written to `outputs/` for tooling that
-expects the old path.
-
----
+A compatibility copy is also written to `outputs/`. Generated artifacts and
+local contact overlays are ignored by git.
 
 ## Quality gates
 
+Run deterministic source checks:
+
 ```bash
-# Validate document manifests
+python scripts/quality_gates.py validate-facts
 python scripts/quality_gates.py validate-documents
-
-# Validate profile definitions
 python scripts/quality_gates.py validate-profiles
-
-# Scan for unresolved placeholder content
 python scripts/quality_gates.py check-placeholders
-
-# Validate ATS text extraction from a generated PDF
-python scripts/quality_gates.py validate-ats \
-  --pdf dist/resume/general/alan-szmyt-resume-general.pdf
-```
-
-### Tests (no LaTeX required)
-
-```bash
-pip install pytest pyyaml
+python scripts/quality_gates.py validate-destinations --audience public
 python -m pytest tests/ -v
 ```
 
-Tests cover: configuration resolution, section ordering, overlay precedence,
-section pool validation, error handling, and output naming.
-
----
-
-## How to extend the system
-
-### Add a new role profile
-
-1. Create `profiles/<name>.yaml` following the schema in `specs/resume.spec.md`.
-2. Add `section_order`, `included_sections`, and `keyword_emphasis`.
-3. Run `python scripts/quality_gates.py validate-profiles`.
-4. Build: `python scripts/build.py --document resume --profile <name>`.
-
-### Add a new application target overlay
-
-1. Create `targets/<name>.yaml` with only what is application-specific:
-   page size, section order, output basename, etc.
-2. Build: `python scripts/build.py --document resume --profile general --target <name>`.
-3. Targets do **not** duplicate career content — they override configuration only.
-
-### Add an optional CV section
-
-1. Create `sections/<name>.tex` with the section content.
-   New CV sections start as empty stubs (see `sections/projects.tex`).
-2. Add the section name to `documents/cv.yaml` → `section_pool`.
-3. Add it to a profile's `section_order` **and** `included_sections` to activate it.
-4. The build system omits sections not in `included_sections` — no empty headings.
-
-### Add or modify a template
-
-1. Edit `templates/<document_type>/template.tex` and/or the corresponding `.sty` file.
-2. The template uses `{{PAGE_CLASS}}`, `{{DOCUMENT_TITLE}}`, `{{DOCUMENT_SUBJECT}}`,
-   and `{{PDF_KEYWORDS}}` placeholders that the build system substitutes.
-3. **Do not modify career content (`sections/*.tex`) as part of a template change.**
-
-### Build letter vs A4
-
-Page size is selected independently of content:
+Validate a built public résumé:
 
 ```bash
-python scripts/build.py --document resume --profile general --page-size letter
-python scripts/build.py --document resume --profile general --page-size a4
+python scripts/quality_gates.py validate-ats \
+  --pdf dist/resume/general/public/Alan-Szmyt-Resume.pdf \
+  --audience public
+python scripts/quality_gates.py validate-pdf \
+  --pdf dist/resume/general/public/Alan-Szmyt-Resume.pdf \
+  --audience public
 ```
 
----
+The artifact gates enforce:
 
-## Profiles
+- stable Poppler and pypdf extraction;
+- required headings, identity phrases, and token boundaries;
+- exactly two balanced résumé pages with at least 58% vertical occupancy;
+- intentional filename, metadata, document language, links, and embedded fonts;
+- no unsafe PDF actions;
+- public/application contact allowlists.
 
-| Profile | Intended roles |
-|---|---|
-| `general` | General software engineering |
-| `platform` | Platform engineering, DevOps, SRE |
-| `research` | Research, academic, applied science |
-| `ai-infra` | AI/ML infrastructure, MLOps |
+## Continuous integration
 
----
+`.github/workflows/build-resume.yml` validates the fact ledger, profiles,
+destinations, privacy policy, and tests. It then:
 
-## Document types
+1. builds and validates four public résumé renders;
+2. builds and validates three application role variants with synthetic CI-only
+   contact data;
+3. smoke-tests the public research CV;
+4. renders both résumé pages to PNG for visual review; and
+5. uploads only public PDFs and visual renders.
 
-| Document | Description | Section pool |
-|---|---|---|
-| `resume` | Concise, ATS-safe, single-column | `header`, `summary`, `experience`, `publications`, `education`, `skills` |
-| `cv` | Multi-page, research-friendly | All résumé sections + `projects`, `talks`, `awards`, `service` |
+Application artifacts are never uploaded by CI.
 
----
+## Changing content safely
 
-## Specification
+1. Update or add a canonical claim in `content/career.json` with verified
+   provenance and separate public/application wording when sensitivity differs.
+2. Reference the claim ID from an approved role profile.
+3. Add skills only when a selected claim supplies evidence.
+4. Run all deterministic gates and affected public/application builds.
+5. Inspect the generated PDF pages, not only the LaTeX source.
 
-See [`specs/resume.spec.md`](specs/resume.spec.md) for the full architecture
-specification and configuration schema.
+Do not infer employment status for overlapping work, upgrade seniority, remove
+qualifiers from metrics, or convert an independent artifact into a peer-reviewed
+publication claim.
 
-See [`specs/governance.md`](specs/governance.md) for repository publication,
-audit, and artifact governance workflows.
-
-See [`.github/copilot-instructions.md`](.github/copilot-instructions.md) for
-Copilot agent instructions and source-of-truth rules.
-
----
-
-## License
-
-Apache-2.0
+See [`specs/resume.spec.md`](specs/resume.spec.md) for the architecture contract
+and [`specs/governance.md`](specs/governance.md) for publication policy.

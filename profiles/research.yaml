@@ -5,20 +5,27 @@
 # Defines sections and emphasis for research and academic roles.
 
 profile: research
-name: "Research Engineering"
+name: "Research and AI-Assisted Systems"
 description: >
-  Targets research, academic, and applied science roles.
-  Emphasizes publications, research contributions, and technical depth.
+  Targets research-software and AI-assisted-systems roles with verified
+  analytical, reproducibility, technical-writing, and bounded-agent evidence.
+
+output_label: "Research-AI-Systems"
+
+headline: "Research Software Engineer | Analytical and Human-AI Workflow Systems"
 
 summary: >
-  Research engineer translating experimental ideas into reproducible
-  systems, technical publications, and practical tools that support
-  rigorous investigation.
+  Software engineer with 6+ years building analytical systems for government
+  and research sponsors. Develops reproducible publishing infrastructure,
+  bounded AI-assisted workflows, and local-first tools, and authored an
+  independent DOI-backed research artifact on recursive human-AI engineering
+  systems.
 
 section_order:
   - header
   - summary
   - experience
+  - independent
   - publications
   - education
   - skills
@@ -27,13 +34,30 @@ included_sections:
   - header
   - summary
   - experience
+  - independent
   - publications
   - education
   - skills
 
+claim_ids:
+  - mit-deconfliction-funding
+  - mit-geospatial-systems
+  - mit-investigative-analysis
+  - mit-usaid-mobile
+  - incompris-publishing
+  - incompris-quality-gates
+  - incompris-bounded-agents
+  - incompris-local-first
+
+skill_group_ids:
+  - research-reproducibility
+  - systems-workflows
+  - languages
+  - platform-devex
+
 keyword_emphasis:
   - research
-  - publications
-  - academic contributions
-  - applied science
+  - research software
+  - reproducibility
+  - AI-assisted systems
   - technical writing

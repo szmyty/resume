@@ -2,12 +2,13 @@
 name = "resume"
 version = "0.1.0"
 description = "Specification-driven LaTeX résumé and CV publishing system"
-authors = ["Alan Szmyt <szmyty@gmail.com>"]
+authors = ["Alan Szmyt"]
 package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
 pyyaml = "^6.0"
+pypdf = "^5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
