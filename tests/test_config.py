@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Alan Szmyt
 # SPDX-License-Identifier: Apache-2.0
-"""Tests for build configuration resolution, validation, and overlay precedence.
-
-These are pure-Python tests that do not require LaTeX or any generated PDFs.
-They validate the configuration layer: document manifests, profile loading,
-target overlay precedence, section validation, and error handling.
-"""
+"""Pure-Python tests for facts, privacy, profiles, and build resolution."""
 
 from __future__ import annotations
 
+import json
 import sys
+from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
-# Add scripts/ to path so we can import build without installation.
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import build  # noqa: E402  (import after sys.path update)
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPOSITORY_ROOT / "scripts"))
 
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
+import build  # noqa: E402
+import career  # noqa: E402
+import quality_gates  # noqa: E402
 
 
 @pytest.fixture()
@@ -38,439 +33,423 @@ def profiles() -> dict[str, build.ProfileConfig]:
 
 
 @pytest.fixture()
-def resume_doc(documents: dict[str, build.DocumentManifest]) -> build.DocumentManifest:
+def resume_document(
+    documents: dict[str, build.DocumentManifest],
+) -> build.DocumentManifest:
     return documents["resume"]
 
 
 @pytest.fixture()
-def cv_doc(documents: dict[str, build.DocumentManifest]) -> build.DocumentManifest:
-    return documents["cv"]
-
-
-@pytest.fixture()
-def general_profile(profiles: dict[str, build.ProfileConfig]) -> build.ProfileConfig:
+def general_profile(
+    profiles: dict[str, build.ProfileConfig],
+) -> build.ProfileConfig:
     return profiles["general"]
 
 
 @pytest.fixture()
-def research_profile(profiles: dict[str, build.ProfileConfig]) -> build.ProfileConfig:
-    return profiles["research"]
+def synthetic_contact() -> dict[str, str]:
+    return {
+        "email": "applicant@example.invalid",
+        "phone": "+1 555-010-0200",
+        "location": "Application City, MA",
+    }
 
 
-# ---------------------------------------------------------------------------
-# Document manifest loading
-# ---------------------------------------------------------------------------
+def test_canonical_ledger_loads_with_verified_sources() -> None:
+    ledger = career.load_ledger()
+    assert ledger["canonical_lane"] == "platform-devex"
+    assert ledger["roles"]["mit-lincoln-laboratory"]["start"] == "2019-04"
+    assert ledger["roles"]["mit-lincoln-laboratory"]["end"] == "2025-08"
+    assert ledger["roles"]["incompris"]["start"] == "2023-01"
+    assert ledger["roles"]["incompris"]["overlap_qualifier"] is None
+    assert all(
+        claim["provenance"]["status"] == "verified"
+        for claim in ledger["claims"].values()
+    )
 
 
-def test_load_document_manifests_returns_resume_and_cv(
+def test_locked_fact_gate_passes() -> None:
+    assert quality_gates.validate_facts() == 0
+
+
+def test_reflector_uses_independent_concept_doi() -> None:
+    artifact = career.load_ledger()["research_artifacts"]["reflector"]
+    assert artifact["status"] == "Independent DOI-backed research artifact"
+    assert artifact["concept_doi"] == "10.5281/zenodo.20477044"
+    assert artifact["concept_url"].endswith(artifact["concept_doi"])
+
+
+def test_metric_wording_keeps_bounded_qualifiers() -> None:
+    claim = career.load_ledger()["claims"]["mit-deconfliction-funding"]
+    for projection in ("public_text", "application_text"):
+        normalized = claim[projection].casefold()
+        assert "contributed to" in normalized
+        assert "approximately" in normalized
+
+
+def test_public_contact_policy_contains_no_private_values() -> None:
+    ledger = career.load_ledger()
+    policy = ledger["privacy"]["public"]
+    assert policy["allowed_contact_fields"] == ["public_location", "public_links"]
+    assert set(policy["forbidden_contact_types"]) == {
+        "email",
+        "phone",
+        "precise_city",
+    }
+    assert not career.find_public_contact_leaks(json.dumps(ledger))
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("applicant@example.invalid", ["email"]),
+        ("+1 555-010-0200", ["phone"]),
+        ("Greater Boston, MA", []),
+        ("10.5281/zenodo.20477044", []),
+        ("0009-0008-5291-9795", []),
+    ],
+)
+def test_public_contact_leak_detection(value: str, expected: list[str]) -> None:
+    assert career.find_public_contact_leaks(value) == expected
+
+
+def test_application_contact_overlay_is_allowlisted(tmp_path: Path) -> None:
+    contact_path = tmp_path / "contact.json"
+    contact_path.write_text(
+        json.dumps(
+            {
+                "email": "applicant@example.invalid",
+                "phone": "+1 555-010-0200",
+                "location": "Application City, MA",
+            }
+        ),
+        encoding="utf-8",
+    )
+    contact = career.load_application_contact(contact_path)
+    assert set(contact) == {"email", "phone", "location"}
+
+
+def test_application_contact_overlay_rejects_unknown_fields(tmp_path: Path) -> None:
+    contact_path = tmp_path / "contact.json"
+    contact_path.write_text(
+        json.dumps({"email": "applicant@example.invalid", "employer": "Example"}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Unsupported application contact field"):
+        career.load_application_contact(contact_path)
+
+
+def test_application_contact_overlay_requires_email_or_phone(tmp_path: Path) -> None:
+    contact_path = tmp_path / "contact.json"
+    contact_path.write_text(
+        json.dumps({"location": "Application City, MA"}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="approved email or phone"):
+        career.load_application_contact(contact_path)
+
+
+def test_document_manifests_keep_resume_and_cv_distinct(
     documents: dict[str, build.DocumentManifest],
 ) -> None:
-    assert "resume" in documents
-    assert "cv" in documents
+    assert set(documents) == {"resume", "cv"}
+    assert set(documents["resume"].section_pool).issubset(
+        documents["cv"].section_pool
+    )
+    assert "projects" not in documents["resume"].section_pool
+    assert "projects" in documents["cv"].section_pool
 
 
-def test_resume_document_manifest_fields(resume_doc: build.DocumentManifest) -> None:
-    assert resume_doc.document_type == "resume"
-    assert resume_doc.default_template == "resume"
-    assert resume_doc.default_page_size == "letter"
-    assert "header" in resume_doc.section_pool
-    assert "experience" in resume_doc.section_pool
-    assert "projects" not in resume_doc.section_pool  # résumé pool is smaller
-
-
-def test_cv_document_manifest_fields(cv_doc: build.DocumentManifest) -> None:
-    assert cv_doc.document_type == "cv"
-    assert cv_doc.default_template == "cv"
-    assert "projects" in cv_doc.section_pool
-    assert "talks" in cv_doc.section_pool
-    assert "awards" in cv_doc.section_pool
-    assert "service" in cv_doc.section_pool
-
-
-def test_cv_section_pool_is_superset_of_resume(
-    resume_doc: build.DocumentManifest,
-    cv_doc: build.DocumentManifest,
+def test_exact_application_role_profile_set(
+    profiles: dict[str, build.ProfileConfig],
 ) -> None:
-    resume_pool = set(resume_doc.section_pool)
-    cv_pool = set(cv_doc.section_pool)
-    assert resume_pool.issubset(cv_pool)
+    assert set(profiles) == {
+        "general",
+        "platform",
+        "research",
+        "mobile-geospatial",
+    }
+    assert profiles["general"].output_label == "Platform-DevEx"
+    assert profiles["research"].output_label == "Research-AI-Systems"
+    assert profiles["mobile-geospatial"].output_label == "Mobile-Geospatial"
 
 
-# ---------------------------------------------------------------------------
-# Profile loading
-# ---------------------------------------------------------------------------
-
-
-def test_load_all_four_profiles(profiles: dict[str, build.ProfileConfig]) -> None:
-    assert set(profiles) == {"general", "platform", "research", "ai-infra"}
-
-
-def test_general_profile_fields(general_profile: build.ProfileConfig) -> None:
-    assert general_profile.profile == "general"
-    assert "header" in general_profile.included_sections
-    assert "experience" in general_profile.included_sections
-    assert len(general_profile.keyword_emphasis) >= 1
-
-
-def test_profile_section_order_contains_included_sections(
-    general_profile: build.ProfileConfig,
+def test_every_profile_uses_evidenced_claims_and_skill_groups(
+    profiles: dict[str, build.ProfileConfig],
 ) -> None:
-    included = set(general_profile.included_sections)
-    ordered = set(general_profile.section_order)
-    assert included.issubset(ordered)
+    ledger = career.load_ledger()
+    for profile in profiles.values():
+        effective_profile = "platform" if profile.profile == "general" else profile.profile
+        for claim_id in profile.claim_ids:
+            assert effective_profile in ledger["claims"][claim_id]["profiles"]
+        for group_id in profile.skill_group_ids:
+            evidence = set(ledger["skill_groups"][group_id]["evidence"])
+            assert evidence.intersection(profile.claim_ids)
 
 
-def test_research_profile_includes_publications(research_profile: build.ProfileConfig) -> None:
-    assert "publications" in research_profile.included_sections
-
-
-# ---------------------------------------------------------------------------
-# Config resolution — defaults
-# ---------------------------------------------------------------------------
-
-
-def test_resolve_config_defaults(
-    resume_doc: build.DocumentManifest,
+def test_public_baseline_resolution_has_intentional_name(
+    resume_document: build.DocumentManifest,
     general_profile: build.ProfileConfig,
 ) -> None:
     config = build.resolve_config(
-        document=resume_doc,
+        document=resume_document,
         profile=general_profile,
         target=None,
         page_size_override=None,
     )
-    assert config.document_type == "resume"
-    assert config.profile == "general"
+    assert config.audience == "public"
+    assert config.output_basename == "Alan-Szmyt-Resume"
     assert config.page_size == "letter"
-    assert config.template == "resume"
-    assert config.target is None
-    assert config.output_basename == "alan-szmyt-resume-general"
+    assert config.contact == {}
 
 
-def test_resolve_config_cv_defaults(
-    cv_doc: build.DocumentManifest,
-    research_profile: build.ProfileConfig,
+def test_application_role_resolution_has_intentional_name(
+    resume_document: build.DocumentManifest,
+    profiles: dict[str, build.ProfileConfig],
+    synthetic_contact: dict[str, str],
 ) -> None:
     config = build.resolve_config(
-        document=cv_doc,
-        profile=research_profile,
+        document=resume_document,
+        profile=profiles["research"],
+        target=None,
+        page_size_override=None,
+        audience="application",
+        contact=synthetic_contact,
+    )
+    assert config.output_basename == "Alan-Szmyt-Resume-Research-AI-Systems"
+    assert config.audience == "application"
+    assert config.contact == synthetic_contact
+
+
+def test_cv_filename_preserves_uppercase_initialism(
+    documents: dict[str, build.DocumentManifest],
+    profiles: dict[str, build.ProfileConfig],
+) -> None:
+    config = build.resolve_config(
+        document=documents["cv"],
+        profile=profiles["research"],
         target=None,
         page_size_override=None,
     )
-    assert config.document_type == "cv"
-    assert config.profile == "research"
-    assert config.output_basename == "alan-szmyt-cv-research"
+    assert config.output_basename == "Alan-Szmyt-CV-Research-AI-Systems-Public"
 
 
-# ---------------------------------------------------------------------------
-# Config resolution — page-size override
-# ---------------------------------------------------------------------------
-
-
-def test_cli_page_size_override(
-    resume_doc: build.DocumentManifest,
+def test_application_resolution_requires_contact(
+    resume_document: build.DocumentManifest,
     general_profile: build.ProfileConfig,
 ) -> None:
-    config = build.resolve_config(
-        document=resume_doc,
+    with pytest.raises(ValueError, match="require approved contact"):
+        build.resolve_config(
+            document=resume_document,
+            profile=general_profile,
+            target=None,
+            page_size_override=None,
+            audience="application",
+        )
+
+
+def test_invalid_audience_is_rejected(
+    resume_document: build.DocumentManifest,
+    general_profile: build.ProfileConfig,
+) -> None:
+    with pytest.raises(ValueError, match="Unsupported audience"):
+        build.resolve_config(
+            document=resume_document,
+            profile=general_profile,
+            target=None,
+            page_size_override=None,
+            audience="internal",
+        )
+
+
+def test_target_and_cli_precedence(
+    resume_document: build.DocumentManifest,
+    general_profile: build.ProfileConfig,
+) -> None:
+    target = build.load_target(REPOSITORY_ROOT / "targets" / "example.yaml")
+    target_config = build.resolve_config(
+        document=resume_document,
         profile=general_profile,
-        target=None,
+        target=target,
         page_size_override="a4",
     )
-    assert config.page_size == "a4"
+    assert target_config.page_size == "a4"
+    assert target_config.section_order == target.section_order
+    assert target_config.output_basename.endswith("-example")
 
 
-# ---------------------------------------------------------------------------
-# Target overlay
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture()
-def example_target() -> build.TargetConfig:
-    return build.load_target(REPO_ROOT / "targets" / "example.yaml")
-
-
-def test_load_example_target(example_target: build.TargetConfig) -> None:
-    assert example_target.target == "example"
-    assert example_target.document_type == "resume"
-    assert example_target.profile == "general"
-    assert example_target.page_size == "letter"
-    assert example_target.section_order is not None
-
-
-def test_target_section_order_overrides_profile(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-    example_target: build.TargetConfig,
+def test_target_declared_profile_mismatch_is_rejected(
+    resume_document: build.DocumentManifest,
+    profiles: dict[str, build.ProfileConfig],
 ) -> None:
-    config = build.resolve_config(
-        document=resume_doc,
-        profile=general_profile,
-        target=example_target,
-        page_size_override=None,
-    )
-    # Example target puts skills before experience.
-    skill_idx = list(config.section_order).index("skills")
-    exp_idx = list(config.section_order).index("experience")
-    assert skill_idx < exp_idx
+    target = build.load_target(REPOSITORY_ROOT / "targets" / "example.yaml")
+    with pytest.raises(ValueError, match="requires profile 'general'"):
+        build.resolve_config(
+            document=resume_document,
+            profile=profiles["research"],
+            target=target,
+            page_size_override=None,
+        )
 
 
-def test_target_page_size_overrides_document_default(
-    resume_doc: build.DocumentManifest,
+def test_unknown_section_is_rejected(
+    resume_document: build.DocumentManifest,
     general_profile: build.ProfileConfig,
 ) -> None:
-    target = build.TargetConfig(
-        target="test",
-        description="test",
-        page_size="a4",
-    )
-    config = build.resolve_config(
-        document=resume_doc,
-        profile=general_profile,
-        target=target,
-        page_size_override=None,
-    )
-    assert config.page_size == "a4"
-
-
-def test_cli_overrides_target_page_size(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-) -> None:
-    target = build.TargetConfig(
-        target="test",
-        description="test",
-        page_size="a4",
-    )
-    config = build.resolve_config(
-        document=resume_doc,
-        profile=general_profile,
-        target=target,
-        page_size_override="letter",
-    )
-    assert config.page_size == "letter"
-
-
-def test_target_output_basename_in_config(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-    example_target: build.TargetConfig,
-) -> None:
-    config = build.resolve_config(
-        document=resume_doc,
-        profile=general_profile,
-        target=example_target,
-        page_size_override=None,
-    )
-    # Should include target in basename.
-    assert "example" in config.output_basename
-    assert config.target == "example"
-
-
-# ---------------------------------------------------------------------------
-# Deterministic output naming
-# ---------------------------------------------------------------------------
-
-
-def test_output_basename_format_no_target(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-) -> None:
-    config = build.resolve_config(
-        document=resume_doc,
-        profile=general_profile,
-        target=None,
-        page_size_override=None,
-    )
-    assert config.output_basename == "alan-szmyt-resume-general"
-
-
-def test_output_basename_format_with_target(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-    example_target: build.TargetConfig,
-) -> None:
-    config = build.resolve_config(
-        document=resume_doc,
-        profile=general_profile,
-        target=example_target,
-        page_size_override=None,
-    )
-    assert config.output_basename == "alan-szmyt-resume-general-example"
-
-
-# ---------------------------------------------------------------------------
-# Section ordering and inclusion
-# ---------------------------------------------------------------------------
-
-
-def test_included_sections_subset_of_section_order(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-) -> None:
-    config = build.resolve_config(
-        document=resume_doc,
-        profile=general_profile,
-        target=None,
-        page_size_override=None,
-    )
-    included = set(config.included_sections)
-    ordered = set(config.section_order)
-    assert included.issubset(ordered)
-
-
-def test_optional_section_omitted_when_not_in_profile(
-    cv_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-) -> None:
-    """'projects' is in the CV pool but not in general profile's included_sections."""
-    config = build.resolve_config(
-        document=cv_doc,
-        profile=general_profile,
-        target=None,
-        page_size_override=None,
-    )
-    assert "projects" not in config.included_sections
-    assert "talks" not in config.included_sections
-
-
-# ---------------------------------------------------------------------------
-# Error handling — unknown / invalid inputs
-# ---------------------------------------------------------------------------
-
-
-def test_unknown_section_in_section_order_fails(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-) -> None:
-    bad_profile = build.ProfileConfig(
-        profile="general",
-        name="General",
-        section_order=("header", "summary", "nonexistent"),
-        included_sections=("header", "summary"),
-        keyword_emphasis=("test",),
+    invalid_profile = replace(
+        general_profile,
+        section_order=(*general_profile.section_order, "unknown"),
     )
     with pytest.raises(ValueError, match="not in pool"):
         build.resolve_config(
-            document=resume_doc,
-            profile=bad_profile,
+            document=resume_document,
+            profile=invalid_profile,
             target=None,
             page_size_override=None,
         )
 
 
-def test_included_section_missing_from_order_fails(
-    resume_doc: build.DocumentManifest,
+def test_duplicate_section_is_rejected(
+    resume_document: build.DocumentManifest,
     general_profile: build.ProfileConfig,
 ) -> None:
-    bad_profile = build.ProfileConfig(
-        profile="general",
-        name="General",
-        section_order=("header",),
-        included_sections=("header", "summary"),  # summary not in order
-        keyword_emphasis=("test",),
-    )
-    with pytest.raises(ValueError, match="missing from section_order"):
-        build.resolve_config(
-            document=resume_doc,
-            profile=bad_profile,
-            target=None,
-            page_size_override=None,
-        )
-
-
-def test_duplicate_section_in_order_fails(
-    resume_doc: build.DocumentManifest,
-    general_profile: build.ProfileConfig,
-) -> None:
-    bad_profile = build.ProfileConfig(
-        profile="general",
-        name="General",
-        section_order=("header", "summary", "header"),  # duplicate
-        included_sections=("header", "summary"),
-        keyword_emphasis=("test",),
+    invalid_profile = replace(
+        general_profile,
+        section_order=(*general_profile.section_order, "header"),
     )
     with pytest.raises(ValueError, match="Duplicate section"):
         build.resolve_config(
-            document=resume_doc,
-            profile=bad_profile,
+            document=resume_document,
+            profile=invalid_profile,
             target=None,
             page_size_override=None,
         )
 
 
-def test_cv_section_in_resume_pool_fails(
-    resume_doc: build.DocumentManifest,
+def test_public_render_uses_sanitized_projection(
+    resume_document: build.DocumentManifest,
     general_profile: build.ProfileConfig,
 ) -> None:
-    """'projects' is a CV section; using it in a résumé build should fail."""
-    bad_profile = build.ProfileConfig(
-        profile="general",
-        name="General",
-        section_order=("header", "summary", "projects"),
-        included_sections=("header", "summary", "projects"),
-        keyword_emphasis=("test",),
+    config = build.resolve_config(
+        document=resume_document,
+        profile=general_profile,
+        target=None,
+        page_size_override=None,
     )
-    with pytest.raises(ValueError, match="not in pool"):
-        build.resolve_config(
-            document=resume_doc,
-            profile=bad_profile,
-            target=None,
-            page_size_override=None,
-        )
+    rendered = build.render_document(config)
+    assert "Greater Boston, MA" in rendered
+    assert "humanitarian commodity monitoring" in rendered
+    assert "USAID" not in rendered
+    assert "mailto:" not in rendered
+    assert "tel:" not in rendered
+    assert not career.find_public_contact_leaks(rendered)
 
 
-def test_nonexistent_target_file_fails() -> None:
+def test_general_baseline_keeps_independent_role_together(
+    resume_document: build.DocumentManifest,
+    general_profile: build.ProfileConfig,
+) -> None:
+    config = build.resolve_config(
+        document=resume_document,
+        profile=general_profile,
+        target=None,
+        page_size_override=None,
+    )
+    rendered = build.render_document(config)
+    assert "Founder \\& Systems Architect (continued)" not in rendered
+    assert rendered.index("\\item Designed AI-assisted workflow architectures") < (
+        rendered.index("\\newpage\n\\setlength{\\parskip}{0.9em}")
+    )
+    assert rendered.index("\\newpage\n\\setlength{\\parskip}{0.9em}") < (
+        rendered.index("\\section{Research Artifact}")
+    )
+
+
+def test_public_research_cv_uses_balanced_section_boundary(
+    documents: dict[str, build.DocumentManifest],
+    profiles: dict[str, build.ProfileConfig],
+) -> None:
+    config = build.resolve_config(
+        document=documents["cv"],
+        profile=profiles["research"],
+        target=None,
+        page_size_override=None,
+    )
+    rendered = build.render_document(config)
+    artifact = career.load_ledger()["research_artifacts"]["reflector"]
+    page_break = "\\newpage\n\\setlength{\\parskip}{0.9em}"
+    assert rendered.index("\\item Architected and developed Ego Hygiene") < (
+        rendered.index(page_break)
+    )
+    assert rendered.index(page_break) < rendered.index("\\section{Research Artifact}")
+    assert f"Artifact year: {artifact['year']}" in rendered
+    assert "Artifact status: Independent DOI-backed research artifact" in rendered
+    assert f"Concept DOI: {artifact['concept_doi']}" in rendered
+
+
+def test_application_render_uses_approved_contact_and_claim_projection(
+    resume_document: build.DocumentManifest,
+    general_profile: build.ProfileConfig,
+    synthetic_contact: dict[str, str],
+) -> None:
+    config = build.resolve_config(
+        document=resume_document,
+        profile=general_profile,
+        target=None,
+        page_size_override=None,
+        audience="application",
+        contact=synthetic_contact,
+    )
+    rendered = build.render_document(config)
+    assert "applicant@example.invalid" in rendered
+    assert "+1 555-010-0200" in rendered
+    assert "Application City, MA" in rendered
+    assert "USAID" in rendered
+
+
+def test_build_publishes_latexmk_generated_suffix(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    resume_document: build.DocumentManifest,
+    general_profile: build.ProfileConfig,
+) -> None:
+    config = build.resolve_config(
+        document=resume_document,
+        profile=general_profile,
+        target=None,
+        page_size_override=None,
+    )
+    repository_root = tmp_path / "repository"
+    out_dir = repository_root / ".cache" / "out"
+    aux_dir = repository_root / ".cache" / "aux"
+    outputs_dir = repository_root / "outputs"
+    dist_dir = repository_root / "dist"
+    for directory in (repository_root, out_dir, aux_dir, outputs_dir, dist_dir):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr(build, "REPOSITORY_ROOT", repository_root)
+    monkeypatch.setattr(build, "OUT_DIR", out_dir)
+    monkeypatch.setattr(build, "AUX_DIR", aux_dir)
+    monkeypatch.setattr(build, "OUTPUTS_DIR", outputs_dir)
+    monkeypatch.setattr(build, "DIST_DIR", dist_dir)
+    monkeypatch.setattr(build, "render_document", lambda _: "generated source")
+
+    def fake_run(*_: object, **__: object) -> SimpleNamespace:
+        expected = out_dir / f"{config.output_basename}.generated.pdf"
+        expected.write_bytes(b"%PDF-test")
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(build.subprocess, "run", fake_run)
+    result = build.build_document(config)
+    assert result.name == "Alan-Szmyt-Resume.pdf"
+    assert result.read_bytes() == b"%PDF-test"
+    assert (outputs_dir / "Alan-Szmyt-Resume.pdf").exists()
+
+
+def test_latex_escape_preserves_safe_text_and_escapes_specials() -> None:
+    assert career.latex_escape("R&D 100%") == r"R\&D 100\%"
+
+
+def test_nonexistent_target_fails() -> None:
     with pytest.raises(FileNotFoundError):
-        build.load_target(REPO_ROOT / "targets" / "nonexistent.yaml")
-
-
-def test_unknown_document_type_in_manifest_fails(tmp_path: Path) -> None:
-    bad_manifest = tmp_path / "badtype.yaml"
-    bad_manifest.write_text(
-        "document_type: badtype\n"
-        "default_template: resume\n"
-        "default_page_size: letter\n"
-        "section_pool:\n  - header\n"
-        "default_section_order:\n  - header\n",
-        encoding="utf-8",
-    )
-    with pytest.raises(ValueError, match="Unsupported document_type"):
-        build.load_document_manifest(bad_manifest)
-
-
-def test_unknown_page_size_in_manifest_fails(tmp_path: Path) -> None:
-    bad_manifest = tmp_path / "resume.yaml"
-    bad_manifest.write_text(
-        "document_type: resume\n"
-        "default_template: resume\n"
-        "default_page_size: legal\n"
-        "section_pool:\n  - header\n"
-        "default_section_order:\n  - header\n",
-        encoding="utf-8",
-    )
-    with pytest.raises(ValueError, match="Unsupported page size"):
-        build.load_document_manifest(bad_manifest)
-
-
-# ---------------------------------------------------------------------------
-# Section pool constants
-# ---------------------------------------------------------------------------
-
-
-def test_resume_sections_constant() -> None:
-    assert build.RESUME_SECTIONS == frozenset({
-        "header", "summary", "experience", "publications", "education", "skills"
-    })
-
-
-def test_cv_sections_is_superset_of_resume_sections() -> None:
-    assert build.RESUME_SECTIONS.issubset(build.CV_SECTIONS)
-    assert {"projects", "talks", "awards", "service"}.issubset(build.CV_SECTIONS)
-
-
-def test_document_section_pools_mapping() -> None:
-    assert "resume" in build.DOCUMENT_SECTION_POOLS
-    assert "cv" in build.DOCUMENT_SECTION_POOLS
-    assert build.DOCUMENT_SECTION_POOLS["resume"] == build.RESUME_SECTIONS
-    assert build.DOCUMENT_SECTION_POOLS["cv"] == build.CV_SECTIONS
+        build.load_target(REPOSITORY_ROOT / "targets" / "does-not-exist.yaml")

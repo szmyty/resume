@@ -33,9 +33,10 @@ section_order:
   - summary
   - skills
   - experience
+  - independent
   - education
   - publications
 
 # Optional custom output basename. Defaults to
-# alan-szmyt-{document_type}-{profile}-{target} when omitted.
-# output_basename: alan-szmyt-resume-general-example
+# Alan-Szmyt-{Document}-{Role}-{target} when omitted.
+# output_basename: Alan-Szmyt-Resume-Platform-DevEx-example

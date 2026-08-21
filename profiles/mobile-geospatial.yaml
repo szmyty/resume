@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 Alan Szmyt
+# SPDX-License-Identifier: Apache-2.0
+
+profile: mobile-geospatial
+name: "Mobile and Geospatial Systems"
+description: >
+  Targets resilient mobile, Flutter, Android, and geospatial roles with
+  low-connectivity and field-delivery evidence.
+
+output_label: "Mobile-Geospatial"
+
+headline: "Software Engineer | Resilient Mobile and Geospatial Systems"
+
+summary: >
+  Software engineer with 6+ years delivering mobile, geospatial, and analytical
+  systems for constrained field environments. Builds low-connectivity products,
+  interactive decision-support tools, Android and web build pipelines, and
+  local-first Flutter architectures.
+
+section_order:
+  - header
+  - summary
+  - experience
+  - independent
+  - skills
+  - education
+  - publications
+
+included_sections:
+  - header
+  - summary
+  - experience
+  - independent
+  - skills
+  - education
+  - publications
+
+claim_ids:
+  - mit-usaid-mobile
+  - mit-disaster-response
+  - mit-geospatial-systems
+  - mit-build-pipelines
+  - incompris-local-first
+  - incompris-multimodal
+
+skill_group_ids:
+  - mobile-geospatial
+  - languages
+  - platform-devex
+  - systems-workflows
+
+keyword_emphasis:
+  - mobile engineering
+  - flutter
+  - android
+  - geospatial systems
+  - low-connectivity systems
+  - local-first systems

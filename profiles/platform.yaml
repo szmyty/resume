@@ -5,35 +5,59 @@
 # Defines sections and emphasis for platform and SRE roles.
 
 profile: platform
-name: "Platform Engineering"
+name: "Platform and Developer Experience"
 description: >
-  Targets platform engineering, DevOps, SRE, and cloud infrastructure roles.
-  Emphasizes CI/CD, observability, Kubernetes, and developer tooling.
+  Targets platform engineering and developer-experience roles with verified
+  build, publication, quality-gate, and reproducible-environment evidence.
+
+output_label: "Platform-DevEx"
+
+headline: "Platform Software Engineer | Developer Tooling and Reproducible Infrastructure"
 
 summary: >
-  Platform engineer building reliable internal platforms, automation, and
-  cloud infrastructure that improve developer velocity and operational
-  excellence.
+  Software engineer with 6+ years delivering analytical and field systems while
+  improving the development infrastructure behind them. Builds reproducible
+  pipelines, repository quality gates, local-first platforms, and bounded
+  AI-assisted workflows that make complex engineering work easier to validate
+  and maintain.
 
 section_order:
   - header
   - summary
   - experience
+  - independent
   - skills
+  - publications
   - education
 
 included_sections:
   - header
   - summary
   - experience
+  - independent
   - skills
+  - publications
   - education
+
+claim_ids:
+  - mit-build-pipelines
+  - mit-usaid-mobile
+  - mit-deconfliction-funding
+  - mit-geospatial-systems
+  - incompris-local-first
+  - incompris-publishing
+  - incompris-quality-gates
+  - incompris-bounded-agents
+
+skill_group_ids:
+  - platform-devex
+  - languages
+  - systems-workflows
+  - mobile-geospatial
 
 keyword_emphasis:
   - platform engineering
-  - site reliability
-  - kubernetes
   - ci/cd
-  - observability
-  - cloud infrastructure
   - developer tooling
+  - reproducible infrastructure
+  - local-first systems

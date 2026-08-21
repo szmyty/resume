@@ -1,0 +1,285 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-08-21",
+  "canonical_lane": "platform-devex",
+  "identity": {
+    "name": "Alan Szmyt",
+    "public_location": "Greater Boston, MA",
+    "public_links": [
+      {
+        "id": "portfolio",
+        "label": "szmyty.vercel.app",
+        "url": "https://szmyty.vercel.app",
+        "audiences": ["public", "application"]
+      },
+      {
+        "id": "github",
+        "label": "github.com/szmyty",
+        "url": "https://github.com/szmyty",
+        "audiences": ["public", "application"]
+      },
+      {
+        "id": "orcid",
+        "label": "orcid.org/0009-0008-5291-9795",
+        "url": "https://orcid.org/0009-0008-5291-9795",
+        "audiences": ["public", "application"]
+      }
+    ]
+  },
+  "privacy": {
+    "public": {
+      "allowed_contact_fields": ["public_location", "public_links"],
+      "forbidden_contact_types": [
+        "email",
+        "phone",
+        "precise_city"
+      ]
+    },
+    "application": {
+      "allowed_contact_fields": ["email", "phone", "location"],
+      "requires_contact_overlay": true
+    }
+  },
+  "roles": {
+    "mit-lincoln-laboratory": {
+      "organization": "MIT Lincoln Laboratory",
+      "title": "Software Engineer, Associate Staff",
+      "location": "Lexington, MA",
+      "start": "2019-04",
+      "end": "2025-08",
+      "display_dates": "Apr 2019 - Aug 2025",
+      "category": "employment",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "incompris": {
+      "organization": "Incompris LLC",
+      "title": "Founder & Systems Architect",
+      "location": "Massachusetts",
+      "start": "2023-01",
+      "end": null,
+      "display_dates": "Jan 2023 - Present",
+      "category": "independent-engineering-research",
+      "overlap_qualifier": null,
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    }
+  },
+  "claims": {
+    "mit-build-pipelines": {
+      "subject": "mit-lincoln-laboratory",
+      "application_text": "Improved developer velocity by optimizing Android and web build pipelines using Gradle, Java, Kotlin, Vite, and ESBuild while reducing local environment configuration drift.",
+      "public_text": "Improved developer velocity by optimizing Android and web build pipelines using Gradle, Java, Kotlin, Vite, and ESBuild while reducing local environment configuration drift.",
+      "profiles": ["platform", "mobile-geospatial"],
+      "sensitivity": "public",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "mit-usaid-mobile": {
+      "subject": "mit-lincoln-laboratory",
+      "application_text": "Engineered a low-connectivity mobile tracking system for USAID commodity monitoring, field-testing pilot shipments to Africa and enabling end-to-end supply-chain visibility in constrained network environments.",
+      "public_text": "Delivered a low-connectivity mobile tracking system for humanitarian commodity monitoring, supporting end-to-end supply-chain visibility in constrained network environments.",
+      "profiles": ["platform", "research", "mobile-geospatial"],
+      "sensitivity": "application-bounded",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "mit-deconfliction-funding": {
+      "subject": "mit-lincoln-laboratory",
+      "application_text": "Contributed to approximately $1M in follow-on sponsor funding by designing and delivering a humanitarian deconfliction notification platform for no-strike-zone visualization and secure, auditable analyst reporting.",
+      "public_text": "Contributed to approximately $1M in follow-on sponsor funding by designing and delivering a humanitarian deconfliction platform for secure, auditable analyst reporting.",
+      "profiles": ["platform", "research"],
+      "sensitivity": "public-bounded",
+      "metric": {
+        "value": "approximately $1M",
+        "required_qualifiers": ["contributed to", "approximately"]
+      },
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "mit-investigative-analysis": {
+      "subject": "mit-lincoln-laboratory",
+      "application_text": "Built a counter-human-trafficking investigation tool for law enforcement, enabling analysts to triage large volumes of digital evidence and reduce time to actionable leads.",
+      "public_text": "Built an investigative analysis tool that helped analysts triage large volumes of digital evidence and reduce time to actionable leads.",
+      "profiles": ["research"],
+      "sensitivity": "application-bounded",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "mit-geospatial-systems": {
+      "subject": "mit-lincoln-laboratory",
+      "application_text": "Shipped externally accessible geospatial decision-support applications integrating shared data hubs, interactive maps, and domain-specific analytical datasets for government and research sponsors.",
+      "public_text": "Shipped geospatial decision-support applications integrating shared data hubs, interactive maps, and domain-specific analytical datasets for government and research sponsors.",
+      "profiles": ["platform", "research", "mobile-geospatial"],
+      "sensitivity": "public-bounded",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "mit-disaster-response": {
+      "subject": "mit-lincoln-laboratory",
+      "application_text": "Delivered field-ready mobile capabilities for NATO disaster-response exercises, including real-time hazard visualization, area-of-interest management, and location reporting across multinational operations.",
+      "public_text": "Delivered field-ready mobile capabilities for multinational disaster-response exercises, including hazard visualization, area-of-interest management, and location reporting.",
+      "profiles": ["mobile-geospatial"],
+      "sensitivity": "application-bounded",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "incompris-local-first": {
+      "subject": "incompris",
+      "application_text": "Architected and developed Ego Hygiene, a local-first Flutter platform using Dart, Riverpod 3, Drift, Freezed, offline-first repository abstractions, and provider-independent AI interfaces.",
+      "public_text": "Architected and developed Ego Hygiene, a local-first Flutter platform using Dart, Riverpod 3, Drift, Freezed, offline-first repository abstractions, and provider-independent AI interfaces.",
+      "profiles": ["platform", "research", "mobile-geospatial"],
+      "sensitivity": "public",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "incompris-publishing": {
+      "subject": "incompris",
+      "application_text": "Engineered deterministic publishing infrastructure that transforms structured Markdown specifications and JSON/YAML schemas into compiled, validated LaTeX documents for print and digital workflows.",
+      "public_text": "Engineered deterministic publishing infrastructure that transforms structured Markdown specifications and JSON/YAML schemas into compiled, validated LaTeX documents for print and digital workflows.",
+      "profiles": ["platform", "research"],
+      "sensitivity": "public",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "incompris-quality-gates": {
+      "subject": "incompris",
+      "application_text": "Implemented repository quality gates and TeX metadata validation using Python, Taskfile, and GitHub Actions to support reproducible document builds.",
+      "public_text": "Implemented repository quality gates and TeX metadata validation using Python, Taskfile, and GitHub Actions to support reproducible document builds.",
+      "profiles": ["platform", "research"],
+      "sensitivity": "public",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "incompris-bounded-agents": {
+      "subject": "incompris",
+      "application_text": "Designed AI-assisted workflow architectures that treat language-model agents as bounded components with explicit schemas, context assembly, tool registries, synchronization checkpoints, and verification loops.",
+      "public_text": "Designed AI-assisted workflow architectures that treat language-model agents as bounded components with explicit schemas, context assembly, tool registries, synchronization checkpoints, and verification loops.",
+      "profiles": ["platform", "research"],
+      "sensitivity": "public",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    "incompris-multimodal": {
+      "subject": "incompris",
+      "application_text": "Created multimodal media-generation pipelines integrating language models, image and video generation, metadata processing, and publication tooling into automated creative and technical workflows.",
+      "public_text": "Created multimodal media-generation pipelines integrating language models, image and video generation, metadata processing, and publication tooling into automated creative and technical workflows.",
+      "profiles": ["research", "mobile-geospatial"],
+      "sensitivity": "public",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    }
+  },
+  "research_artifacts": {
+    "reflector": {
+      "title": "reflector: Reflective Synchronization Systems for Recursive AI-Assisted Software Engineering",
+      "year": "2026",
+      "status": "Independent DOI-backed research artifact",
+      "summary": "Proposes synchronization checkpoints, reflective auditing, specification-driven orchestration, and human-AI governance patterns for recursive AI-assisted software engineering workflows.",
+      "concept_doi": "10.5281/zenodo.20477044",
+      "concept_url": "https://doi.org/10.5281/zenodo.20477044",
+      "orcid": "0009-0008-5291-9795",
+      "provenance": {
+        "source": "doi-and-supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    }
+  },
+  "education": [
+    {
+      "id": "boston-university-ms",
+      "degree": "M.S., Software Development",
+      "institution": "Boston University",
+      "location": "Boston, MA",
+      "start": "2021-09",
+      "end": "2023-04",
+      "display_dates": "Sep 2021 - Apr 2023",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    },
+    {
+      "id": "umass-lowell-bs",
+      "degree": "B.S., Computer Science; Minor in Mathematics",
+      "institution": "University of Massachusetts Lowell",
+      "location": "Lowell, MA",
+      "start": "2012-09",
+      "end": "2017-01",
+      "display_dates": "Sep 2012 - Jan 2017",
+      "provenance": {
+        "source": "supplied-resume-2026-08-21",
+        "status": "verified",
+        "reviewed_on": "2026-08-21"
+      }
+    }
+  ],
+  "skill_groups": {
+    "platform-devex": {
+      "label": "Platform & Developer Experience",
+      "items": ["GitHub Actions", "Docker", "Devcontainers", "CI/CD", "Taskfile", "Gradle", "Vite", "ESBuild", "Reproducible Environments"],
+      "evidence": ["mit-build-pipelines", "incompris-publishing", "incompris-quality-gates"]
+    },
+    "languages": {
+      "label": "Languages",
+      "items": ["Python", "Dart", "Java", "Kotlin", "JavaScript", "C++"],
+      "evidence": ["mit-build-pipelines", "incompris-local-first", "incompris-quality-gates"]
+    },
+    "systems-workflows": {
+      "label": "Systems & Workflows",
+      "items": ["Local-First Systems", "Specification-Driven Development", "Schema-Driven Development", "Bounded Agent Orchestration", "Workflow Automation"],
+      "evidence": ["incompris-local-first", "incompris-publishing", "incompris-bounded-agents"]
+    },
+    "mobile-geospatial": {
+      "label": "Mobile & Geospatial",
+      "items": ["Flutter", "Riverpod", "Drift", "Freezed", "Android", "Low-Connectivity Systems", "Geospatial Visualization"],
+      "evidence": ["mit-usaid-mobile", "mit-geospatial-systems", "mit-disaster-response", "incompris-local-first"]
+    },
+    "research-reproducibility": {
+      "label": "Research & Reproducibility",
+      "items": ["Technical Writing", "LaTeX", "Reproducible Publishing", "Schema Validation", "Research Software"],
+      "evidence": ["incompris-publishing", "incompris-quality-gates", "incompris-bounded-agents"]
+    }
+  }
+}

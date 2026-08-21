@@ -20,6 +20,7 @@ section_pool:
   - header
   - summary
   - experience
+  - independent
   - publications
   - education
   - skills
@@ -29,6 +30,7 @@ default_section_order:
   - header
   - summary
   - experience
+  - independent
   - publications
   - education
   - skills

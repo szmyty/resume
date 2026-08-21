@@ -39,6 +39,10 @@ __pycache__/
 .venv/
 .pytest_cache/
 
+# Owner-approved application-only data
+.local/
+content/application-contact.json
+
 # OS artifacts
 .DS_Store
 Thumbs.db
