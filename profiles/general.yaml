@@ -15,9 +15,10 @@ headline: "Software Engineer | Platform, Developer Tools, and AI-Assisted System
 summary: >
   Software engineer with 6+ years delivering mobile, geospatial, and analytical
   systems for government and research sponsors. Builds developer platforms,
-  local-first products, and AI-assisted workflows with reproducible
-  infrastructure and CI/CD. Contributed to approximately $1M in follow-on
-  sponsor funding and authored a DOI-backed independent research artifact.
+  Rust and Python tooling, local-first products, and AI-assisted workflows with
+  reproducible infrastructure and CI/CD. Contributed to approximately $1M in
+  follow-on sponsor funding and authored a DOI-backed independent research
+  artifact.
 
 section_order:
   - header
@@ -61,3 +62,4 @@ keyword_emphasis:
   - automation
   - distributed systems
   - developer tooling
+  - rust
