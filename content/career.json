@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_on": "2026-08-21",
+  "reviewed_on": "2026-08-22",
   "canonical_lane": "platform-devex",
   "identity": {
     "name": "Alan Szmyt",
@@ -29,11 +29,7 @@
   "privacy": {
     "public": {
       "allowed_contact_fields": ["public_location", "public_links"],
-      "forbidden_contact_types": [
-        "email",
-        "phone",
-        "precise_city"
-      ]
+      "forbidden_contact_types": ["email", "phone", "precise_city"]
     },
     "application": {
       "allowed_contact_fields": ["email", "phone", "location"],
@@ -162,26 +158,26 @@
     },
     "incompris-publishing": {
       "subject": "incompris",
-      "application_text": "Engineered deterministic publishing infrastructure that transforms structured Markdown specifications and JSON/YAML schemas into compiled, validated LaTeX documents for print and digital workflows.",
-      "public_text": "Engineered deterministic publishing infrastructure that transforms structured Markdown specifications and JSON/YAML schemas into compiled, validated LaTeX documents for print and digital workflows.",
+      "application_text": "Built Renderflow, a Rust specification-driven document engine with graph-planned transformations, parallel execution, incremental caching, and multi-format PDF, HTML, and DOCX output.",
+      "public_text": "Built Renderflow, a Rust specification-driven document engine with graph-planned transformations, parallel execution, incremental caching, and multi-format PDF, HTML, and DOCX output.",
       "profiles": ["platform", "research"],
       "sensitivity": "public",
       "provenance": {
-        "source": "supplied-resume-2026-08-21",
+        "source": "https://github.com/egohygiene/renderflow",
         "status": "verified",
-        "reviewed_on": "2026-08-21"
+        "reviewed_on": "2026-08-22"
       }
     },
     "incompris-quality-gates": {
       "subject": "incompris",
-      "application_text": "Implemented repository quality gates and TeX metadata validation using Python, Taskfile, and GitHub Actions to support reproducible document builds.",
-      "public_text": "Implemented repository quality gates and TeX metadata validation using Python, Taskfile, and GitHub Actions to support reproducible document builds.",
+      "application_text": "Built Relay, a versioned library of reusable GitHub Actions and CI contracts that centralizes repository automation while preserving consumer-owned configuration and deployment boundaries.",
+      "public_text": "Built Relay, a versioned library of reusable GitHub Actions and CI contracts that centralizes repository automation while preserving consumer-owned configuration and deployment boundaries.",
       "profiles": ["platform", "research"],
       "sensitivity": "public",
       "provenance": {
-        "source": "supplied-resume-2026-08-21",
+        "source": "https://github.com/egohygiene/relay",
         "status": "verified",
-        "reviewed_on": "2026-08-21"
+        "reviewed_on": "2026-08-22"
       }
     },
     "incompris-bounded-agents": {
@@ -258,17 +254,17 @@
   "skill_groups": {
     "platform-devex": {
       "label": "Platform & Developer Experience",
-      "items": ["GitHub Actions", "Docker", "Devcontainers", "CI/CD", "Taskfile", "Gradle", "Vite", "ESBuild", "Reproducible Environments"],
+      "items": ["GitHub Actions", "Docker", "Dev Containers", "CI/CD", "Taskfile", "Git", "Gradle", "Vite / ESBuild", "Reproducible Environments"],
       "evidence": ["mit-build-pipelines", "incompris-publishing", "incompris-quality-gates"]
     },
     "languages": {
       "label": "Languages",
-      "items": ["Python", "Dart", "Java", "Kotlin", "JavaScript", "C++"],
-      "evidence": ["mit-build-pipelines", "incompris-local-first", "incompris-quality-gates"]
+      "items": ["Python", "Rust", "Dart", "Java", "Kotlin", "JavaScript", "C++"],
+      "evidence": ["mit-build-pipelines", "incompris-local-first", "incompris-publishing", "incompris-quality-gates"]
     },
     "systems-workflows": {
       "label": "Systems & Workflows",
-      "items": ["Local-First Systems", "Specification-Driven Development", "Schema-Driven Development", "Bounded Agent Orchestration", "Workflow Automation"],
+      "items": ["Local-First Systems", "CLI Design", "Specification-Driven Development", "Schema-Driven Development", "Bounded Agent Orchestration", "Workflow Automation"],
       "evidence": ["incompris-local-first", "incompris-publishing", "incompris-bounded-agents"]
     },
     "mobile-geospatial": {

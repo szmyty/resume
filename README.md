@@ -5,6 +5,21 @@ from one verified career ledger. It renders a sanitized public baseline and
 role-specific application documents without forking facts or committing private
 contact data.
 
+## Public resume
+
+The canonical sanitized résumé is published at:
+
+- **Resume site:** <https://szmyty.github.io/resume/>
+- **Direct PDF:** <https://szmyty.github.io/resume/resume.pdf>
+
+The Pages deployment is built from the same validated `general` public artifact
+used by CI. Application-only email, phone, location overlays, and generated
+application PDFs are never included in the Pages artifact.
+
+GitHub Pages requires one repository-level setup before the first deployment:
+**Settings → Pages → Build and deployment → Source → GitHub Actions**. After that
+one-time selection, successful `main` builds publish the site automatically.
+
 ## Publication model
 
 | Layer | Location | Responsibility |
@@ -189,10 +204,12 @@ destinations, privacy policy, and tests. It then:
 2. builds and validates four application role variants with synthetic CI-only
    contact data;
 3. builds and fully validates the public research CV;
-4. renders both résumé pages to PNG for visual review; and
-5. uploads only public PDFs and visual renders.
+4. renders résumé pages to PNG for visual review;
+5. uploads only public PDFs and visual renders; and
+6. on successful `main` pushes, packages the validated canonical public résumé
+   with `site/` and deploys it to GitHub Pages.
 
-Application artifacts are never uploaded by CI.
+Application artifacts are never uploaded by CI or GitHub Pages.
 
 ## Changing content safely
 
