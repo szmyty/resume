@@ -17,9 +17,9 @@ headline: "Platform Software Engineer | Developer Tooling and Reproducible Infra
 summary: >
   Software engineer with 6+ years delivering analytical and field systems while
   improving the development infrastructure behind them. Builds reproducible
-  pipelines, repository quality gates, local-first platforms, and bounded
-  AI-assisted workflows that make complex engineering work easier to validate
-  and maintain.
+  CI/CD, Rust and Python developer tools, repository quality gates, local-first
+  platforms, and bounded AI-assisted workflows that make complex engineering
+  work easier to validate and maintain.
 
 section_order:
   - header
@@ -61,3 +61,4 @@ keyword_emphasis:
   - developer tooling
   - reproducible infrastructure
   - local-first systems
+  - rust
