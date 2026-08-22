@@ -16,6 +16,10 @@ The Pages deployment is built from the same validated `general` public artifact
 used by CI. Application-only email, phone, location overlays, and generated
 application PDFs are never included in the Pages artifact.
 
+GitHub Pages requires one repository-level setup before the first deployment:
+**Settings → Pages → Build and deployment → Source → GitHub Actions**. After that
+one-time selection, successful `main` builds publish the site automatically.
+
 ## Publication model
 
 | Layer | Location | Responsibility |
