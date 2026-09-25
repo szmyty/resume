@@ -1,9 +1,9 @@
 # Career Document Publishing System
 
 A specification-driven LaTeX system for producing Alan Szmyt's résumé and CV
-from one verified career ledger. It renders a sanitized public baseline and
-role-specific application documents without forking facts or committing private
-contact data.
+from a validated, self-contained rendering ledger. It renders a sanitized
+public baseline and role-specific application documents without forking facts
+or committing private contact data.
 
 ## Public resume
 
@@ -24,7 +24,8 @@ one-time selection, successful `main` builds publish the site automatically.
 
 | Layer | Location | Responsibility |
 | --- | --- | --- |
-| Facts and evidence | `content/career.json` | Canonical chronology, claims, provenance, privacy rules, destinations, and demonstrated skills |
+| Source facts and evidence | Private career repository | Source catalog and future owner-reviewed career facts, outside this public build |
+| Rendering projection | `content/career.json` | Existing validated ledger with reviewed additions, public-safe claims, provenance summaries, privacy rules, and destinations |
 | Role profiles | `profiles/*.yaml` | Headline, summary, selected claim IDs, evidenced skill groups, and section order |
 | Audience | `--audience public\|application` | Selects sanitized or owner-approved wording and contact projection |
 | Document type | `documents/*.yaml` | Résumé/CV section pool, template, and page-size defaults |
@@ -38,7 +39,12 @@ document manifest → role profile → optional target → CLI overrides
 ```
 
 Career text is always selected by ID from `content/career.json`. Profiles and
-targets cannot introduce new career facts.
+targets cannot introduce new career facts. The private career repository is the
+authority for source facts and evidence as they are reviewed; this local ledger
+is the canonical input to the renderer and must remain independently buildable
+without private access. Existing public content stays in place as the current
+publication baseline. A source catalog is not an approved claim, and this
+documentation change performs no new source audit or content migration.
 
 ## Current résumé lanes
 
@@ -213,12 +219,21 @@ Application artifacts are never uploaded by CI or GitHub Pages.
 
 ## Changing content safely
 
-1. Update or add a canonical claim in `content/career.json` with verified
-   provenance and separate public/application wording when sensitivity differs.
-2. Reference the claim ID from an approved role profile.
-3. Add skills only when a selected claim supplies evidence.
+1. Review the source fact and evidence in the private career repository. Obtain
+   owner approval for new or revised wording and the intended audience.
+2. Add only the approved public-safe projection to `content/career.json`, with
+   a stable claim ID, public-safe provenance, and separate public/application
+   wording when sensitivity differs. Do not copy private documents, private
+   URLs, personal notes, or contact information into this repository.
+3. Reference the claim ID from an approved role profile; add skills only when a
+   selected claim supplies evidence.
 4. Run all deterministic gates and affected public/application builds.
 5. Inspect the generated PDF pages, not only the LaTeX source.
+
+No rendering or CI step fetches from the private career repository. There is
+no automatic export into `content/career.json`; its future additions require a
+separate, reviewed content change. This handoff does not migrate claims or
+replace a PDF.
 
 Do not infer employment status for overlapping work, upgrade seniority, remove
 qualifiers from metrics, or convert an independent artifact into a peer-reviewed
