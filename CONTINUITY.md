@@ -7,7 +7,7 @@ repository:
   continuity_path: CONTINUITY.md
 document:
   status: active
-  updated_at: '2026-09-25T20:25:01Z'
+  updated_at: '2026-09-25T20:25:54Z'
   max_bytes: 16384
   max_lines: 240
   stale_reason: null
@@ -56,23 +56,26 @@ state:
   base:
     revision: b17b70c573c296b7e4cae8c5bd268a359e6e490c
     ref: refs/heads/main
-    verified_at: '2026-09-25T20:25:01Z'
+    verified_at: '2026-09-25T20:25:54Z'
   candidate:
     branch: codex/resume-continuity-post-merge-2026-09-25
-    revision: b17b70c573c296b7e4cae8c5bd268a359e6e490c
-    pull_request: null
-    handoff_state: prepared-for-review
+    revision: 9488f2ea3e02d682c863e41effee20c8b053bfe5
+    pull_request:
+      provider: github
+      id: szmyty/resume#28
+      url: https://github.com/szmyty/resume/pull/28
+    handoff_state: ready-for-owner-review
   live:
     status: verified
-    observed_at: '2026-09-25T20:25:01Z'
+    observed_at: '2026-09-25T20:25:54Z'
     default_branch_revision: b17b70c573c296b7e4cae8c5bd268a359e6e490c
     issue_state: open
-    pull_request_state: none-open
-    notes: 'PRs #26 and #27 merged into main. Issue #25 remains open; no claim migration, renderer change or PDF publication resulted from either documentation merge.'
+    pull_request_state: draft
+    notes: 'PRs #26 and #27 merged into main. One-file continuity refresh PR #28 is draft; issue #25 remains open. No claim migration, renderer change or PDF publication.'
   parallel_changes: []
 review:
   status: partial
-  reviewed_at: '2026-09-25T20:25:01Z'
+  reviewed_at: '2026-09-25T20:25:54Z'
   reviewed_by: ChatGPT
   evidence:
   - command: GitHub PR #26, issue #25, and default branch inspection
@@ -89,8 +92,12 @@ review:
     notes: 'Post-merge run 36174507790 failed validation with zero recorded steps; build and Pages deploy were skipped.'
   - command: GitHub PR #27, issue #25, and current main inspection
     outcome: passed
-    observed_at: '2026-09-25T20:25:01Z'
-    notes: 'PR #27 merged as b17b70c; main has no open PRs, and issue #25 remains open. The continuation update changed only this file.'
+    observed_at: '2026-09-25T20:25:54Z'
+    notes: 'PR #27 merged as b17b70c; issue #25 remains open. Before PR #28, main had no open PRs. This update changes only CONTINUITY.md.'
+  - command: Aether YAML front matter, byte/line limit, and public-safe language check
+    outcome: passed
+    observed_at: '2026-09-25T20:25:54Z'
+    notes: 'One-file handoff update; no public claims, renderer code or PDFs changed. Candidate revision precedes this final handoff edit.'
   environment_limitations:
   - Hosted Actions did not validate or deploy the merged documentation change. Inspect live CI and Pages state separately before claiming a successful release.
 privacy:
@@ -125,7 +132,7 @@ Read AGENTS.md, repository instructions, README, applicable specs, and this chec
 ## State snapshot
 
 - Public `main` was observed at merge commit `b17b70c573c296b7e4cae8c5bd268a359e6e490c`; [PR #26](https://github.com/szmyty/resume/pull/26) and [PR #27](https://github.com/szmyty/resume/pull/27) are both merged.
-- PR #27 changed only this continuity file. No public claim migration, renderer change, or PDF publication resulted from the documentation merges.
+- PR #27 changed only this continuity file. Draft [PR #28](https://github.com/szmyty/resume/pull/28) updates this snapshot only; the candidate revision above precedes its final handoff update. No public claim migration, renderer change, or PDF publication resulted from the documentation merges.
 - [Issue #25](https://github.com/szmyty/resume/issues/25) remains open for later reviewed comprehensive-master, generic-baseline, and tailoring work. Its inventory and document-production checklist is not complete merely because the authority documentation merged.
 
 ## Completed and material changes
