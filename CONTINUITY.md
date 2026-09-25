@@ -7,19 +7,19 @@ repository:
   continuity_path: CONTINUITY.md
 document:
   status: active
-  updated_at: '2026-09-25T18:22:50Z'
+  updated_at: '2026-09-25T19:08:50Z'
   max_bytes: 16384
   max_lines: 240
   stale_reason: null
   superseded_by: null
 scope:
-  purpose: Hand off the public-safe fact authority contract and the next reviewed résumé publishing step.
+  purpose: Hand off the merged public fact-authority contract and later reviewed document work.
   includes:
-  - Private source authority versus self-contained public rendering projection.
-  - The master/baseline roadmap issue and documentation review state.
+  - Self-contained rendering projection and owner-reviewed claim gate.
+  - Merged governance changes and the comprehensive-master/baseline roadmap.
   excludes:
-  - Private source files, local contact overlays, application PDFs, and conversation history.
-  - Full roadmap text and generated artifacts.
+  - Private evidence, contact overlays, application PDFs, and conversation history.
+  - Private repository URLs, source locators, and full roadmap text.
   precedence:
   - user-and-runtime-instructions
   - scoped-repository-instructions
@@ -35,74 +35,68 @@ scope:
   - content/career.json
   - https://github.com/szmyty/resume/issues/25
 work:
-  objective: Align public résumé instructions and specs with the private source-of-truth and public projection boundary.
+  objective: Prepare the public document system for later owner-reviewed fact projection and baseline work without changing current claims or PDFs.
   success_conditions:
-  - Private career sources await fact review; existing public content/career.json remains a self-contained validated
-    rendering projection.
-  - AGENTS.md points to this checkpoint and the specs; new facts require owner review before projection.
-  - No private evidence, contact overlay, claim migration, renderer change, or generated PDF is part of this documentation
-    change.
+  - Existing content/career.json remains the self-contained validated public renderer input.
+  - New public claim wording is source-reviewed and owner-approved before projection.
+  - Private master and contact overlays stay out of public Git, CI, and Pages.
   active_issue:
     provider: github
     id: szmyty/resume#25
     url: https://github.com/szmyty/resume/issues/25
   next:
     kind: action
-    id: review-resume-governance-pr
-    description: 'Review documentation changes in draft PR #26 alongside the private source contract. Start any
-      claim migration only after owner review of the private facts.'
+    id: inventory-publishing-inputs-for-later-reviewed-baseline
+    description: 'Inventory the current public claim ledger, profiles, documents, renderer, tests, and PDFs under #25; wait for approved claim reviews before any content migration or baseline replacement.'
     readiness: ready
     references:
-    - https://github.com/szmyty/resume/pull/26
     - https://github.com/szmyty/resume/issues/25
     depends_on: []
 state:
   base:
-    revision: 566648f77fb4263ed37cb7c07b886ad4f18c856a
+    revision: d36ac2dea84718d2c54e98f5cafc8de680a12fca
     ref: refs/heads/main
-    verified_at: '2026-09-25T18:12:10Z'
+    verified_at: '2026-09-25T18:51:44Z'
   candidate:
-    branch: docs/career-continuity-2026-09-25
-    revision: 068a5921f5321ddc368faa404c861dba2700f504
+    branch: codex/continuity-post-merge-2026-09-25
+    revision: da86260bebb26998898ba71a20468b53236efe7b
     pull_request:
       provider: github
-      id: szmyty/resume#26
-      url: https://github.com/szmyty/resume/pull/26
-    handoff_state: ready-for-review
+      id: szmyty/resume#27
+      url: https://github.com/szmyty/resume/pull/27
+    handoff_state: ready-for-owner-review
   live:
     status: verified
-    observed_at: '2026-09-25T18:22:50Z'
-    default_branch_revision: 566648f77fb4263ed37cb7c07b886ad4f18c856a
+    observed_at: '2026-09-25T19:08:50Z'
+    default_branch_revision: d36ac2dea84718d2c54e98f5cafc8de680a12fca
     issue_state: open
     pull_request_state: draft
-    notes: 'Issue #25 and draft PR #26 were open and mergeable at review; candidate revision precedes this handoff.
-      Hosted Actions validation failed without recorded steps. Recheck before merge.'
+    notes: 'Documentation PR #26 merged into main. One-file continuity refresh PR #27 is draft; issue #25 remains open, with no claim migration, renderer change or PDF publication.'
   parallel_changes: []
 review:
   status: partial
-  reviewed_at: '2026-09-25T18:22:50Z'
+  reviewed_at: '2026-09-25T19:08:50Z'
   reviewed_by: ChatGPT
   evidence:
-  - command: 'GitHub issue #25 and draft PR #26 live inspection'
+  - command: GitHub PR #26, issue #25, and default branch inspection
     outcome: passed
-    observed_at: '2026-09-25T18:12:10Z'
-    notes: 'Public PR #26 open, draft and mergeable before this handoff update; no content migration.'
-  - command: git diff --check; Aether v1 metadata and relative Markdown links; public privacy scan
-    outcome: passed
-    observed_at: '2026-09-25T18:22:50Z'
-    notes: Documentation-only change; no private source URLs, application artifacts, or contact values.
+    observed_at: '2026-09-25T18:51:44Z'
+    notes: 'PR #26 merged as d36ac2d; the six changed files were documentation, without a changed claim ledger or PDF.'
   - command: Five local fact/configuration gates and python -m pytest tests/ --quiet
     outcome: passed
     observed_at: '2026-09-25T18:22:50Z'
-    notes: Five deterministic gates passed and 36 tests passed; no PDF was changed or rebuilt.
+    notes: 'Five deterministic gates and 36 tests passed locally before merge; no PDF was rebuilt.'
+  - command: Hosted Actions after PR #26 merge
+    outcome: limited
+    observed_at: '2026-09-25T18:37:00Z'
+    notes: 'Post-merge run 36174507790 failed validation with zero recorded steps; build and Pages deploy were skipped.'
   environment_limitations:
-  - Hosted résumé Actions run 36172006455 failed with no recorded job steps; rerun or inspect GitHub before merge.
+  - Hosted Actions did not validate or deploy the merged documentation change. Inspect live CI and Pages state separately before claiming a successful release.
 privacy:
   classification: public-repository
   contains_sensitive_data: false
   redactions:
-  - Private source names and document locations omitted.
-  - Personal contact values omitted.
+  - Private source locators and contact values omitted.
   excluded:
   - secrets-and-credentials
   - private-conversation-text
@@ -117,46 +111,46 @@ privacy:
 
 ## Purpose and precedence
 
-This public-safe handoff points to the current publishing contract and next reviewed change. [AGENTS.md](AGENTS.md), [repository instructions](.github/copilot-instructions.md), [the product spec](specs/resume.spec.md), [governance](specs/governance.md), and live GitHub state outrank this checkpoint.
+This public-safe checkpoint records the merged publishing contract and next reviewed step. [AGENTS.md](AGENTS.md), [repository instructions](.github/copilot-instructions.md), [the product spec](specs/resume.spec.md), [governance](specs/governance.md), and live GitHub state outrank this file.
 
 ## Resume protocol
 
-Read AGENTS.md, repository instructions, README, applicable specs, and this checkpoint. Inspect the branch and recent changes, then verify the live issue, PR, CI, and Pages state. This file does not authorize publication or claim changes.
+Read AGENTS.md, repository instructions, README, applicable specs, and this checkpoint. Inspect the branch and recent changes; verify live issue, PR, CI, and Pages state before changing content. This file does not authorize publication or claim changes.
 
 ## Current objective and success conditions
 
-Draft [PR #26](https://github.com/szmyty/resume/pull/26) clarifies that reviewed career facts and evidence originate in the private career repository while `content/career.json` remains the standalone, validated input to this public renderer. Its existing content remains unchanged; no automatic export or new claim approval is implied.
+[Documentation PR #26](https://github.com/szmyty/resume/pull/26) merged the authority and handoff wording. `content/career.json` remains a standalone validated renderer input; new or revised public facts require source review and owner approval before they enter it. No automatic export or new claim approval resulted from that merge.
 
 ## State snapshot
 
-- Public `main` was observed at `566648f77fb4263ed37cb7c07b886ad4f18c856a`.
-- [PR #26](https://github.com/szmyty/resume/pull/26) remains open and draft on `docs/career-continuity-2026-09-25`; its cited candidate revision is before this handoff commit. No merge is implied.
-- [Issue #25](https://github.com/szmyty/resume/issues/25) still tracks later comprehensive-master and generic-baseline work.
+- Public `main` was observed at merge commit `d36ac2dea84718d2c54e98f5cafc8de680a12fca`; PR #26 is merged, not an outstanding draft.
+- Draft [PR #27](https://github.com/szmyty/resume/pull/27) updates this continuity snapshot only; the candidate revision above precedes its own final handoff update. It is unmerged and has no document/content changes.
+- [Issue #25](https://github.com/szmyty/resume/issues/25) remains open for later reviewed comprehensive-master, generic-baseline, and tailoring work. Its inventory and document-production checklist is not complete merely because the authority documentation merged.
 
 ## Completed and material changes
 
-- README, product spec, governance and agent guidance now distinguish private source authority from a self-contained public rendering projection.
-- A root AGENTS.md points new chats to specs and this checkpoint. The existing published résumé ledger, claims, renderer, tests, PDFs, application contact overlays, and Pages artifacts were not changed.
-- Private catalog entries and repository metadata are candidates, not approved claims. New or revised public wording needs a separate, owner-reviewed content change.
+- README, product spec, governance, and agent guidance distinguish reviewed career fact authority from the public renderer's self-contained content projection.
+- The existing published ledger, claims, renderer, tests, PDFs, and application contact overlays were not changed by PR #26.
+- Future fact revisions need separate owner-reviewed changes; metadata or a historic draft alone cannot approve a new public claim.
 
 ## Validation and review evidence
 
-- Public branch, issue, and PR state were rechecked at the time above. Documentation links, Aether metadata, diff whitespace, and privacy were checked locally.
-- Five deterministic fact/configuration gates and 36 unit tests passed locally. Hosted Actions failed with no recorded job steps; inspect or rerun the PR check before merge.
+- Before merge, documentation links, continuity metadata, diff whitespace, and public privacy were checked locally. Five deterministic gates and 36 tests passed.
+- Post-merge Actions run `36174507790` failed validation before recording a step; build and Pages deploy were skipped. No current served Pages state was verified. Do not report hosted CI or deploy as successful.
 
 ## Blockers, risks, unknowns, and deferred work
 
-- Content migration awaits private claim-by-claim source review, owner approval, and an explicit export/validation decision.
-- A comprehensive master may contain private material, so keep it out of this public repository until an owner-reviewed projection exists.
-- CI and future Pages state require a live check; neither a replacement baseline nor a public release was approved by this handoff.
+- Content migration awaits claim-by-claim evidence review, owner approval, and a deliberate export/validation decision.
+- The comprehensive master can contain private material; only an owner-reviewed public projection belongs here.
+- A replacement generic baseline or Pages release was not approved by the documentation merge.
 
 ## Next dependency-ready work
 
-Review this public contract alongside the private authority checkpoint. Then inventory the current ledger, profiles, documents, tests, and rendered PDFs for later master and baseline work under #25. Keep each new claim and publication behind owner review.
+Inventory the current `content/career.json`, profiles, document manifests, renderer, tests, and actual PDFs under #25. Prepare an implementation plan for reviewed master and baseline work. Keep content and publication changes behind owner review.
 
 ## Parallel changes and reconciliation
 
-The private content-contract review is separate. It has no public runtime or CI dependency. Compare the live branch before changing this single root checkpoint.
+Fact review proceeds in its authoritative private workflow. This public renderer has no runtime or CI dependency on private sources. Verify current public branch and issue state before editing this handoff.
 
 ## Privacy and redaction
 
@@ -164,8 +158,4 @@ This file contains no private source URLs, contact values, application materials
 
 ## Handoff update protocol
 
-Refresh branch, issue, PR, validation, blockers, and next action after an authorized change. Never treat this checkpoint as permission to submit an application, merge a PR, or publish a PDF.
-
-## Compaction and supersession
-
-Keep this file below 16,384 bytes and 240 lines; use issues and Git history for detail.
+Refresh branch, issue, PR, validation, blockers, and next action after a reviewed change. This checkpoint never authorizes an application submission, PR merge, or PDF publication. Keep it below 16,384 bytes and 240 lines.
