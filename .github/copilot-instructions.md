@@ -97,3 +97,11 @@ Use intentional title-cased filenames. `CV` is uppercase, application filenames
 omit `-Public`, and the permanent baseline is `Alan-Szmyt-Resume.pdf`.
 
 Generated PDFs, rendered images, caches, and `.local/` data are not committed.
+
+## Continuity handoff
+
+Read the root `CONTINUITY.md` after these instructions and the applicable
+canonical specs. Verify its branch, issue, pull-request, and release claims
+against live state; the checkpoint is a compact handoff, not a source of facts
+or permission to publish. For an authorized repository change, refresh it in
+the same pull request after validation and before presenting the work.
