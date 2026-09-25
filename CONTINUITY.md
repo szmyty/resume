@@ -7,7 +7,7 @@ repository:
   continuity_path: CONTINUITY.md
 document:
   status: active
-  updated_at: '2026-09-25T18:51:44Z'
+  updated_at: '2026-09-25T19:08:50Z'
   max_bytes: 16384
   max_lines: 240
   stale_reason: null
@@ -58,21 +58,24 @@ state:
     ref: refs/heads/main
     verified_at: '2026-09-25T18:51:44Z'
   candidate:
-    branch: null
-    revision: null
-    pull_request: null
-    handoff_state: no-active-change
+    branch: codex/continuity-post-merge-2026-09-25
+    revision: da86260bebb26998898ba71a20468b53236efe7b
+    pull_request:
+      provider: github
+      id: szmyty/resume#27
+      url: https://github.com/szmyty/resume/pull/27
+    handoff_state: ready-for-owner-review
   live:
     status: verified
-    observed_at: '2026-09-25T18:51:44Z'
+    observed_at: '2026-09-25T19:08:50Z'
     default_branch_revision: d36ac2dea84718d2c54e98f5cafc8de680a12fca
     issue_state: open
-    pull_request_state: merged
-    notes: 'Documentation PR #26 merged into main. Issue #25 remains open; no claim migration, renderer change, replacement PDF, or new Pages publication was part of #26.'
+    pull_request_state: draft
+    notes: 'Documentation PR #26 merged into main. One-file continuity refresh PR #27 is draft; issue #25 remains open, with no claim migration, renderer change or PDF publication.'
   parallel_changes: []
 review:
   status: partial
-  reviewed_at: '2026-09-25T18:51:44Z'
+  reviewed_at: '2026-09-25T19:08:50Z'
   reviewed_by: ChatGPT
   evidence:
   - command: GitHub PR #26, issue #25, and default branch inspection
@@ -121,6 +124,7 @@ Read AGENTS.md, repository instructions, README, applicable specs, and this chec
 ## State snapshot
 
 - Public `main` was observed at merge commit `d36ac2dea84718d2c54e98f5cafc8de680a12fca`; PR #26 is merged, not an outstanding draft.
+- Draft [PR #27](https://github.com/szmyty/resume/pull/27) updates this continuity snapshot only; the candidate revision above precedes its own final handoff update. It is unmerged and has no document/content changes.
 - [Issue #25](https://github.com/szmyty/resume/issues/25) remains open for later reviewed comprehensive-master, generic-baseline, and tailoring work. Its inventory and document-production checklist is not complete merely because the authority documentation merged.
 
 ## Completed and material changes
