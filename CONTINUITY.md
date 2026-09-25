@@ -7,7 +7,7 @@ repository:
   continuity_path: CONTINUITY.md
 document:
   status: active
-  updated_at: '2026-09-25T19:08:50Z'
+  updated_at: '2026-09-25T20:25:54Z'
   max_bytes: 16384
   max_lines: 240
   stale_reason: null
@@ -54,28 +54,28 @@ work:
     depends_on: []
 state:
   base:
-    revision: d36ac2dea84718d2c54e98f5cafc8de680a12fca
+    revision: b17b70c573c296b7e4cae8c5bd268a359e6e490c
     ref: refs/heads/main
-    verified_at: '2026-09-25T18:51:44Z'
+    verified_at: '2026-09-25T20:25:54Z'
   candidate:
-    branch: codex/continuity-post-merge-2026-09-25
-    revision: da86260bebb26998898ba71a20468b53236efe7b
+    branch: codex/resume-continuity-post-merge-2026-09-25
+    revision: 9488f2ea3e02d682c863e41effee20c8b053bfe5
     pull_request:
       provider: github
-      id: szmyty/resume#27
-      url: https://github.com/szmyty/resume/pull/27
+      id: szmyty/resume#28
+      url: https://github.com/szmyty/resume/pull/28
     handoff_state: ready-for-owner-review
   live:
     status: verified
-    observed_at: '2026-09-25T19:08:50Z'
-    default_branch_revision: d36ac2dea84718d2c54e98f5cafc8de680a12fca
+    observed_at: '2026-09-25T20:25:54Z'
+    default_branch_revision: b17b70c573c296b7e4cae8c5bd268a359e6e490c
     issue_state: open
     pull_request_state: draft
-    notes: 'Documentation PR #26 merged into main. One-file continuity refresh PR #27 is draft; issue #25 remains open, with no claim migration, renderer change or PDF publication.'
+    notes: 'PRs #26 and #27 merged into main. One-file continuity refresh PR #28 is draft; issue #25 remains open. No claim migration, renderer change or PDF publication.'
   parallel_changes: []
 review:
   status: partial
-  reviewed_at: '2026-09-25T19:08:50Z'
+  reviewed_at: '2026-09-25T20:25:54Z'
   reviewed_by: ChatGPT
   evidence:
   - command: GitHub PR #26, issue #25, and default branch inspection
@@ -90,6 +90,14 @@ review:
     outcome: limited
     observed_at: '2026-09-25T18:37:00Z'
     notes: 'Post-merge run 36174507790 failed validation with zero recorded steps; build and Pages deploy were skipped.'
+  - command: GitHub PR #27, issue #25, and current main inspection
+    outcome: passed
+    observed_at: '2026-09-25T20:25:54Z'
+    notes: 'PR #27 merged as b17b70c; issue #25 remains open. Before PR #28, main had no open PRs. This update changes only CONTINUITY.md.'
+  - command: Aether YAML front matter, byte/line limit, and public-safe language check
+    outcome: passed
+    observed_at: '2026-09-25T20:25:54Z'
+    notes: 'One-file handoff update; no public claims, renderer code or PDFs changed. Candidate revision precedes this final handoff edit.'
   environment_limitations:
   - Hosted Actions did not validate or deploy the merged documentation change. Inspect live CI and Pages state separately before claiming a successful release.
 privacy:
@@ -123,14 +131,14 @@ Read AGENTS.md, repository instructions, README, applicable specs, and this chec
 
 ## State snapshot
 
-- Public `main` was observed at merge commit `d36ac2dea84718d2c54e98f5cafc8de680a12fca`; PR #26 is merged, not an outstanding draft.
-- Draft [PR #27](https://github.com/szmyty/resume/pull/27) updates this continuity snapshot only; the candidate revision above precedes its own final handoff update. It is unmerged and has no document/content changes.
+- Public `main` was observed at merge commit `b17b70c573c296b7e4cae8c5bd268a359e6e490c`; [PR #26](https://github.com/szmyty/resume/pull/26) and [PR #27](https://github.com/szmyty/resume/pull/27) are both merged.
+- PR #27 changed only this continuity file. Draft [PR #28](https://github.com/szmyty/resume/pull/28) updates this snapshot only; the candidate revision above precedes its final handoff update. No public claim migration, renderer change, or PDF publication resulted from the documentation merges.
 - [Issue #25](https://github.com/szmyty/resume/issues/25) remains open for later reviewed comprehensive-master, generic-baseline, and tailoring work. Its inventory and document-production checklist is not complete merely because the authority documentation merged.
 
 ## Completed and material changes
 
 - README, product spec, governance, and agent guidance distinguish reviewed career fact authority from the public renderer's self-contained content projection.
-- The existing published ledger, claims, renderer, tests, PDFs, and application contact overlays were not changed by PR #26.
+- The existing published ledger, claims, renderer, tests, PDFs, and application contact overlays were not changed by PRs #26 or #27.
 - Future fact revisions need separate owner-reviewed changes; metadata or a historic draft alone cannot approve a new public claim.
 
 ## Validation and review evidence
