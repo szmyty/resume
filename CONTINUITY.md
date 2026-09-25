@@ -7,7 +7,7 @@ repository:
   continuity_path: CONTINUITY.md
 document:
   status: active
-  updated_at: "2026-09-25T16:45:09Z"
+  updated_at: "2026-09-25T16:48:35Z"
   max_bytes: 16384
   max_lines: 240
   stale_reason: null
@@ -76,7 +76,7 @@ state:
   parallel_changes: []
 review:
   status: partial
-  reviewed_at: "2026-09-25T16:45:09Z"
+  reviewed_at: "2026-09-25T16:48:35Z"
   reviewed_by: ChatGPT
   evidence:
     - command: "git clone --depth 1 --branch main https://github.com/szmyty/resume.git; git rev-parse HEAD^{tree}"
@@ -89,11 +89,11 @@ review:
       notes: "Repository is public, issue open, and draft PR open; no other résumé PR was returned."
     - command: "Validate Aether v1 metadata, required headings, size, and privacy"
       outcome: passed
-      observed_at: "2026-09-25T16:45:09Z"
+      observed_at: "2026-09-25T16:48:35Z"
       notes: "Structural and public-data review on this candidate."
     - command: "python scripts/quality_gates.py validate-facts and python -m pytest tests/"
       outcome: not-run
-      observed_at: "2026-09-25T16:45:09Z"
+      observed_at: "2026-09-25T16:48:35Z"
       notes: "This PR changes documentation and an instruction pointer only; no fact, renderer, or artifact changes."
   environment_limitations:
     - "PR checks and future Pages output require a fresh live inspection after the candidate is updated."
