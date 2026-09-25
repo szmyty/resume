@@ -7,7 +7,7 @@ repository:
   continuity_path: CONTINUITY.md
 document:
   status: active
-  updated_at: '2026-09-25T18:12:10Z'
+  updated_at: '2026-09-25T18:22:50Z'
   max_bytes: 16384
   max_lines: 240
   stale_reason: null
@@ -63,7 +63,7 @@ state:
     verified_at: '2026-09-25T18:12:10Z'
   candidate:
     branch: docs/career-continuity-2026-09-25
-    revision: e02ed56aa37cc276a8335e685bf79c51fedb0de3
+    revision: 068a5921f5321ddc368faa404c861dba2700f504
     pull_request:
       provider: github
       id: szmyty/resume#26
@@ -71,16 +71,16 @@ state:
     handoff_state: ready-for-review
   live:
     status: verified
-    observed_at: '2026-09-25T18:12:10Z'
+    observed_at: '2026-09-25T18:22:50Z'
     default_branch_revision: 566648f77fb4263ed37cb7c07b886ad4f18c856a
     issue_state: open
     pull_request_state: draft
-    notes: 'Issue #25 and draft PR #26 were rechecked live. Candidate revision precedes this handoff update; inspect
-      current CI and publication state before merge.'
+    notes: 'Issue #25 and draft PR #26 were open and mergeable at review; candidate revision precedes this handoff.
+      Hosted Actions validation failed without recorded steps. Recheck before merge.'
   parallel_changes: []
 review:
   status: partial
-  reviewed_at: '2026-09-25T18:12:10Z'
+  reviewed_at: '2026-09-25T18:22:50Z'
   reviewed_by: ChatGPT
   evidence:
   - command: 'GitHub issue #25 and draft PR #26 live inspection'
@@ -89,14 +89,14 @@ review:
     notes: 'Public PR #26 open, draft and mergeable before this handoff update; no content migration.'
   - command: git diff --check; Aether v1 metadata and relative Markdown links; public privacy scan
     outcome: passed
-    observed_at: '2026-09-25T18:12:10Z'
+    observed_at: '2026-09-25T18:22:50Z'
     notes: Documentation-only change; no private source URLs, application artifacts, or contact values.
-  - command: python scripts/quality_gates.py validate-facts; python -m pytest tests/
-    outcome: not-run
-    observed_at: '2026-09-25T18:12:10Z'
-    notes: No career JSON, renderer, templates, or output artifacts changed in this documentation checkpoint.
+  - command: Five local fact/configuration gates and python -m pytest tests/ --quiet
+    outcome: passed
+    observed_at: '2026-09-25T18:22:50Z'
+    notes: Five deterministic gates passed and 36 tests passed; no PDF was changed or rebuilt.
   environment_limitations:
-  - Recheck the live PR checks and Pages output after the final handoff commit.
+  - Hosted résumé Actions run 36172006455 failed with no recorded job steps; rerun or inspect GitHub before merge.
 privacy:
   classification: public-repository
   contains_sensitive_data: false
@@ -142,7 +142,7 @@ Draft [PR #26](https://github.com/szmyty/resume/pull/26) clarifies that reviewed
 ## Validation and review evidence
 
 - Public branch, issue, and PR state were rechecked at the time above. Documentation links, Aether metadata, diff whitespace, and privacy were checked locally.
-- Fact and renderer tests were not run for this documentation-only update. Check PR CI before merging.
+- Five deterministic fact/configuration gates and 36 unit tests passed locally. Hosted Actions failed with no recorded job steps; inspect or rerun the PR check before merge.
 
 ## Blockers, risks, unknowns, and deferred work
 
