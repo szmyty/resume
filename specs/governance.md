@@ -5,11 +5,20 @@
 
 ## Source of truth
 
-`content/career.json` is the only canonical source for identity, chronology,
-claims, research artifacts, education, demonstrated skills, provenance, and
-audience privacy rules. Profiles select fact IDs; they never copy or rewrite
-facts. LaTeX files control presentation only, except for optional CV extension
-sections.
+The private career repository is the authority for career facts and supporting
+evidence as they are reviewed. Cataloged source files and repository metadata
+alone do not establish an approved claim. `content/career.json` is the public
+repository's self-contained rendering projection for identity, chronology,
+claims, research artifacts, education, demonstrated skills, public-safe
+provenance, and audience privacy rules. It remains the only factual input to
+this renderer. Profiles
+select fact IDs; they never copy or rewrite facts. LaTeX files control
+presentation only, except for optional CV extension sections.
+
+The existing published ledger remains the starting baseline. Reclassifying it
+as a projection does not independently verify its existing sources or approve
+new claims. No automatic source export exists. The private repo is consulted
+during editorial review, never by public CI or runtime builds.
 
 Do not invent or infer:
 
@@ -21,10 +30,15 @@ Do not invent or infer:
 
 ## Fact change workflow
 
-1. Identify an owner-approved source.
-2. Add or update the canonical record and its provenance.
-3. Provide public/application text separately when sensitivity differs.
-4. Preserve required metric qualifiers in both projections.
+1. Identify and review the source fact and evidence in the private career
+   repository, including contribution, outcome, and sensitivity limits.
+2. Obtain owner approval for each new or revised factual claim and its exact
+   public/application wording. Prior publication alone is not independent
+   verification of a newly proposed expansion.
+3. Add or update only the approved projection in `content/career.json` with
+   stable IDs and public-safe provenance. Never copy private evidence, private
+   source URLs or paths, contact data, or application-state notes into public Git.
+4. Preserve required metric qualifiers in both audience projections.
 5. Select the fact by ID from the relevant profile.
 6. Run `validate-facts`, `validate-profiles`, and unit tests.
 7. Build and inspect every affected audience/profile artifact.
@@ -101,17 +115,20 @@ CI uploads only public PDFs and public visual renders for 30 days. Application
 variants are validation-only and remain runner-local. The CI summary records
 page counts and SHA-256 hashes.
 
-Repository history and the canonical ledger's provenance fields provide source
-traceability. Audit logs in `audits/` remain timestamped and tracked.
+Repository history and the public rendering ledger's safe provenance fields
+provide publication traceability. The private career repository retains the
+underlying evidence and review history. Audit logs in `audits/` remain
+timestamped and tracked.
 
 ## Pull request expectations
 
-A career-content PR documents its source and affected claim IDs. A rendering or
+A career-content PR documents reviewed source identifiers that are safe to
+disclose, owner approval, and affected claim IDs. A rendering or
 quality-gate PR lists affected artifact paths and validation commands. A
 cohesive application-readiness PR may combine both when its body explicitly
 separates:
 
-- canonical fact/content changes;
+- reviewed public projection/content changes;
 - renderer/layout changes;
 - build regressions; and
 - validation/CI changes.

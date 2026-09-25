@@ -5,8 +5,8 @@
 
 ## 1. Product contract
 
-The system generates deterministic, ATS-readable PDFs from one validated career
-ledger. It must support:
+The system generates deterministic, ATS-readable PDFs from one validated,
+self-contained rendering ledger. It must support:
 
 - a canonical two-page Platform/DevEx résumé;
 - Platform/DevEx, research/AI-assisted-systems, and mobile/geospatial role
@@ -20,9 +20,19 @@ implementation.
 
 ## 2. Source layers
 
-### 2.1 Canonical fact ledger
+### 2.1 Source authority and rendering ledger
 
-`content/career.json` owns:
+The private career repository is the authority for career facts, evidence, and
+review history as they are reviewed. Cataloged sources and GitHub metadata are
+candidate evidence, not approved claims. This public repository stores its
+rendering projection in `content/career.json`. The projection is the canonical,
+self-contained input to the existing renderer; no build or CI job reads the
+private repository. The existing content is a previously published baseline
+and is not newly verified by this authority clarification. No automatic export
+exists: new or revised facts and wording must pass owner review before entering
+this public repository through a separate content change.
+
+`content/career.json` locally defines:
 
 - public identity and recruiter destinations;
 - public/application privacy policies;
@@ -32,7 +42,13 @@ implementation.
 - research-artifact status and concept DOI;
 - education chronology;
 - evidenced skill groups; and
-- provenance for every role, claim, artifact, and education record.
+- public-safe provenance for every role, claim, artifact, and education record.
+
+Preserve stable claim IDs and this file's existing shape until a separately
+reviewed migration updates the renderer and quality gates. Do not embed private
+source documents, contact values, private URLs or paths, or application-state
+notes in the projection. Keep a verifiable link to the private evidence in the
+private review workflow, without creating a runtime dependency on it here.
 
 Every provenance object contains `source`, `status`, and `reviewed_on`. Only
 `status: verified` records may render.

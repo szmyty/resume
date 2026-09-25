@@ -5,13 +5,26 @@
 
 ## Purpose
 
-This repository publishes ATS-readable résumés and CVs from one verified career
-ledger. The PDF is the product. Public and application artifacts are different
-privacy projections of the same facts.
+This repository publishes ATS-readable résumés and CVs from its validated,
+self-contained rendering ledger. The private career repository is the source
+authority for career facts and evidence as they are reviewed. The PDF is the
+product; public and application artifacts are different privacy projections
+of selected facts.
 
 ## Non-negotiable source rules
 
-- `content/career.json` is the canonical fact and evidence source.
+- The private career repository is the authority for reviewed source facts
+  and evidence. A cataloged source or repository is not an approved claim.
+  `content/career.json` is this public repository's reviewed, self-contained
+  rendering projection, not a second independent source of career truth.
+- The existing public ledger is the starting publication baseline; this
+  documentation update does not newly verify or approve its claims. New or
+  changed facts require source review and owner approval before projection.
+- The renderer and CI must never fetch private evidence or depend on private
+  repository access. Keep private paths, URLs, notes, and source documents out
+  of this public repository.
+- No automatic fact export or source migration exists; update the public ledger
+  only through an explicitly reviewed, owner-approved content change.
 - Never invent or infer chronology, seniority, employment status, metrics,
   funding, adoption, ownership, or research status.
 - Incompris remains independent engineering/research with no unverified
@@ -37,7 +50,8 @@ privacy projections of the same facts.
 
 | Layer | Location |
 | --- | --- |
-| Canonical facts/evidence/privacy | `content/career.json` |
+| Reviewed source facts and evidence | Private career repository (external to this public build) |
+| Validated rendering projection/privacy | `content/career.json` |
 | Audience contact example | `content/application-contact.example.json` |
 | Role selection and copy | `profiles/*.yaml` |
 | Résumé/CV manifests | `documents/*.yaml` |
@@ -85,7 +99,9 @@ python scripts/quality_gates.py validate-pdf \
 
 ## Change policy
 
-For content changes, cite the owner-approved source and update provenance. For
+For content changes, review the upstream source and obtain owner approval for
+the exact audience projection. Record public-safe provenance in
+`content/career.json`; never copy private evidence into this repository. For
 profile changes, prove every selected skill through a selected claim. For
 rendering changes, rebuild and visually inspect every affected two-page PDF.
 For privacy changes, add negative and positive tests.
@@ -97,3 +113,12 @@ Use intentional title-cased filenames. `CV` is uppercase, application filenames
 omit `-Public`, and the permanent baseline is `Alan-Szmyt-Resume.pdf`.
 
 Generated PDFs, rendered images, caches, and `.local/` data are not committed.
+
+## Continuity handoff
+
+Read the root `AGENTS.md`, applicable specs, and `CONTINUITY.md` after these
+instructions. Verify the checkpoint's branch, issue, pull-request, and release
+claims against live state; the checkpoint is a compact handoff, not a source
+of facts or permission to publish. For an authorized repository change,
+refresh it in the same pull request after validation and before presenting the
+work.
