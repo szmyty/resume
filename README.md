@@ -241,3 +241,12 @@ publication claim.
 
 See [`specs/resume.spec.md`](specs/resume.spec.md) for the architecture contract
 and [`specs/governance.md`](specs/governance.md) for publication policy.
+
+## Roadmap #25: reviewed master and generic baseline
+
+The [checkpoint 1 inventory and migration plan](docs/roadmap/issue-25-checkpoint-1.md)
+records the current ledger, profiles, renderer, tests, artifact path, and
+remaining gaps. The [versioned source-to-projection contract](specs/source-projection-contract.v1.md)
+describes how an individually reviewed private claim may later enter this
+self-contained public renderer. These documents do not approve new claims,
+replace the published baseline, or add a private master to public CI.
