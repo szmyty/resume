@@ -73,8 +73,8 @@ state:
     observed_at: '2026-09-27T12:47:55Z'
     default_branch_revision: 09210c15d2429c2b4324aca076bd29092de26663
     issue_state: open
-    pull_request_state: draft
-    notes: 'PR #28 merged; no open PR before #29. Issue #25 remains open. This PR changes documentation only.'
+    pull_request_state: ready-for-review
+    notes: 'PR #28 merged; PR #29 is ready for review. Issue #25 remains open. This PR changes documentation only.'
   parallel_changes: []
 review:
   status: partial
@@ -96,7 +96,7 @@ review:
   - command: Hosted CI and Pages observation
     outcome: limited
     observed_at: '2026-09-27T12:47:55Z'
-    notes: 'Last visible successful deploy was 2026-08-22; later validation failed before recording steps. Current served Pages bytes were not fetched.'
+    notes: 'Last visible successful deploy was 2026-08-22; PR #29 run 36320211063 failed validation with zero recorded steps. Current served Pages bytes were not fetched.'
   environment_limitations:
   - Pytest was unavailable locally, so the full unit suite was not rerun.
   - Hosted Actions and current served Pages state need separate confirmation before publication claims.
